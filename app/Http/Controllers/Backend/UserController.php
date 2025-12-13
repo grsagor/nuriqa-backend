@@ -75,10 +75,20 @@ class UserController extends Controller
             return DataTables::of($data)
                 ->addColumn('image', function ($row) {
                     $imagePath = $row->image ? Storage::url('users/' . $row->image) : asset('assets/img/default-avatar.png');
-                    return '<img src="' . $imagePath . '" alt="' . $row->name . '" class="user-avatar">';
+                    if ($row->image) {
+                        return '<img src="' . $imagePath . '" alt="' . $row->name . '" class="user-avatar">';
+                    }
+                    return '<div class="user-avatar d-flex align-items-center justify-content-center bg-light"><i class="fas fa-user text-muted"></i></div>';
+                })
+                ->addColumn('name', function ($row) {
+                    return '<div class="d-flex align-items-center"><i class="fas fa-user me-2 text-primary"></i>' . $row->name . '</div>';
+                })
+                ->addColumn('phone', function ($row) {
+                    return $row->phone ?: '<span class="text-muted">N/A</span>';
                 })
                 ->addColumn('role', function ($row) {
-                    return $row->role ? $row->role->name : 'N/A';
+                    $roleName = $row->role ? $row->role->name : 'N/A';
+                    return '<span class="badge bg-primary">' . $roleName . '</span>';
                 })
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at->format('d M Y');
@@ -89,7 +99,7 @@ class UserController extends Controller
 
                     return $edit . ' ' . $delete;
                 })
-                ->rawColumns(['image', 'action'])
+                ->rawColumns(['image', 'name', 'phone', 'role', 'action'])
 
                 ->make(true);
         }

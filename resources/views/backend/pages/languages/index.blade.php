@@ -8,21 +8,21 @@
     <nav class="breadcrumb-modern">
         <a href="{{ route('admin.dashboard.index') }}">Dashboard</a>
         <span>/</span>
-        <span>Users</span>
+        <span>Languages</span>
     </nav>
 
     <!-- Header -->
     <div class="page-top">
         <div>
-            <h1 class="page-heading">Users</h1>
-            <p class="page-subtitle">Create and manage system users</p>
+            <h1 class="page-heading">Languages</h1>
+            <p class="page-subtitle">Create and manage system languages</p>
         </div>
 
         <button
             class="btn btn-create open_modal_btn"
-            data-url="{{ route('admin.users.create') }}"
+            data-url="{{ route('admin.languages.create') }}"
             data-modal-parent="#crudModal">
-            + New user
+            + New language
         </button>
     </div>
 
@@ -31,12 +31,10 @@
         <table id="datatable" class="data-table">
             <thead>
                 <tr>
-                    <th>Image</th>
                     <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Joined</th>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Created</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
@@ -54,32 +52,10 @@ $(function () {
     initDataTable(
         '#datatable',
         [
-            {
-                data: 'image',
-                name: 'image',
-                orderable: false,
-                searchable: false
-            },
-            {
-                data: 'name',
-                name: 'name'
-            },
-            { 
-                data: 'email', 
-                name: 'email' 
-            },
-            {
-                data: 'phone',
-                name: 'phone'
-            },
-            {
-                data: 'role',
-                name: 'role'
-            },
-            { 
-                data: 'created_at', 
-                name: 'created_at' 
-            },
+            { data: 'name', name: 'name' },
+            { data: 'code', name: 'code' },
+            { data: 'is_active', name: 'is_active' },
+            { data: 'created_at', name: 'created_at' },
             {
                 data: 'action',
                 name: 'action',
@@ -88,7 +64,7 @@ $(function () {
                 className: 'text-end'
             }
         ],
-        "{{ route('admin.users.list') }}"
+        "{{ route('admin.languages.list') }}"
     );
 });
 </script>

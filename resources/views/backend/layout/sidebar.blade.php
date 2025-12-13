@@ -20,6 +20,7 @@
                     <nav class="sb-sidenav-menu-nested nav">
                         <a class="nav-link" href="{{ route('admin.roles.index') }}">Role Management</a>
                         <a class="nav-link" href="{{ route('admin.users.index') }}">User Management</a>
+                        <a class="nav-link" href="{{ route('admin.languages.index') }}">Language Management</a>
                     </nav>
                 </div>
                 {{-- User Management Ended --}}

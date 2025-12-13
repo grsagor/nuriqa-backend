@@ -19,7 +19,7 @@
         </div>
 
         <button
-            class="btn-create open_modal_btn"
+            class="btn btn-create open_modal_btn"
             data-url="{{ route('admin.roles.create') }}"
             data-modal-parent="#crudModal">
             + New role
