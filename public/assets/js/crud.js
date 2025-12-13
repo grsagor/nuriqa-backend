@@ -37,8 +37,17 @@ $(document).ready(function () {
         
         const $container = $(previewContainer);
         
+        // If a new image is selected, reset the remove_image flag
+        $('#remove_image').val('0');
+        
+        // Remove any removal message
+        $('#imageRemovalMessage').remove();
+        
+        // Show the current image preview if it was hidden
+        $('.current-image-preview').show();
+        
         // Clear previous previews
-        $container.empty();
+        $container.find('.preview-wrapper').remove();
         
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -55,7 +64,7 @@ $(document).ready(function () {
                     class: 'btn btn-sm btn-danger preview-remove-btn',
                     html: '<i class="fas fa-times"></i>',
                     click: function () {
-                        $container.empty();
+                        $container.find('.preview-wrapper').remove();
                         $(input).val('');
                     }
                 });
@@ -69,6 +78,45 @@ $(document).ready(function () {
             
             reader.readAsDataURL(input.files[0]);
         }
+    });
+    
+    // Handle remove image button click
+    $(document).on('click', '#removeCurrentImage', function() {
+        const removeInput = $('#remove_image');
+        const imageInput = $('#image');
+        const currentImagePreview = $('.current-image-preview');
+        
+        // Set the hidden input value to 1 (remove image)
+        removeInput.val('1');
+        
+        // Clear file input
+        imageInput.val('');
+        
+        // Hide the current image preview
+        currentImagePreview.hide();
+        
+        // Show removal message
+        currentImagePreview.after(
+            $('<div>', {
+                id: 'imageRemovalMessage',
+                class: 'alert alert-warning mt-2',
+                text: 'Current image will be removed upon update. Click the undo button to restore.'
+            }).append(
+                $('<button>', {
+                    type: 'button',
+                    class: 'btn btn-sm btn-outline-secondary ms-2',
+                    text: 'Undo',
+                    click: function() {
+                        // Restore the image preview
+                        currentImagePreview.show();
+                        // Remove the removal message
+                        $('#imageRemovalMessage').remove();
+                        // Reset the hidden input value
+                        removeInput.val('0');
+                    }
+                })
+            )
+        );
     });
     
     $(document).on('click', '.open_modal_btn', function (e) {

@@ -72,10 +72,14 @@
                        accept="image/*" data-preview-container="#imagePreviewContainer">
                 <div id="imagePreviewContainer" class="mt-2 image-preview-container">
                     @if(isset($user->image) && !empty($user->image))
-                        <div class="current-image-preview">
-                            <img src="{{ asset('storage/users/' . $user->image) }}" alt="Current Image" class="img-thumbnail">
+                        <div class="current-image-preview position-relative d-inline-block">
+                            <img src="{{ $user->image_url }}" alt="Current Image" class="img-thumbnail">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" id="removeCurrentImage">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <div class="form-text mt-1">Current image</div>
                         </div>
+                        <input type="hidden" name="remove_image" id="remove_image" value="0">
                     @endif
                 </div>
                 <div class="form-text">Allowed formats: jpeg, png, jpg, gif (Max size: 2MB)</div>

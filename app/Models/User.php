@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\ImageService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -74,9 +75,6 @@ class User extends Authenticatable
      */
     public function getImageUrlAttribute()
     {
-        if ($this->image) {
-            return asset('storage/users/' . $this->image);
-        }
-        return asset('assets/img/default-avatar.png');
+        return ImageService::getUrl($this->image, 'users', asset('assets/img/default-avatar.png'));
     }
 }

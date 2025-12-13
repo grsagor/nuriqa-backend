@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Language;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -49,10 +49,7 @@ class UserController extends Controller
         }
         
         if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->storeAs('public/users', $imageName);
-            $data['image'] = $imageName;
+            $data['image'] = ImageService::upload($request->file('image'), 'users');
         }
         
         if ($request->filled('signup_date')) {
@@ -74,14 +71,14 @@ class UserController extends Controller
 
             return DataTables::of($data)
                 ->addColumn('image', function ($row) {
-                    $imagePath = $row->image ? Storage::url('users/' . $row->image) : asset('assets/img/default-avatar.png');
+                    $imagePath = ImageService::getUrl($row->image, 'users', asset('assets/img/default-avatar.png'));
                     if ($row->image) {
                         return '<img src="' . $imagePath . '" alt="' . $row->name . '" class="user-avatar">';
                     }
                     return '<div class="user-avatar d-flex align-items-center justify-content-center bg-light"><i class="fas fa-user text-muted"></i></div>';
                 })
                 ->addColumn('name', function ($row) {
-                    return '<div class="d-flex align-items-center"><i class="fas fa-user me-2 text-primary"></i>' . $row->name . '</div>';
+                    return '<div class="d-flex align-items-center">' . $row->name . '</div>';
                 })
                 ->addColumn('phone', function ($row) {
                     return $row->phone ?: '<span class="text-muted">N/A</span>';
@@ -146,16 +143,16 @@ class UserController extends Controller
             unset($data['password']);
         }
         
-        if ($request->hasFile('image')) {
-            // Delete old image
+        // Handle image removal
+        if ($request->has('remove_image') && $request->remove_image == '1') {
             if ($user->image) {
-                Storage::delete('public/users/' . $user->image);
+                ImageService::delete($user->image, 'users');
+                $data['image'] = null;
             }
-            
-            $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->storeAs('public/users', $imageName);
-            $data['image'] = $imageName;
+        }
+        // Handle new image upload
+        elseif ($request->hasFile('image')) {
+            $data['image'] = ImageService::upload($request->file('image'), 'users', $user->image);
         }
         
         if ($request->filled('signup_date')) {
@@ -179,7 +176,7 @@ class UserController extends Controller
         
         // Delete user image
         if ($user->image) {
-            Storage::delete('public/users/' . $user->image);
+            ImageService::delete($user->image, 'users');
         }
         
         $user->delete();
