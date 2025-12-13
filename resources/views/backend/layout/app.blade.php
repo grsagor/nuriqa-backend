@@ -14,6 +14,7 @@
 
     <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" />
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" />
 
     @stack('styles');
 </head>
@@ -28,7 +29,7 @@
                     @yield('content')
                 </div>
             </main>
-            @include('backend.layout.footer')
+            {{-- @include('backend.layout.footer') --}}
         </div>
     </div>
 

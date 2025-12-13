@@ -19,7 +19,7 @@
                     data-bs-parent="#sidenavAccordion">
                     <nav class="sb-sidenav-menu-nested nav">
                         <a class="nav-link" href="{{ route('admin.roles.index') }}">Role Management</a>
-                        <a class="nav-link" href="layout-sidenav-light.html">Light Sidenav</a>
+                        <a class="nav-link" href="{{ route('admin.users.index') }}">User Management</a>
                     </nav>
                 </div>
                 {{-- User Management Ended --}}

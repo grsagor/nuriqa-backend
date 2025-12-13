@@ -8,21 +8,21 @@
     <nav class="breadcrumb-modern">
         <a href="{{ route('admin.dashboard.index') }}">Dashboard</a>
         <span>/</span>
-        <span>Roles</span>
+        <span>Users</span>
     </nav>
 
     <!-- Header -->
     <div class="page-top">
         <div>
-            <h1 class="page-heading">Roles</h1>
-            <p class="page-subtitle">Create and manage access roles</p>
+            <h1 class="page-heading">Users</h1>
+            <p class="page-subtitle">Create and manage users</p>
         </div>
 
         <button
             class="btn-create open_modal_btn"
-            data-url="{{ route('admin.roles.create') }}"
+            data-url="{{ route('admin.users.create') }}"
             data-modal-parent="#crudModal">
-            + New role
+            + New user  
         </button>
     </div>
 
@@ -31,7 +31,7 @@
         <table id="datatable" class="data-table">
             <thead>
                 <tr>
-                    <th>Role name</th>
+                    <th>User name</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>

@@ -1,0 +1,123 @@
+/* Layout shell */
+.page-shell {
+    margin: 0 auto;
+}
+
+/* Breadcrumb */
+.breadcrumb-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.breadcrumb-modern a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-modern span {
+    color: #9ca3af;
+}
+
+/* Header */
+.page-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.page-heading {
+    font-size: 1.45rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Primary button */
+.btn-create {
+    background: #111827;
+    color: #ffffff;
+    border: none;
+    padding: 0.55rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.btn-create:hover {
+    background: #000000;
+    transform: translateY(-1px);
+}
+
+/* Card surface */
+.surface {
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    padding: 16px;
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.04),
+        0 12px 32px rgba(0,0,0,0.06);
+}
+
+/* Table */
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+}
+
+/* Header */
+.data-table thead th {
+    background: #fafafa;
+    padding: 16px 18px;
+    font-weight: 600;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Vertical separators (subtle, modern) */
+.data-table thead th + th,
+.data-table tbody td + td {
+    border-left: 1px solid #f1f5f9;
+}
+
+/* Body */
+.data-table tbody td {
+    padding: 15px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #111827;
+}
+
+/* Row hover */
+.data-table tbody tr {
+    transition: background 0.12s ease;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.surface .dt-length label {
+    margin-left: 8px;
+}
+
+/* Action buttons */
+.data-table .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+}
