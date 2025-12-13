@@ -121,3 +121,94 @@
     padding: 0.25rem 0.55rem;
     border-radius: 6px;
 }
+
+/* Image Preview Styles */
+.image-preview-container {
+    margin-top: 8px;
+}
+
+.preview-wrapper {
+    max-width: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.preview-wrapper:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.preview-image {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.preview-remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.preview-remove-btn:hover {
+    opacity: 1;
+}
+
+.current-image-preview {
+    max-width: 200px;
+}
+
+.current-image-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* User Avatar Styles */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #f1f5f9;
+}
+
+/* Header Background */
+.header-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Table Header Background */
+.table-header-bg {
+    background-color: #f8f9fa !important;
+}
+
+/* Primary Button Custom */
+.btn-primary-custom {
+    background-color: #6366f1;
+    border-color: #6366f1;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+}

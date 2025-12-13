@@ -25,6 +25,52 @@ function initDataTable(selector, columns, ajaxUrl, customOptions = {}) {
 }
 
 $(document).ready(function () {
+    // Image preview functionality
+    $(document).on('change', '.image-preview-input', function (e) {
+        const input = this;
+        const previewContainer = $(input).data('preview-container');
+        
+        if (!previewContainer) {
+            console.error('Missing data-preview-container attribute');
+            return;
+        }
+        
+        const $container = $(previewContainer);
+        
+        // Clear previous previews
+        $container.empty();
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function (e) {
+                const img = $('<img>', {
+                    src: e.target.result,
+                    class: 'preview-image img-thumbnail',
+                    alt: 'Preview'
+                });
+                
+                const removeBtn = $('<button>', {
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger preview-remove-btn',
+                    html: '<i class="fas fa-times"></i>',
+                    click: function () {
+                        $container.empty();
+                        $(input).val('');
+                    }
+                });
+                
+                const wrapper = $('<div>', {
+                    class: 'preview-wrapper position-relative d-inline-block'
+                }).append(img).append(removeBtn);
+                
+                $container.append(wrapper);
+            };
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    });
+    
     $(document).on('click', '.open_modal_btn', function (e) {
         e.preventDefault();
         const url = $(this).data('url');
