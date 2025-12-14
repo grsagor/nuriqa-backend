@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\LanguageController;
 use App\Http\Controllers\Backend\RoleController;
@@ -10,7 +11,15 @@ Route::get('/', function () {
     return view('backend.pages.dashboard.index');
 });
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::controller(AuthController::class)->group(function () {
+    Route::get('/login', 'login')->name('auth.login');
+    Route::post('/login', 'loginSubmit')->name('auth.login.submit');
+    Route::get('/register', 'register')->name('auth.register');
+    Route::post('/register', 'registerSubmit')->name('auth.register.submit');
+    Route::post('/logout', 'logout')->name('auth.logout');
+});
+
+Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
     Route::prefix('dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function () {
         Route::get('/', 'index')->name('index');
     });

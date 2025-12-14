@@ -23,7 +23,14 @@
                 <li>
                     <hr class="dropdown-divider" />
                 </li>
-                <li><a class="dropdown-item" href="#!">Logout</a></li>
+                <li>
+                    <form action="{{ route('auth.logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-start" style="border: none; background: none; width: 100%; text-align: left; padding: 0.25rem 1rem;">
+                            Logout
+                        </button>
+                    </form>
+                </li>
             </ul>
         </li>
     </ul>
