@@ -9,10 +9,10 @@
                 </a>
 
                 <div class="sb-sidenav-menu-heading">Users</div>
-                <a class="nav-link {{ Request::segment(2) == 'languages' ? 'active' : '' }}" href="{{ route('admin.languages.index') }}">
+                {{-- <a class="nav-link {{ Request::segment(2) == 'languages' ? 'active' : '' }}" href="{{ route('admin.languages.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-language"></i></div>
                     Languages
-                </a>
+                </a> --}}
                 <a class="nav-link {{ Request::segment(2) == 'roles' ? 'active' : '' }}" href="{{ route('admin.roles.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-user-tag"></i></div>
                     Roles
@@ -39,10 +39,10 @@
                 {{-- User Management Ended --}}
 
                 <div class="sb-sidenav-menu-heading">Products</div>
-                <a class="nav-link {{ Request::segment(2) == 'brands' ? 'active' : '' }}" href="{{ route('admin.brands.index') }}">
+                {{-- <a class="nav-link {{ Request::segment(2) == 'brands' ? 'active' : '' }}" href="{{ route('admin.brands.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-tag"></i></div>
                     Brands
-                </a>
+                </a> --}}
                 <a class="nav-link {{ Request::segment(2) == 'conditions' ? 'active' : '' }}" href="{{ route('admin.conditions.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-check-circle"></i></div>
                     Conditions
