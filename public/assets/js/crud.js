@@ -7,9 +7,14 @@ const Toast = Swal.mixin({
 });
 
 function initDataTable(selector, columns, ajaxUrl, customOptions = {}) {
+    // Destroy any existing DataTable instance
+    if ($.fn.DataTable.isDataTable(selector)) {
+        $(selector).DataTable().destroy();
+    }
+    
     const defaults = {
         processing: true,
-        serverSide: true,
+        // serverSide: true,
         responsive: true,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,
@@ -18,7 +23,8 @@ function initDataTable(selector, columns, ajaxUrl, customOptions = {}) {
             type: 'GET'
         },
         columns: columns,
-        destroy: true
+        // ordering: true,
+        order: []
     };
     const options = $.extend(true, {}, defaults, customOptions);
     return $(selector).DataTable(options);

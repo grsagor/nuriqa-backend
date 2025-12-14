@@ -10,6 +10,7 @@ use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -35,7 +36,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:6|confirmed',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'signup_date' => 'nullable|date',
             'lang_id' => 'nullable|exists:languages,id',
@@ -67,7 +68,7 @@ class UserController extends Controller
     public function list()
     {
         if (request()->ajax()) {
-            $data = User::with(['role', 'language'])->select('id', 'name', 'email', 'phone', 'image', 'role_id', 'created_at')->latest();
+            $data = User::with(['role', 'language'])->select('id', 'name', 'email', 'phone', 'image', 'role_id', 'signup_date', 'created_at')->latest();
 
             return DataTables::of($data)
                 ->addColumn('image', function ($row) {
@@ -88,7 +89,7 @@ class UserController extends Controller
                     return '<span class="badge bg-primary">' . $roleName . '</span>';
                 })
                 ->addColumn('created_at', function ($row) {
-                    return $row->created_at->format('d M Y');
+                    return $row->signup_date ? Carbon::parse($row->signup_date)->format('d M Y') : 'N/A';
                 })
                 ->addColumn('action', function ($row) {
                     $edit = '<button data-url="' . route('admin.users.edit', $row->id) . '" data-modal-parent="#crudModal" class="btn btn-sm btn-primary open_modal_btn"><i class="fas fa-edit"></i></button>';
@@ -127,7 +128,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $request->id,
             'phone' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:6|confirmed',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'signup_date' => 'nullable|date',
             'lang_id' => 'nullable|exists:languages,id',
