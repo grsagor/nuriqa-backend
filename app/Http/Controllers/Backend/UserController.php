@@ -72,7 +72,7 @@ class UserController extends Controller
 
             return DataTables::of($data)
                 ->addColumn('image', function ($row) {
-                    $imagePath = ImageService::getUrl($row->image, 'users', asset('assets/img/default-avatar.png'));
+                    $imagePath = ImageService::getUrl($row->image, asset('assets/img/default-avatar.png'));
                     if ($row->image) {
                         return '<img src="' . $imagePath . '" alt="' . $row->name . '" class="user-avatar">';
                     }
@@ -147,7 +147,7 @@ class UserController extends Controller
         // Handle image removal
         if ($request->has('remove_image') && $request->remove_image == '1') {
             if ($user->image) {
-                ImageService::delete($user->image, 'users');
+                ImageService::delete($user->image);
                 $data['image'] = null;
             }
         }
@@ -177,7 +177,7 @@ class UserController extends Controller
         
         // Delete user image
         if ($user->image) {
-            ImageService::delete($user->image, 'users');
+            ImageService::delete($user->image);
         }
         
         $user->delete();

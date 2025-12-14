@@ -1,3 +1,8 @@
+:root {
+    --primary-color: #111827;
+    --muted-color: #6b7280;
+}
+
 /* Layout shell */
 .page-shell {
     margin: 0 auto;
@@ -9,18 +14,18 @@
     align-items: center;
     gap: 8px;
     font-size: 0.8rem;
-    color: #6b7280;
+    color: var(--muted-color);
     margin-bottom: 12px;
 }
 
 .breadcrumb-modern a {
-    color: #4f46e5;
+    color: var(--primary-color);
     text-decoration: none;
     font-weight: 500;
 }
 
 .breadcrumb-modern span {
-    color: #9ca3af;
+    color: var(--muted-color);
 }
 
 /* Header */
@@ -61,7 +66,7 @@
 /* Primary button */
 .btn-create,
 .btn-primary {
-    background: #111827;
+    background: var(--primary-color);
     color: #ffffff;
 }
 
@@ -73,7 +78,7 @@
 
 .btn-secondary {
     background: #fff;
-    color: #111827;
+    color: var(--primary-color);
 }
 
 /* Card surface */
@@ -112,7 +117,7 @@
 .data-table tbody td {
     padding: 15px 18px;
     border-bottom: 1px solid #f1f5f9;
-    color: #111827;
+    color: var(--primary-color);
 }
 
 /* Row hover */
@@ -203,7 +208,7 @@
 
 /* Header Background */
 .header-bg {
-    background: #111827;
+    background: var(--primary-color);
 }
 
 /* Table Header Background */

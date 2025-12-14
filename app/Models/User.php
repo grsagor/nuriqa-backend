@@ -72,6 +72,6 @@ class User extends Authenticatable
      */
     public function getImageUrlAttribute()
     {
-        return ImageService::getUrl($this->image, 'users', asset('assets/img/default-avatar.png'));
+        return ImageService::getUrl($this->image, asset('assets/img/default-avatar.png'));
     }
 }

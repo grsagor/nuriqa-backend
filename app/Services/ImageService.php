@@ -24,11 +24,11 @@ class ImageService
 
         // Generate unique filename
         $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        
+
         // Store file in public/uploads directory
         $path = $file->move(public_path("uploads/{$directory}"), $filename);
-        
-        return $filename;
+
+        return "uploads/{$directory}/{$filename}";
     }
 
     /**
@@ -38,14 +38,14 @@ class ImageService
      * @param string $directory
      * @return bool
      */
-    public static function delete(string $filename, string $directory): bool
+    public static function delete(string $filename): bool
     {
-        $path = public_path("uploads/{$directory}/{$filename}");
-        
+        $path = public_path($filename);
+
         if (file_exists($path)) {
             return unlink($path);
         }
-        
+
         return false;
     }
 
@@ -53,39 +53,37 @@ class ImageService
      * Get the URL of an image
      *
      * @param string|null $filename
-     * @param string $directory
      * @param string|null $default
      * @return string|null
      */
-    public static function getUrl(?string $filename, string $directory, string $default = null): ?string
+    public static function getUrl(?string $filename, string $default = null): ?string
     {
         if (!$filename) {
             return $default;
         }
-        
-        $path = public_path("uploads/{$directory}/{$filename}");
-        
+
+        $path = public_path($filename);
+
         // Check if file exists
         if (!file_exists($path)) {
             return $default;
         }
-        
-        return url("uploads/{$directory}/{$filename}");
+
+        return url($filename);
     }
 
     /**
      * Get the full path of an image
      *
      * @param string|null $filename
-     * @param string $directory
      * @return string|null
      */
-    public static function getPath(?string $filename, string $directory): ?string
+    public static function getPath(?string $filename): ?string
     {
         if (!$filename) {
             return null;
         }
-        
-        return public_path("uploads/{$directory}/{$filename}");
+
+        return public_path($filename);
     }
 }

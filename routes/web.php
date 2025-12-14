@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Backend\BrandController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\ConditionController;
@@ -12,15 +13,23 @@ use App\Http\Controllers\Backend\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('backend.pages.dashboard.index');
+    return redirect()->route('admin.dashboard.index');
+});
+Route::get('/admin', function () {
+    return redirect()->route('admin.dashboard.index');
 });
 
 Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'login')->name('auth.login');
     Route::post('/login', 'loginSubmit')->name('auth.login.submit');
-    Route::get('/register', 'register')->name('auth.register');
-    Route::post('/register', 'registerSubmit')->name('auth.register.submit');
+    // Route::get('/register', 'register')->name('auth.register');
+    // Route::post('/register', 'registerSubmit')->name('auth.register.submit');
     Route::post('/logout', 'logout')->name('auth.logout');
+});
+
+Route::controller(ProfileController::class)->group(function () {
+    Route::get('/profile', 'index')->name('profile.index');
+    Route::post('/profile/update', 'update')->name('profile.update');
 });
 
 Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
