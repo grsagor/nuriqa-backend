@@ -32,6 +32,7 @@
             <thead>
                 <tr>
                     <th>Size name</th>
+                    <th>Type</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
@@ -50,6 +51,7 @@ $(function () {
         '#datatable',
         [
             { data: 'name', name: 'name' },
+            { data: 'type', name: 'type' },
             {
                 data: 'action',
                 name: 'action',

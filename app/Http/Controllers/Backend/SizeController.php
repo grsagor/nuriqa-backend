@@ -24,11 +24,13 @@ class SizeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:sizes,name'
+            'name' => 'required|string|max:255|unique:sizes,name',
+            'type' => 'required|in:general,pant'
         ]);
 
         Size::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'type' => $request->type
         ]);
 
         return response()->json([
@@ -39,9 +41,13 @@ class SizeController extends Controller
     public function list()
     {
         if (request()->ajax()) {
-            $data = Size::select('id', 'name')->latest();
+            $data = Size::select('id', 'name', 'type')->latest();
 
             return DataTables::of($data)
+
+                ->addColumn('type', function ($row) {
+                    return '<span class="badge bg-' . ($row->type == 'general' ? 'primary' : 'info') . '">' . ucfirst($row->type) . '</span>';
+                })
 
                 ->addColumn('action', function ($row) {
                     $edit = '<button data-url="' . route('admin.sizes.edit', $row->id) . '" data-modal-parent="#crudModal" class="btn btn-sm btn-primary open_modal_btn" data-modal-parent="#crudModal"><i class="fas fa-edit"></i></button>';
@@ -50,7 +56,7 @@ class SizeController extends Controller
                     return $edit . ' ' . $delete;
                 })
 
-                ->rawColumns(['action'])
+                ->rawColumns(['type', 'action'])
 
                 ->make(true);
         }
@@ -72,11 +78,13 @@ class SizeController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:sizes,name,' . $request->id
+            'name' => 'required|string|max:255|unique:sizes,name,' . $request->id,
+            'type' => 'required|in:general,pant'
         ]);
 
         Size::find($request->id)->update([
-            'name' => $request->name
+            'name' => $request->name,
+            'type' => $request->type
         ]);
 
         return response()->json([

@@ -11,6 +11,15 @@
                 <label for="name" class="form-label fw-semibold">Size Name <span class="text-danger">*</span></label>
                 <input type="text" name="name" id="name" class="form-control" value="{{ $size->name ?? '' }}" placeholder="Enter size name" required>
             </div>
+            <div class="mb-3">
+                <label for="type" class="form-label fw-semibold">Type <span class="text-danger">*</span></label>
+                <select name="type" id="type" class="form-select" required>
+                    <option value="">Select Type</option>
+                    @foreach(\App\Models\Size::$types as $value => $label)
+                        <option value="{{ $value }}" {{ ($size->type ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
