@@ -55,6 +55,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-ruler"></i></div>
                     Sizes
                 </a>
+                <a class="nav-link {{ Request::segment(2) == 'products' ? 'active' : '' }}" href="{{ route('admin.products.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
+                    Products
+                </a>
 
                 {{-- <div class="sb-sidenav-menu-heading">Interface</div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts"
