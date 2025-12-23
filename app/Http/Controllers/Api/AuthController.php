@@ -9,6 +9,7 @@ use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
@@ -199,7 +200,9 @@ class AuthController extends Controller
                 }
                 
                 // Generate JWT token
+                Log::info("here called 1");
                 $token = JWTAuth::fromUser($user);
+                Log::info("here called 2");
 
                 return response()->json([
                     'success' => true,
