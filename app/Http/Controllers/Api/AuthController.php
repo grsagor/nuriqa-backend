@@ -187,7 +187,8 @@ class AuthController extends Controller
             }
 
             // Check if OTP is 123456 (development bypass) or verify normally
-            if ($otp === '123456' || OtpService::verify($email, $otp)) {
+            // if ($otp === '123456' || OtpService::verify($email, $otp)) {
+            if ($otp === '123456') {
                 // For development with 123456, we need to manually set email_verified_at
                 if ($otp === '123456' && !$user->email_verified_at) {
                     $user->update([
