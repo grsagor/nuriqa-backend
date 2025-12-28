@@ -116,10 +116,12 @@ class AuthController extends Controller
                         'name' => $user->name,
                         'email' => $user->email,
                         'phone' => $user->phone,
+                        'image_url' => $user->image_url,
                         'role' => $user->role ? $user->role->name : null,
                         'created_at' => $user->created_at->toISOString()
                     ],
                     'token' => $token,
+                    'expires_in' => JWTAuth::factory()->getTTL() * 60, // in seconds
                     'token_type' => 'Bearer'
                 ]
             ]);
@@ -235,5 +237,13 @@ class AuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function myUserInfo(Request $request) {
+        $user = JWTAuth::parseToken()->authenticate();
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ]);
     }
 }

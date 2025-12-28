@@ -11,6 +11,7 @@ class Product extends Model
     protected $fillable = [
         'owner_id',
         'title',
+        'type',
         'description',
         'is_washed',
         'location',
@@ -18,12 +19,16 @@ class Product extends Model
         'brand',
         'size_id',
         'category_id',
-        'condition_id',
+        'condition',
         'material',
         'color',
         'price',
         'thumbnail',
         'is_featured'
+    ];
+
+    protected $appends = [
+        'thumbnail_url'
     ];
 
     protected $casts = [

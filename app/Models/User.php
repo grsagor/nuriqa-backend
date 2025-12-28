@@ -33,6 +33,8 @@ class User extends Authenticatable implements JWTSubject
         'otp_expires_at',
     ];
 
+    protected $appends = ['image_url'];
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -48,14 +50,15 @@ class User extends Authenticatable implements JWTSubject
      *
      * @return array<string, string>
      */
-  protected function casts(): array
+    protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'otp_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }/**
+    }
+    /**
      * Get the role associated with the user.
      */
     public function role()
