@@ -72,7 +72,7 @@ class UserController extends Controller
 
             return DataTables::of($data)
                 ->addColumn('image', function ($row) {
-                    $imagePath = ImageService::getUrl($row->image, asset('assets/img/utils/default-avatar.avif'));
+                    $imagePath = ImageService::getUrl($row->image, asset('assets/img/utils/no-image.png'));
                     if ($row->image) {
                         return '<img src="' . $imagePath . '" alt="' . $row->name . '" class="user-avatar">';
                     }

@@ -77,6 +77,11 @@ class Product extends Model
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail ? asset($this->thumbnail) : 'https://picsum.photos/seed/product/400/300.jpg';
+        if (!$this->thumbnail) {
+            return asset('img/utils/no-product.png');
+        }
+        
+        $thumbnailPath = public_path($this->thumbnail);
+        return file_exists($thumbnailPath) ? asset($this->thumbnail) : asset('assets/img/utils/no-image.png');
     }
 }
