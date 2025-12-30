@@ -78,7 +78,7 @@ class Product extends Model
     public function getThumbnailUrlAttribute()
     {
         if (!$this->thumbnail) {
-            return asset('img/utils/no-product.png');
+            return asset('assets/img/utils/no-image.png');
         }
         
         $thumbnailPath = public_path($this->thumbnail);
