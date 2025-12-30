@@ -39,7 +39,7 @@ class AuthController extends Controller
         try {
             $data = $request->all();
             $data['password'] = Hash::make($request->password);
-            
+
             // Set default role if not provided
             if (!isset($data['role_id']) || empty($data['role_id'])) {
                 $defaultRole = Role::where('name', 'user')->first();
@@ -67,7 +67,6 @@ class AuthController extends Controller
                     'otp_message' => 'In development, OTP is always: 123456'
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -125,7 +124,6 @@ class AuthController extends Controller
                     'token_type' => 'Bearer'
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -147,7 +145,6 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Logout successful'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -181,7 +178,7 @@ class AuthController extends Controller
 
             // Get the user first
             $user = User::where('email', $email)->first();
-            
+
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -200,11 +197,9 @@ class AuthController extends Controller
                         'email_verified_at' => now(),
                     ]);
                 }
-                
+
                 // Generate JWT token
-                Log::info("here called 1");
                 $token = JWTAuth::fromUser($user);
-                Log::info("here called 2");
 
                 return response()->json([
                     'success' => true,
@@ -220,6 +215,7 @@ class AuthController extends Controller
                             'created_at' => $user->created_at->toISOString()
                         ],
                         'token' => $token,
+                        'expires_in' => JWTAuth::factory()->getTTL() * 60, // in seconds
                         'token_type' => 'Bearer'
                     ]
                 ]);
@@ -229,7 +225,6 @@ class AuthController extends Controller
                     'message' => 'Invalid or expired OTP'
                 ], 400);
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -239,7 +234,8 @@ class AuthController extends Controller
         }
     }
 
-    public function myUserInfo(Request $request) {
+    public function myUserInfo(Request $request)
+    {
         $user = JWTAuth::parseToken()->authenticate();
         return response()->json([
             'success' => true,
