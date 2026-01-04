@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Size;
+use App\Models\Wishlist;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -123,6 +124,24 @@ class ProductController extends Controller
         }
 
         $products = $query->get();
+
+        // Check if user is authenticated and get their wishlist product IDs
+        $wishlistProductIds = [];
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if ($user) {
+                $wishlistProductIds = Wishlist::where('user_id', $user->id)
+                    ->pluck('product_id')
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+            // User not authenticated, wishlistProductIds remains empty
+        }
+
+        // Add wishlist status to each product
+        $products->each(function ($product) use ($wishlistProductIds) {
+            $product->is_in_wishlist = in_array($product->id, $wishlistProductIds);
+        });
 
         return response()->json([
             'success' => true,
@@ -261,6 +280,19 @@ class ProductController extends Controller
                 'success' => false,
                 'message' => 'Product not found'
             ], 404);
+        }
+
+        // Check if user is authenticated and if product is in their wishlist
+        $product->is_in_wishlist = false;
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if ($user) {
+                $product->is_in_wishlist = Wishlist::where('user_id', $user->id)
+                    ->where('product_id', $product->id)
+                    ->exists();
+            }
+        } catch (\Exception $e) {
+            // User not authenticated, is_in_wishlist remains false
         }
 
         return response()->json([
