@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SponsorRequestController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -42,5 +43,12 @@ Route::prefix('v1')->group(function () {
         Route::delete('/', 'clear')->name('api.v1.cart.clear');
         Route::put('/{id}', 'update')->name('api.v1.cart.update');
         Route::delete('/{id}', 'destroy')->name('api.v1.cart.destroy');
+    });
+
+    Route::prefix('sponsor-requests')->controller(SponsorRequestController::class)->group(function () {
+        Route::get('/', 'index')->name('api.v1.sponsor-requests.index');
+        Route::get('/my-requests', 'myRequests')->name('api.v1.sponsor-requests.my-requests')->middleware('jwt.auth');
+        Route::post('/', 'store')->name('api.v1.sponsor-requests.store')->middleware('jwt.auth');
+        Route::get('/{id}', 'show')->name('api.v1.sponsor-requests.show')->middleware('jwt.auth');
     });
 });
