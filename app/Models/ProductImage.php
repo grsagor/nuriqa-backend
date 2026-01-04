@@ -12,13 +12,22 @@ class ProductImage extends Model
         'image'
     ];
 
+    protected $appends = [
+        'image_url'
+    ];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): string
     {
-        return $this->image ? asset($this->image) : 'https://picsum.photos/seed/product/400/300.jpg';
+        if (!$this->image) {
+            return asset('assets/img/utils/no-image.png');
+        }
+        
+        $imagePath = public_path($this->image);
+        return file_exists($imagePath) ? asset($this->image) : asset('assets/img/utils/no-image.png');
     }
 }

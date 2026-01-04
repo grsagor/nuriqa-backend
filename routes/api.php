@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +24,23 @@ Route::prefix('v1')->group(function () {
         Route::get('/', 'index')->name('api.v1.products.index');
         Route::get('/categories', 'categories')->name('api.v1.products.categories');
         Route::get('/sizes', 'sizes')->name('api.v1.products.sizes');
+        Route::get('/details/{id}', 'show')->name('api.v1.products.show');
         Route::post('/store', 'store')->name('api.v1.products.store')->middleware('jwt.auth');
+    });
+
+    Route::prefix('wishlist')->controller(WishlistController::class)->middleware('jwt.auth')->group(function () {
+        Route::get('/', 'index')->name('api.v1.wishlist.index');
+        Route::post('/', 'store')->name('api.v1.wishlist.store');
+        Route::get('/check', 'check')->name('api.v1.wishlist.check');
+        Route::delete('/{id}', 'destroy')->name('api.v1.wishlist.destroy');
+        Route::delete('/product/{productId}', 'destroyByProduct')->name('api.v1.wishlist.destroy-by-product');
+    });
+
+    Route::prefix('cart')->controller(CartController::class)->middleware('jwt.auth')->group(function () {
+        Route::get('/', 'index')->name('api.v1.cart.index');
+        Route::post('/', 'store')->name('api.v1.cart.store');
+        Route::delete('/', 'clear')->name('api.v1.cart.clear');
+        Route::put('/{id}', 'update')->name('api.v1.cart.update');
+        Route::delete('/{id}', 'destroy')->name('api.v1.cart.destroy');
     });
 });

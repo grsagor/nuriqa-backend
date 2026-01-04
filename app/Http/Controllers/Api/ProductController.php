@@ -246,4 +246,26 @@ class ProductController extends Controller
             'data' => $sizes
         ]);
     }
+
+    public function show(string $id)
+    {
+        $product = Product::with([
+            'owner',
+            'size',
+            'category',
+            'images'
+        ])->find($id);
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $product
+        ]);
+    }
 }
