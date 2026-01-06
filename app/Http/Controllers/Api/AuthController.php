@@ -61,6 +61,7 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'phone' => $user->phone,
                         'role' => $user->role ? $user->role->name : null,
+                        'role_id' => $user->role_id,
                         'created_at' => $user->created_at->toISOString()
                     ],
                     'otp_code' => $otpCode, // Only for development
@@ -117,6 +118,7 @@ class AuthController extends Controller
                         'phone' => $user->phone,
                         'image_url' => $user->image_url,
                         'role' => $user->role ? $user->role->name : null,
+                        'role_id' => $user->role_id,
                         'created_at' => $user->created_at->toISOString()
                     ],
                     'token' => $token,
@@ -211,6 +213,7 @@ class AuthController extends Controller
                             'email' => $user->email,
                             'phone' => $user->phone,
                             'role' => $user->role ? $user->role->name : null,
+                            'role_id' => $user->role_id,
                             'email_verified_at' => $user->email_verified_at ? $user->email_verified_at->toISOString() : null,
                             'created_at' => $user->created_at->toISOString()
                         ],
