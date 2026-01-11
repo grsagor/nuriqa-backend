@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SponsorRequestController;
 use App\Http\Controllers\Api\WishlistController;
@@ -51,4 +52,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/', 'store')->name('api.v1.sponsor-requests.store')->middleware('jwt.auth');
         Route::get('/{id}', 'show')->name('api.v1.sponsor-requests.show')->middleware('jwt.auth');
     });
+
+    Route::prefix('orders')->controller(OrderController::class)->middleware('jwt.auth')->group(function () {
+        Route::post('/create-payment-intent', 'createPaymentIntent')->name('api.v1.orders.create-payment-intent');
+        Route::post('/checkout', 'checkout')->name('api.v1.orders.checkout');
+        Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment');
+        Route::get('/', 'index')->name('api.v1.orders.index');
+        Route::get('/{id}', 'show')->name('api.v1.orders.show');
+    });
+
+    // Stripe webhook (no auth required)
+    Route::post('/stripe/webhook', [OrderController::class, 'handleWebhook'])->name('api.v1.stripe.webhook');
 });
