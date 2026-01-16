@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\Cart;
+use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
@@ -238,6 +239,139 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to process checkout. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Process sponsor checkout and create transaction
+     */
+    public function sponsorCheckout(Request $request): JsonResponse
+    {
+        $request->validate([
+            'sponsor_request_id' => 'required|exists:sponsor_requests,id',
+            'billing_first_name' => 'required|string|max:255',
+            'billing_last_name' => 'required|string|max:255',
+            'billing_email' => 'required|email|max:255',
+            'billing_phone' => 'required|string|max:255',
+            'donate_anonymous' => 'nullable|boolean',
+            'payment_method' => 'required|in:card,paypal,bank,cod',
+            'keep_updated' => 'nullable|boolean',
+            'agree_terms' => 'required|boolean|accepted',
+        ]);
+
+        $sponsor = JWTAuth::parseToken()->authenticate();
+
+        DB::beginTransaction();
+
+        try {
+            // Get sponsor request
+            $sponsorRequest = SponsorRequest::with(['product', 'user'])
+                ->where('status', 'pending')
+                ->findOrFail($request->sponsor_request_id);
+
+            $product = $sponsorRequest->product;
+            $requester = $sponsorRequest->user;
+
+            if (! $product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            // Calculate totals
+            $productPrice = (float) ($product->price ?? 0);
+            $subtotal = $productPrice;
+            $tax = 0;
+            $deliveryFee = 15.00;
+            $couponDiscount = 0;
+            $total = $subtotal + $tax + $deliveryFee - $couponDiscount;
+
+            // Generate invoice number
+            $invoiceNo = $this->generateInvoiceNumber();
+
+            // Create transaction
+            $transaction = Transaction::create([
+                'user_id' => $sponsor->id,
+                'invoice_no' => $invoiceNo,
+                'status' => 'pending',
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'delivery_fee' => $deliveryFee,
+                'coupon_discount' => $couponDiscount,
+                'total' => $total,
+                'billing_first_name' => $request->billing_first_name,
+                'billing_last_name' => $request->billing_last_name,
+                'billing_email' => $request->billing_email,
+                'billing_phone' => $request->billing_phone,
+                'donate_anonymous' => $request->donate_anonymous ?? false,
+                'payment_method' => $request->payment_method,
+                'keep_updated' => $request->keep_updated ?? false,
+            ]);
+
+            // Create transaction sell line with sponsor tracking
+            TransactionSellLine::create([
+                'transaction_id' => $transaction->id,
+                'product_id' => $product->id,
+                'sponsor_request_id' => $sponsorRequest->id,
+                'requester_user_id' => $requester->id,
+                'sponsor_user_id' => $sponsor->id,
+                'quantity' => 1,
+                'unit_price' => $productPrice,
+                'subtotal' => $productPrice,
+            ]);
+
+            // Handle payment
+            if ($request->payment_method === 'card') {
+                if ($request->payment_intent_id) {
+                    TransactionPayment::create([
+                        'transaction_id' => $transaction->id,
+                        'stripe_payment_intent_id' => $request->payment_intent_id,
+                        'payment_method' => 'stripe',
+                        'amount' => $total,
+                        'currency' => 'GBP',
+                        'status' => 'pending',
+                    ]);
+                } else {
+                    TransactionPayment::create([
+                        'transaction_id' => $transaction->id,
+                        'payment_method' => 'stripe',
+                        'amount' => $total,
+                        'currency' => 'GBP',
+                        'status' => 'pending',
+                    ]);
+                }
+            } else {
+                TransactionPayment::create([
+                    'transaction_id' => $transaction->id,
+                    'payment_method' => $request->payment_method,
+                    'amount' => $total,
+                    'currency' => 'GBP',
+                    'status' => 'pending',
+                ]);
+            }
+
+            // Update sponsor request status to approved
+            $sponsorRequest->update(['status' => 'approved']);
+
+            DB::commit();
+
+            $transaction->load(['sellLines.product', 'sellLines.sponsorRequest', 'sellLines.requester', 'sellLines.sponsor', 'payments']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sponsor transaction created successfully',
+                'data' => $transaction,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Sponsor Checkout Error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process sponsor checkout. Please try again.',
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }

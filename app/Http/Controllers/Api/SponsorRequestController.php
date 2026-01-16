@@ -14,9 +14,9 @@ class SponsorRequestController extends Controller
     {
         // Get all pending sponsor requests (public)
         $status = $request->input('status', 'pending');
-        
+
         $query = SponsorRequest::with(['product.size', 'product.category', 'product.images', 'product.owner', 'user']);
-        
+
         if ($status === 'pending') {
             $query->where('status', 'pending');
         }
@@ -54,7 +54,7 @@ class SponsorRequestController extends Controller
         // Search by product title
         if ($request->filled('search')) {
             $query->whereHas('product', function ($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%');
+                $q->where('title', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -117,7 +117,7 @@ class SponsorRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $requests
+            'data' => $requests,
         ]);
     }
 
@@ -132,7 +132,7 @@ class SponsorRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $requests
+            'data' => $requests,
         ]);
     }
 
@@ -157,10 +157,10 @@ class SponsorRequestController extends Controller
 
         // Check if product exists
         $product = Product::find($request->product_id);
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
@@ -186,7 +186,7 @@ class SponsorRequestController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Sponsor request submitted successfully',
-            'data' => $sponsorRequest
+            'data' => $sponsorRequest,
         ], 201);
     }
 
@@ -198,16 +198,39 @@ class SponsorRequestController extends Controller
             ->with(['product.size', 'product.category', 'product.images', 'product.owner'])
             ->find($id);
 
-        if (!$sponsorRequest) {
+        if (! $sponsorRequest) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sponsor request not found'
+                'message' => 'Sponsor request not found',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $sponsorRequest
+            'data' => $sponsorRequest,
+        ]);
+    }
+
+    /**
+     * Public endpoint to view a sponsor request by ID
+     * Only shows pending sponsor requests
+     */
+    public function publicShow(string $id)
+    {
+        $sponsorRequest = SponsorRequest::where('status', 'pending')
+            ->with(['product.size', 'product.category', 'product.condition', 'product.images', 'product.owner', 'user'])
+            ->find($id);
+
+        if (! $sponsorRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sponsor request not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $sponsorRequest,
         ]);
     }
 }

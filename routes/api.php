@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SponsorRequestController;
@@ -48,6 +49,7 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('sponsor-requests')->controller(SponsorRequestController::class)->group(function () {
         Route::get('/', 'index')->name('api.v1.sponsor-requests.index');
+        Route::get('/{id}/public', 'publicShow')->name('api.v1.sponsor-requests.public-show');
         Route::get('/my-requests', 'myRequests')->name('api.v1.sponsor-requests.my-requests')->middleware('jwt.auth');
         Route::post('/', 'store')->name('api.v1.sponsor-requests.store')->middleware('jwt.auth');
         Route::get('/{id}', 'show')->name('api.v1.sponsor-requests.show')->middleware('jwt.auth');
@@ -56,6 +58,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('orders')->controller(OrderController::class)->middleware('jwt.auth')->group(function () {
         Route::post('/create-payment-intent', 'createPaymentIntent')->name('api.v1.orders.create-payment-intent');
         Route::post('/checkout', 'checkout')->name('api.v1.orders.checkout');
+        Route::post('/sponsor-checkout', 'sponsorCheckout')->name('api.v1.orders.sponsor-checkout');
         Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment');
         Route::get('/', 'index')->name('api.v1.orders.index');
         Route::get('/{id}', 'show')->name('api.v1.orders.show');
@@ -63,4 +66,7 @@ Route::prefix('v1')->group(function () {
 
     // Stripe webhook (no auth required)
     Route::post('/stripe/webhook', [OrderController::class, 'handleWebhook'])->name('api.v1.stripe.webhook');
+
+    // Join Us Applications (no auth required)
+    Route::post('/join-us', [JoinUsController::class, 'store'])->name('api.v1.join-us.store');
 });

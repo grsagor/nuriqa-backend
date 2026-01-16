@@ -10,6 +10,9 @@ class TransactionSellLine extends Model
     protected $fillable = [
         'transaction_id',
         'product_id',
+        'sponsor_request_id',
+        'requester_user_id',
+        'sponsor_user_id',
         'quantity',
         'unit_price',
         'subtotal',
@@ -32,5 +35,20 @@ class TransactionSellLine extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function sponsorRequest(): BelongsTo
+    {
+        return $this->belongsTo(SponsorRequest::class);
+    }
+
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requester_user_id');
+    }
+
+    public function sponsor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sponsor_user_id');
     }
 }
