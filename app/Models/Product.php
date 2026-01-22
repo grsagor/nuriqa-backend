@@ -24,19 +24,35 @@ class Product extends Model
         'color',
         'price',
         'thumbnail',
-        'is_featured'
+        'is_featured',
+        'is_free',
+        'discount_enabled',
+        'discount_type',
+        'discount',
+        'platform_donation',
+        'donation_percentage',
+        'active_listing',
     ];
 
     protected $appends = [
-        'thumbnail_url'
+        'thumbnail_url',
     ];
 
-    protected $casts = [
-        'is_washed' => 'boolean',
-        'is_featured' => 'boolean',
-        'upload_date' => 'date',
-        'price' => 'decimal:2'
-    ];
+    protected function casts(): array
+    {
+        return [
+            'is_washed' => 'boolean',
+            'is_featured' => 'boolean',
+            'is_free' => 'boolean',
+            'discount_enabled' => 'boolean',
+            'platform_donation' => 'boolean',
+            'active_listing' => 'boolean',
+            'upload_date' => 'date',
+            'price' => 'decimal:2',
+            'discount' => 'decimal:2',
+            'donation_percentage' => 'integer',
+        ];
+    }
 
     public function owner(): BelongsTo
     {
@@ -53,11 +69,6 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function condition(): BelongsTo
-    {
-        return $this->belongsTo(Condition::class);
-    }
-
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
@@ -72,16 +83,17 @@ class Product extends Model
         'denim' => 'Denim',
         'leather' => 'Leather',
         'synthetic' => 'Synthetic',
-        'other' => 'Other'
+        'other' => 'Other',
     ];
 
     public function getThumbnailUrlAttribute()
     {
-        if (!$this->thumbnail) {
+        if (! $this->thumbnail) {
             return asset('assets/img/utils/no-image.png');
         }
-        
+
         $thumbnailPath = public_path($this->thumbnail);
+
         return file_exists($thumbnailPath) ? asset($this->thumbnail) : asset('assets/img/utils/no-image.png');
     }
 }
