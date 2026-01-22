@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
@@ -69,4 +70,7 @@ Route::prefix('v1')->group(function () {
 
     // Join Us Applications (no auth required)
     Route::post('/join-us', [JoinUsController::class, 'store'])->name('api.v1.join-us.store');
+
+    // Contact Form (no auth required)
+    Route::post('/contact', [ContactController::class, 'store'])->name('api.v1.contact.store');
 });
