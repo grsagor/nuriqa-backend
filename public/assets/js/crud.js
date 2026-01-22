@@ -281,4 +281,63 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Handle action buttons (approve, reject, etc.)
+    $(document).on('click', '.crud_action_btn', function (e) {
+        e.preventDefault();
+
+        const url = $(this).data('url');
+        const action = $(this).data('action');
+
+        if (!url) {
+            Toast.fire({ icon: 'error', title: 'Action URL missing' });
+            return;
+        }
+
+        const actionText = action === 'approve' ? 'approve' : 'reject';
+        const confirmText = action === 'approve' ? 'approve this item' : 'reject this item';
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to ${confirmText}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: action === 'approve' ? '#28a745' : '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Yes, ${actionText} it!`,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+
+                    success: function (res) {
+                        if (res.success) {
+                            Toast.fire({ 
+                                icon: 'success', 
+                                title: res.message || `${actionText.charAt(0).toUpperCase() + actionText.slice(1)}d successfully` 
+                            });
+
+                            if (typeof $('#datatable').DataTable === 'function') {
+                                $('#datatable').DataTable().ajax.reload(null, false);
+                            }
+                        } else {
+                            Toast.fire({ icon: 'error', title: res.message || `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} failed` });
+                        }
+                    },
+
+                    error: function (err) {
+                        console.error(err.responseText);
+                        Toast.fire({ icon: 'error', title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} request failed` });
+                    }
+                });
+            }
+        });
+    });
 })

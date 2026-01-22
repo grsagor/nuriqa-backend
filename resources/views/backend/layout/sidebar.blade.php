@@ -60,6 +60,26 @@
                     Products
                 </a>
 
+                <div class="sb-sidenav-menu-heading">Orders & Requests</div>
+                <a class="nav-link {{ Request::segment(2) == 'sponsor-requests' ? 'active' : '' }}" href="{{ route('admin.sponsor-requests.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-gift"></i></div>
+                    Sponsor Requests
+                </a>
+                <a class="nav-link {{ Request::segment(2) == 'transactions' ? 'active' : '' }}" href="{{ route('admin.transactions.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
+                    Transactions
+                </a>
+                <a class="nav-link {{ Request::segment(2) == 'join-us-applications' ? 'active' : '' }}" href="{{ route('admin.join-us-applications.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-user-plus"></i></div>
+                    Join Us Applications
+                </a>
+
+                <div class="sb-sidenav-menu-heading">Communications</div>
+                <a class="nav-link {{ Request::segment(2) == 'contacts' ? 'active' : '' }}" href="{{ route('admin.contacts.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-envelope"></i></div>
+                    Contact Messages
+                </a>
+
                 {{-- <div class="sb-sidenav-menu-heading">Interface</div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts"
                     aria-expanded="false" aria-controls="collapseLayouts">

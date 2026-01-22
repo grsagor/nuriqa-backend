@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ContactRequest;
 use App\Mail\ContactMail;
+use App\Models\Contact;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -18,6 +19,17 @@ class ContactController extends Controller
     {
         try {
             $data = $request->validated();
+
+            // Save to database
+            Contact::create([
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'subject' => $data['subject'],
+                'message' => $data['message'] ?? null,
+                'is_read' => false,
+            ]);
 
             // Get admin email from config or use a default
             $adminEmail = config('mail.from.address', 'admin@nuriqa.com');
