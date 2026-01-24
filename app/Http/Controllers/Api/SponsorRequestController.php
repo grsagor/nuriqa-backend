@@ -218,7 +218,7 @@ class SponsorRequestController extends Controller
     public function publicShow(string $id)
     {
         $sponsorRequest = SponsorRequest::where('status', 'pending')
-            ->with(['product.size', 'product.category', 'product.condition', 'product.images', 'product.owner', 'user'])
+            ->with(['product.size', 'product.category', 'product.images', 'product.owner', 'user'])
             ->find($id);
 
         if (! $sponsorRequest) {
