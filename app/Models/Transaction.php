@@ -53,4 +53,9 @@ class Transaction extends Model
     {
         return $this->hasMany(TransactionPayment::class);
     }
+
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class);
+    }
 }

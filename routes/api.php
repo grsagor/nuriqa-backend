@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\EVRiController;
 use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
@@ -73,4 +74,18 @@ Route::prefix('v1')->group(function () {
 
     // Contact Form (no auth required)
     Route::post('/contact', [ContactController::class, 'store'])->name('api.v1.contact.store');
+
+    // EVRi Integration
+    Route::get('/evri/authenticate', [EVRiController::class, 'authenticate'])->name('api.v1.evri.authenticate');
+    Route::post('/evri/validate-address', [EVRiController::class, 'validateAddress'])->name('api.v1.evri.validate-address');
+    Route::get('/evri/rates', [EVRiController::class, 'getRates'])->name('api.v1.evri.rates');
+    Route::post('/evri/webhook', [EVRiController::class, 'webhook'])->name('api.v1.evri.webhook');
+
+    // EVRi Admin Routes (protected)
+    Route::middleware('jwt.auth')->group(function () {
+        Route::post('/evri/transactions/{transaction}/create-label', [EVRiController::class, 'createLabel'])->name('api.v1.evri.create-label');
+        Route::get('/evri/shipments/{shipment}/tracking', [EVRiController::class, 'getTrackingInfo'])->name('api.v1.evri.tracking');
+        Route::post('/evri/shipments/{shipment}/cancel', [EVRiController::class, 'cancelLabel'])->name('api.v1.evri.cancel');
+        Route::post('/evri/tracking/update', [EVRiController::class, 'updateTracking'])->name('api.v1.evri.update-tracking');
+    });
 });

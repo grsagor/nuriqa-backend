@@ -41,4 +41,12 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'evri' => [
+        'base_url' => env('EVRI_BASE_URL', 'https://api.evri.com'),
+        'client_id' => env('EVRI_CLIENT_ID'),
+        'client_secret' => env('EVRI_CLIENT_SECRET'),
+        's3_bucket' => env('EVRI_S3_BUCKET', 'nuriqa-labels'),
+        'webhook_secret' => env('EVRI_WEBHOOK_SECRET'),
+    ],
+
 ];
