@@ -9,13 +9,8 @@ class ImageService
 {
     /**
      * Upload an image to the specified directory
-     *
-     * @param UploadedFile $file
-     * @param string $directory
-     * @param string|null $oldImage
-     * @return string|null
      */
-    public static function upload(UploadedFile $file, string $directory, string $oldImage = null): ?string
+    public static function upload(UploadedFile $file, string $directory, ?string $oldImage = null): ?string
     {
         // Delete old image if exists
         if ($oldImage) {
@@ -23,7 +18,7 @@ class ImageService
         }
 
         // Generate unique filename
-        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        $filename = time().'_'.Str::random(10).'.'.$file->getClientOriginalExtension();
 
         // Store file in public/uploads directory
         $path = $file->move(public_path("uploads/{$directory}"), $filename);
@@ -34,9 +29,7 @@ class ImageService
     /**
      * Delete an image from the specified directory
      *
-     * @param string $filename
-     * @param string $directory
-     * @return bool
+     * @param  string  $directory
      */
     public static function delete(string $filename): bool
     {
@@ -51,21 +44,17 @@ class ImageService
 
     /**
      * Get the URL of an image
-     *
-     * @param string|null $filename
-     * @param string|null $default
-     * @return string|null
      */
-    public static function getUrl(?string $filename, string $default = null): ?string
+    public static function getUrl(?string $filename, ?string $default = null): ?string
     {
-        if (!$filename) {
+        if (! $filename) {
             return $default;
         }
 
         $path = public_path($filename);
 
         // Check if file exists
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return $default;
         }
 
@@ -74,13 +63,10 @@ class ImageService
 
     /**
      * Get the full path of an image
-     *
-     * @param string|null $filename
-     * @return string|null
      */
     public static function getPath(?string $filename): ?string
     {
-        if (!$filename) {
+        if (! $filename) {
             return null;
         }
 

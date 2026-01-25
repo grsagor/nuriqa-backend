@@ -4,8 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
@@ -17,7 +17,7 @@ return new class extends Migration {
             }
 
             // Add enum condition column
-            if (!Schema::hasColumn('products', 'condition')) {
+            if (! Schema::hasColumn('products', 'condition')) {
                 $table->enum('condition', ['new', 'used'])->default('used');
             }
         });
@@ -33,7 +33,7 @@ return new class extends Migration {
             }
 
             // Restore condition_id column + foreign key
-            if (!Schema::hasColumn('products', 'condition_id')) {
+            if (! Schema::hasColumn('products', 'condition_id')) {
                 $table->unsignedBigInteger('condition_id')->nullable();
 
                 $table->foreign('condition_id')

@@ -3,29 +3,29 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Services\ImageService;
 
 class ProfileController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
+
         return view('auth.profile', compact('user'));
     }
 
     public function update(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8|confirmed',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = [
@@ -40,7 +40,7 @@ class ProfileController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $imageService = new ImageService();
+            $imageService = new ImageService;
             $data['image'] = $imageService->upload($request->file('image'), 'users');
         }
 

@@ -21,7 +21,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $wishlists
+            'data' => $wishlists,
         ]);
     }
 
@@ -35,10 +35,10 @@ class WishlistController extends Controller
 
         // Check if product exists
         $product = Product::find($request->product_id);
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
@@ -50,7 +50,7 @@ class WishlistController extends Controller
         if ($existingWishlist) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product already in wishlist'
+                'message' => 'Product already in wishlist',
             ], 400);
         }
 
@@ -64,7 +64,7 @@ class WishlistController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product added to wishlist',
-            'data' => $wishlist
+            'data' => $wishlist,
         ], 201);
     }
 
@@ -76,10 +76,10 @@ class WishlistController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$wishlist) {
+        if (! $wishlist) {
             return response()->json([
                 'success' => false,
-                'message' => 'Wishlist item not found'
+                'message' => 'Wishlist item not found',
             ], 404);
         }
 
@@ -87,7 +87,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product removed from wishlist'
+            'message' => 'Product removed from wishlist',
         ]);
     }
 
@@ -99,10 +99,10 @@ class WishlistController extends Controller
             ->where('product_id', $productId)
             ->first();
 
-        if (!$wishlist) {
+        if (! $wishlist) {
             return response()->json([
                 'success' => false,
-                'message' => 'Wishlist item not found'
+                'message' => 'Wishlist item not found',
             ], 404);
         }
 
@@ -110,7 +110,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product removed from wishlist'
+            'message' => 'Product removed from wishlist',
         ]);
     }
 
@@ -128,7 +128,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'success' => true,
-            'in_wishlist' => $exists
+            'in_wishlist' => $exists,
         ]);
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Language extends Model
 {
     use HasFactory;
-    
+
     /**
      * The attributes that are mass assignable.
      *
@@ -19,7 +19,7 @@ class Language extends Model
         'code',
         'is_active',
     ];
-    
+
     /**
      * The attributes that should be cast.
      *
@@ -30,7 +30,7 @@ class Language extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-    
+
     /**
      * Get the users associated with the language.
      */

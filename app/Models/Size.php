@@ -10,9 +10,9 @@ class Size extends Model
     use HasFactory;
 
     protected $fillable = ['name', 'type'];
-    
+
     public static $types = [
         'general' => 'General',
-        'pant' => 'Pant'
+        'pant' => 'Pant',
     ];
 }

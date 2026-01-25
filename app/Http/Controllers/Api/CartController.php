@@ -21,7 +21,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $carts
+            'data' => $carts,
         ]);
     }
 
@@ -36,10 +36,10 @@ class CartController extends Controller
 
         // Check if product exists
         $product = Product::find($request->product_id);
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
@@ -58,7 +58,7 @@ class CartController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Cart updated',
-                'data' => $existingCart
+                'data' => $existingCart,
             ]);
         }
 
@@ -73,7 +73,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product added to cart',
-            'data' => $cart
+            'data' => $cart,
         ], 201);
     }
 
@@ -89,10 +89,10 @@ class CartController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$cart) {
+        if (! $cart) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cart item not found'
+                'message' => 'Cart item not found',
             ], 404);
         }
 
@@ -104,7 +104,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Cart updated',
-            'data' => $cart
+            'data' => $cart,
         ]);
     }
 
@@ -116,10 +116,10 @@ class CartController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$cart) {
+        if (! $cart) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cart item not found'
+                'message' => 'Cart item not found',
             ], 404);
         }
 
@@ -127,7 +127,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product removed from cart'
+            'message' => 'Product removed from cart',
         ]);
     }
 
@@ -139,7 +139,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Cart cleared'
+            'message' => 'Cart cleared',
         ]);
     }
 }

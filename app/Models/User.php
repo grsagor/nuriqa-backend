@@ -58,6 +58,7 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
         ];
     }
+
     /**
      * Get the role associated with the user.
      */

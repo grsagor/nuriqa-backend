@@ -9,11 +9,11 @@ class ProductImage extends Model
 {
     protected $fillable = [
         'product_id',
-        'image'
+        'image',
     ];
 
     protected $appends = [
-        'image_url'
+        'image_url',
     ];
 
     public function product(): BelongsTo
@@ -23,11 +23,12 @@ class ProductImage extends Model
 
     public function getImageUrlAttribute(): string
     {
-        if (!$this->image) {
+        if (! $this->image) {
             return asset('assets/img/utils/no-image.png');
         }
-        
+
         $imagePath = public_path($this->image);
+
         return file_exists($imagePath) ? asset($this->image) : asset('assets/img/utils/no-image.png');
     }
 }

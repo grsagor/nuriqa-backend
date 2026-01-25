@@ -62,7 +62,7 @@ class ProductController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%');
         }
 
         // Sorting
@@ -145,7 +145,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $products
+            'data' => $products,
         ]);
     }
 
@@ -202,7 +202,7 @@ class ProductController extends Controller
         }
 
         // Enforce discount rules
-        if (!$data['discount_enabled']) {
+        if (! $data['discount_enabled']) {
             $data['discount'] = 0;
             $data['discount_type'] = null;
         }
@@ -236,7 +236,7 @@ class ProductController extends Controller
             // Save thumbnail if not already set
             if ($thumbnailPath && empty($product->thumbnail)) {
                 $product->update([
-                    'thumbnail' => $thumbnailPath
+                    'thumbnail' => $thumbnailPath,
                 ]);
             }
         }
@@ -244,25 +244,27 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
-            'product_id' => $product->id
+            'product_id' => $product->id,
         ]);
     }
+
     public function categories(Request $request)
     {
         $categories = Category::all();
 
         return response()->json([
             'success' => true,
-            'data' => $categories
+            'data' => $categories,
         ]);
     }
+
     public function sizes(Request $request)
     {
         $sizes = Size::all();
 
         return response()->json([
             'success' => true,
-            'data' => $sizes
+            'data' => $sizes,
         ]);
     }
 
@@ -272,13 +274,13 @@ class ProductController extends Controller
             'owner',
             'size',
             'category',
-            'images'
+            'images',
         ])->find($id);
 
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
@@ -297,7 +299,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $product
+            'data' => $product,
         ]);
     }
 }

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'processing', 'succeeded', 'failed', 'refunded'])->default('pending');
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index('stripe_payment_intent_id');
             $table->index('stripe_charge_id');
         });
