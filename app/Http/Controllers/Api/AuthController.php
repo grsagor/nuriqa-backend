@@ -77,6 +77,60 @@ class AuthController extends Controller
     }
 
     /**
+     * Resend OTP
+     */
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $email = $request->email;
+
+            $user = User::where('email', $email)->first();
+            if (! $user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found',
+                ], 404);
+            }
+
+            if ($user->email_verified_at) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Email already verified',
+                ]);
+            }
+
+            $otpCode = OtpService::generate($user->email);
+            $debugOtpData = config('app.debug') ? ['otp_code' => $otpCode] : [];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP resent successfully',
+                'data' => [
+                    ...$debugOtpData,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend OTP',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * User Login
      */
     public function login(Request $request)
@@ -256,6 +310,45 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => $user,
+        ]);
+    }
+
+    public function updateNotificationSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'notification_settings' => ['required', 'array'],
+        ]);
+
+        $allowedKeys = [
+            'emailNotifications',
+            'requestedItemsUpdate',
+            'sponsoredItemsUpdate',
+            'orderedItemsUpdate',
+            'newItemRequest',
+            'newOrderRequest',
+            'paymentReceive',
+            'paymentWithdrawal',
+            'reviewThanksReceive',
+            'nuriqaUpdates',
+            'hajiqUpdates',
+        ];
+
+        $normalized = [];
+        foreach ($validated['notification_settings'] as $key => $value) {
+            if (! in_array($key, $allowedKeys, true)) {
+                continue;
+            }
+            $normalized[$key] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $user = JWTAuth::parseToken()->authenticate();
+        $current = is_array($user->notification_settings) ? $user->notification_settings : [];
+        $user->notification_settings = array_merge($current, $normalized);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $user->notification_settings,
         ]);
     }
 }

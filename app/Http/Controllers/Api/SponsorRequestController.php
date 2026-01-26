@@ -121,6 +121,29 @@ class SponsorRequestController extends Controller
         ]);
     }
 
+    public function sellerIndex(Request $request)
+    {
+        $seller = JWTAuth::parseToken()->authenticate();
+
+        $query = SponsorRequest::query()
+            ->whereHas('product', function ($q) use ($seller) {
+                $q->where('owner_id', $seller->id);
+            })
+            ->with(['product.size', 'product.category', 'product.images', 'product.owner', 'user'])
+            ->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $requests = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests,
+        ]);
+    }
+
     public function myRequests(Request $request)
     {
         $user = JWTAuth::parseToken()->authenticate();

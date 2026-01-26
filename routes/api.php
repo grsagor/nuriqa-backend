@@ -20,15 +20,18 @@ Route::prefix('v1')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('/signup', 'signup')->name('api.v1.signup');
         Route::post('/verify-otp', 'verifyOtp')->name('api.v1.verify-otp');
+        Route::post('/resend-otp', 'resendOtp')->name('api.v1.resend-otp');
         Route::post('/login', 'login')->name('api.v1.login');
         Route::post('/logout', 'logout')->name('api.v1.logout')->middleware('auth:api');
         Route::get('/my-user-info', 'myUserInfo')->name('api.v1.my-user-info')->middleware('jwt.auth');
+            Route::post('/my-notification-settings', 'updateNotificationSettings')->name('api.v1.my-notification-settings')->middleware('jwt.auth');
     });
 
     Route::prefix('products')->controller(ProductController::class)->group(function () {
         Route::get('/', 'index')->name('api.v1.products.index');
         Route::get('/categories', 'categories')->name('api.v1.products.categories');
         Route::get('/sizes', 'sizes')->name('api.v1.products.sizes');
+        Route::get('/my-most-wishlisted', 'myMostWishlisted')->name('api.v1.products.my-most-wishlisted')->middleware('jwt.auth');
         Route::get('/details/{id}', 'show')->name('api.v1.products.show');
         Route::post('/store', 'store')->name('api.v1.products.store')->middleware('jwt.auth');
     });
@@ -52,6 +55,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('sponsor-requests')->controller(SponsorRequestController::class)->group(function () {
         Route::get('/', 'index')->name('api.v1.sponsor-requests.index');
         Route::get('/{id}/public', 'publicShow')->name('api.v1.sponsor-requests.public-show');
+        Route::get('/seller', 'sellerIndex')->name('api.v1.sponsor-requests.seller-index')->middleware('jwt.auth');
         Route::get('/my-requests', 'myRequests')->name('api.v1.sponsor-requests.my-requests')->middleware('jwt.auth');
         Route::post('/', 'store')->name('api.v1.sponsor-requests.store')->middleware('jwt.auth');
         Route::get('/{id}', 'show')->name('api.v1.sponsor-requests.show')->middleware('jwt.auth');
@@ -62,6 +66,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/checkout', 'checkout')->name('api.v1.orders.checkout');
         Route::post('/sponsor-checkout', 'sponsorCheckout')->name('api.v1.orders.sponsor-checkout');
         Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment');
+        Route::get('/seller', 'sellerIndex')->name('api.v1.orders.seller-index');
+        Route::get('/sponsored', 'sponsoredIndex')->name('api.v1.orders.sponsored-index');
         Route::get('/', 'index')->name('api.v1.orders.index');
         Route::get('/{id}', 'show')->name('api.v1.orders.show');
     });

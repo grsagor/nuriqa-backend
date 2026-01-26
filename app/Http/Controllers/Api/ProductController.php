@@ -10,6 +10,7 @@ use App\Models\Size;
 use App\Models\Wishlist;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class ProductController extends Controller
@@ -19,7 +20,15 @@ class ProductController extends Controller
         $query = Product::with(['size', 'category']);
 
         if ($request->filled('myproduct')) {
-            $user = JWTAuth::parseToken()->authenticate();
+            try {
+                $user = JWTAuth::parseToken()->authenticate();
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
             $query->where('owner_id', $user->id);
         }
 
@@ -161,13 +170,19 @@ class ProductController extends Controller
             'material' => 'nullable|string',
             'color' => 'nullable|string|max:255',
 
+            'size_id' => 'required|exists:sizes,id',
+            'category_id' => 'required|exists:categories,id',
+
+            'type' => 'nullable|string|max:50',
+            'condition' => 'required|in:new,used',
+
             'price' => 'nullable|numeric|min:0',
 
             'is_free' => 'nullable|boolean',
 
             'discount_enabled' => 'nullable|boolean',
-            'discount_type' => 'nullable|in:percentage,flat',
-            'discount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|in:percentage,flat|required_if:discount_enabled,1',
+            'discount' => 'nullable|numeric|min:0|required_if:discount_enabled,1',
 
             'platform_donation' => 'nullable|boolean',
             'donation_percentage' => 'nullable|numeric|min:0|max:100',
@@ -177,6 +192,47 @@ class ProductController extends Controller
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10000',
         ]);
+
+        $discountEnabled = filter_var($request->input('discount_enabled'), FILTER_VALIDATE_BOOLEAN);
+        $isFree = filter_var($request->input('is_free'), FILTER_VALIDATE_BOOLEAN);
+        $platformDonation = filter_var($request->input('platform_donation'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($discountEnabled && ! $isFree) {
+            $discountType = $request->input('discount_type');
+            $discountValue = (float) ($request->input('discount') ?? 0);
+            $price = (float) ($request->input('price') ?? 0);
+
+            if ($discountType === 'percentage' && $discountValue > 100) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => [
+                        'discount' => ['Percentage discount cannot exceed 100.'],
+                    ],
+                ], 422);
+            }
+
+            if ($discountType === 'flat' && $discountValue > $price) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => [
+                        'discount' => ['Flat discount cannot exceed price.'],
+                    ],
+                ], 422);
+            }
+        }
+
+        if ($platformDonation && ! $isFree) {
+            $donationPercentage = (float) ($request->input('donation_percentage') ?? 0);
+
+            if ($donationPercentage <= 0 || $donationPercentage > 100) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => [
+                        'donation_percentage' => ['Donation percentage must be between 1 and 100 when platform donation is enabled.'],
+                    ],
+                ], 422);
+            }
+        }
 
         $data = $request->except(['images']);
 
@@ -265,6 +321,42 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => $sizes,
+        ]);
+    }
+
+    public function myMostWishlisted(Request $request)
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        $product = Product::query()
+            ->select('products.id', 'products.title', DB::raw('COUNT(wishlists.id) as wishlist_count'))
+            ->leftJoin('wishlists', 'wishlists.product_id', '=', 'products.id')
+            ->where('products.owner_id', $user->id)
+            ->groupBy('products.id', 'products.title')
+            ->orderByDesc('wishlist_count')
+            ->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => true,
+                'data' => null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $product->id,
+                'title' => $product->title,
+                'wishlist_count' => (int) ($product->wishlist_count ?? 0),
+            ],
         ]);
     }
 

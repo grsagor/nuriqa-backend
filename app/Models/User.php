@@ -25,9 +25,12 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'phone',
         'image',
+        'rating',
+        'reviews',
         'signup_date',
         'lang_id',
         'role_id',
+        'notification_settings',
         'email_verified_at',
         'otp',
         'otp_expires_at',
@@ -56,6 +59,7 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'otp_expires_at' => 'datetime',
             'password' => 'hashed',
+            'notification_settings' => 'array',
         ];
     }
 

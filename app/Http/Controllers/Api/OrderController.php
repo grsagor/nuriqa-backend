@@ -552,7 +552,89 @@ class OrderController extends Controller
         $user = JWTAuth::parseToken()->authenticate();
 
         $transactions = Transaction::where('user_id', $user->id)
-            ->with(['sellLines.product', 'payments'])
+            ->with([
+                'sellLines.product.size',
+                'sellLines.product.images',
+                'payments',
+            ])
+            ->latest()
+            ->paginate($request->input('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $transactions,
+        ]);
+    }
+
+    /**
+     * Get seller orders (transactions containing seller-owned products)
+     */
+    public function sellerIndex(Request $request): JsonResponse
+    {
+        $seller = JWTAuth::parseToken()->authenticate();
+
+        $transactions = Transaction::query()
+            ->whereHas('sellLines.product', function ($q) use ($seller) {
+                $q->where('owner_id', $seller->id);
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->input('status'));
+            })
+            ->with([
+                'user',
+                'payments',
+                'sellLines' => function ($q) use ($seller) {
+                    $q->whereHas('product', function ($sub) use ($seller) {
+                        $sub->where('owner_id', $seller->id);
+                    })->with([
+                        'product.owner',
+                        'product.size',
+                        'product.category',
+                        'product.images',
+                        'sponsorRequest.user',
+                        'requester',
+                        'sponsor',
+                    ]);
+                },
+            ])
+            ->latest()
+            ->paginate($request->input('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $transactions,
+        ]);
+    }
+
+    /**
+     * Get orders where the authenticated user is the sponsor
+     */
+    public function sponsoredIndex(Request $request): JsonResponse
+    {
+        $sponsor = JWTAuth::parseToken()->authenticate();
+
+        $transactions = Transaction::query()
+            ->whereHas('sellLines', function ($q) use ($sponsor) {
+                $q->where('sponsor_user_id', $sponsor->id);
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->input('status'));
+            })
+            ->with([
+                'user',
+                'payments',
+                'sellLines' => function ($q) use ($sponsor) {
+                    $q->where('sponsor_user_id', $sponsor->id)->with([
+                        'product.owner',
+                        'product.size',
+                        'product.category',
+                        'product.images',
+                        'sponsorRequest.user',
+                        'requester',
+                        'sponsor',
+                    ]);
+                },
+            ])
             ->latest()
             ->paginate($request->input('per_page', 15));
 
@@ -571,7 +653,11 @@ class OrderController extends Controller
 
         $transaction = Transaction::where('id', $id)
             ->where('user_id', $user->id)
-            ->with(['sellLines.product', 'payments'])
+            ->with([
+                'sellLines.product.size',
+                'sellLines.product.images',
+                'payments',
+            ])
             ->firstOrFail();
 
         return response()->json([
