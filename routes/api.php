@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SponsorRequestController;
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\WithdrawalController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -93,5 +95,24 @@ Route::prefix('v1')->group(function () {
         Route::get('/evri/shipments/{shipment}/tracking', [EVRiController::class, 'getTrackingInfo'])->name('api.v1.evri.tracking');
         Route::post('/evri/shipments/{shipment}/cancel', [EVRiController::class, 'cancelLabel'])->name('api.v1.evri.cancel');
         Route::post('/evri/tracking/update', [EVRiController::class, 'updateTracking'])->name('api.v1.evri.update-tracking');
+
+        // Wallet Routes
+        Route::prefix('wallet')->controller(WalletController::class)->group(function () {
+            Route::get('/', 'index')->name('api.v1.wallet.index');
+            Route::get('/payment-methods', 'paymentMethods')->name('api.v1.wallet.payment-methods');
+            Route::post('/payment-methods', 'storePaymentMethod')->name('api.v1.wallet.payment-methods.store');
+            Route::put('/payment-methods/{id}', 'updatePaymentMethod')->name('api.v1.wallet.payment-methods.update');
+            Route::delete('/payment-methods/{id}', 'deletePaymentMethod')->name('api.v1.wallet.payment-methods.delete');
+            Route::post('/payment-methods/{id}/set-default', 'setDefaultPaymentMethod')->name('api.v1.wallet.payment-methods.set-default');
+        });
+
+        // Withdrawal Routes
+        Route::prefix('withdrawals')->controller(WithdrawalController::class)->group(function () {
+            Route::get('/', 'index')->name('api.v1.withdrawals.index');
+            Route::post('/', 'store')->name('api.v1.withdrawals.store');
+            Route::get('/limits', 'withdrawalLimits')->name('api.v1.withdrawals.limits');
+            Route::get('/{id}', 'show')->name('api.v1.withdrawals.show');
+            Route::post('/{id}/cancel', 'cancel')->name('api.v1.withdrawals.cancel');
+        });
     });
 });
