@@ -15,6 +15,8 @@ use App\Http\Controllers\Backend\SizeController;
 use App\Http\Controllers\Backend\SponsorRequestController;
 use App\Http\Controllers\Backend\TransactionController;
 use App\Http\Controllers\Backend\UserController;
+use App\Http\Controllers\Admin\WalletController;
+use App\Http\Controllers\Admin\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -140,5 +142,19 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::delete('/delete/{id}', 'delete')->name('delete');
+    });
+    Route::prefix('wallets')->name('wallets.')->controller(WalletController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/show/{id}', 'show')->name('show');
+        Route::get('/edit/{id}', 'edit')->name('edit');
+        Route::post('/update/{id}', 'update')->name('update');
+        Route::get('/{id}/transactions', 'transactions')->name('transactions');
+    });
+    Route::prefix('withdrawals')->name('withdrawals.')->controller(WithdrawalController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/show/{id}', 'show')->name('show');
+        Route::post('/{id}/approve', 'approve')->name('approve');
+        Route::post('/{id}/reject', 'reject')->name('reject');
+        Route::get('/statistics', 'statistics')->name('statistics');
     });
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Wallet;
 use App\Models\SellerPaymentMethod;
+use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -22,6 +23,7 @@ class WalletController extends Controller
                 'available_balance' => $wallet->available_balance,
                 'pending_balance' => $wallet->pending_balance,
                 'total_earnings' => $wallet->total_earnings,
+                'total_balance' => $wallet->available_balance + $wallet->pending_balance,
             ]
         ]);
     }
@@ -160,6 +162,39 @@ class WalletController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Payment method deleted successfully'
+        ]);
+    }
+
+
+    public function transactions(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Get withdrawals as transactions
+        $withdrawals = Withdrawal::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        $transactions = $withdrawals->map(function ($withdrawal) {
+            return [
+                'id' => $withdrawal->id,
+                'type' => 'withdrawal',
+                'amount' => -abs($withdrawal->amount), // Negative for withdrawals
+                'status' => $withdrawal->status,
+                'description' => 'Withdrawal request - ' . ucfirst($withdrawal->status),
+                'created_at' => $withdrawal->created_at,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $transactions,
+            'pagination' => [
+                'current_page' => $withdrawals->currentPage(),
+                'last_page' => $withdrawals->lastPage(),
+                'per_page' => $withdrawals->perPage(),
+                'total' => $withdrawals->total(),
+            ]
         ]);
     }
 

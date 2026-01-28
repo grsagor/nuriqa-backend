@@ -99,6 +99,8 @@ Route::prefix('v1')->group(function () {
         // Wallet Routes
         Route::prefix('wallet')->controller(WalletController::class)->group(function () {
             Route::get('/', 'index')->name('api.v1.wallet.index');
+            Route::get('/balance', 'index')->name('api.v1.wallet.balance'); // Alias for frontend compatibility
+            Route::get('/transactions', 'transactions')->name('api.v1.wallet.transactions');
             Route::get('/payment-methods', 'paymentMethods')->name('api.v1.wallet.payment-methods');
             Route::post('/payment-methods', 'storePaymentMethod')->name('api.v1.wallet.payment-methods.store');
             Route::put('/payment-methods/{id}', 'updatePaymentMethod')->name('api.v1.wallet.payment-methods.update');
@@ -112,7 +114,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', 'store')->name('api.v1.withdrawals.store');
             Route::get('/limits', 'withdrawalLimits')->name('api.v1.withdrawals.limits');
             Route::get('/{id}', 'show')->name('api.v1.withdrawals.show');
-            Route::post('/{id}/cancel', 'cancel')->name('api.v1.withdrawals.cancel');
+            Route::put('/{id}/cancel', 'cancel')->name('api.v1.withdrawals.cancel');
         });
     });
 });

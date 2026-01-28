@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
 use App\Models\Wallet;
 use App\Models\SellerPaymentMethod;
+use App\Mail\WithdrawalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class WithdrawalController extends Controller
@@ -101,6 +104,15 @@ class WithdrawalController extends Controller
             ]);
 
             $wallet->withdraw($request->amount);
+
+            // Send admin notification email
+            try {
+                $adminEmail = config('mail.from.address', 'admin@nuriqa.com');
+                Mail::to($adminEmail)->send(new WithdrawalNotification($withdrawal, $user, $paymentMethod));
+            } catch (\Exception $e) {
+                // Log email error but don't fail the withdrawal
+                Log::error('Failed to send withdrawal notification email: ' . $e->getMessage());
+            }
 
             DB::commit();
 

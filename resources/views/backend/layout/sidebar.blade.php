@@ -69,6 +69,14 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
                     Transactions
                 </a>
+                <a class="nav-link {{ Request::segment(2) == 'wallets' ? 'active' : '' }}" href="{{ route('admin.wallets.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
+                    Wallets
+                </a>
+                <a class="nav-link {{ Request::segment(2) == 'withdrawals' ? 'active' : '' }}" href="{{ route('admin.withdrawals.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    Withdrawals
+                </a>
                 <a class="nav-link {{ Request::segment(2) == 'join-us-applications' ? 'active' : '' }}" href="{{ route('admin.join-us-applications.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-user-plus"></i></div>
                     Join Us Applications
