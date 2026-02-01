@@ -1,4 +1,4 @@
-@extends('backend.layout.master')
+@extends('backend.layout.app')
 
 @section('title', 'Withdrawals Statistics')
 

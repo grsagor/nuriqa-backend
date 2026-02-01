@@ -12,10 +12,12 @@ class SellerPaymentMethod extends Model
         'user_id',
         'type',
         'provider',
+        'account_name',
         'account_details',
         'last4',
         'is_default',
         'is_verified',
+        'status',
     ];
 
     protected function casts(): array

@@ -80,6 +80,14 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * Get the wallet associated with the user.
+     */
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    /**
      * Get the image URL attribute.
      */
     public function getImageUrlAttribute()

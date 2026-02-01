@@ -31,7 +31,7 @@ class Wallet extends Model
 
     public function withdrawals(): HasMany
     {
-        return $this->hasMany(Withdrawal::class);
+        return $this->hasMany(Withdrawal::class, 'user_id', 'user_id');
     }
 
     public function paymentMethods(): HasMany

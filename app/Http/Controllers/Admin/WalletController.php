@@ -7,34 +7,61 @@ use App\Models\Wallet;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\DataTables;
+use Carbon\Carbon;
 
 class WalletController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('role:admin');
-    }
-
     public function index()
     {
-        $wallets = Wallet::with('user')
-            ->selectRaw('wallets.*, (available_balance + pending_balance) as total_balance')
-            ->orderBy('total_balance', 'desc')
-            ->paginate(50);
+        return view('backend.pages.wallets.index');
+    }
 
-        $totalBalance = Wallet::sum('available_balance');
-        $totalPending = Wallet::sum('pending_balance');
-        $totalWallets = Wallet::count();
-        $activeUsers = User::whereHas('wallet')->count();
+    public function list()
+    {
+        if (request()->ajax()) {
+            $data = Wallet::with('user')
+                ->selectRaw('wallets.*, (available_balance + pending_balance) as total_balance')
+                ->latest();
 
-        return view('backend.pages.wallets.index', compact(
-            'wallets',
-            'totalBalance',
-            'totalPending', 
-            'totalWallets',
-            'activeUsers'
-        ));
+            return DataTables::of($data)
+                ->addColumn('user', function ($row) {
+                    return $row->user ? $row->user->name : 'N/A';
+                })
+                ->addColumn('email', function ($row) {
+                    return $row->user ? $row->user->email : 'N/A';
+                })
+                ->addColumn('available_balance', function ($row) {
+                    return '<span class="text-success fw-bold">$'.number_format($row->available_balance, 2).'</span>';
+                })
+                ->addColumn('pending_balance', function ($row) {
+                    return '<span class="text-warning fw-bold">$'.number_format($row->pending_balance, 2).'</span>';
+                })
+                ->addColumn('total_balance', function ($row) {
+                    return '<span class="text-primary fw-bold">$'.number_format($row->total_balance, 2).'</span>';
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->available_balance > 0) {
+                        return '<span class="badge bg-success">Active</span>';
+                    } else {
+                        return '<span class="badge bg-secondary">No Balance</span>';
+                    }
+                })
+                ->addColumn('created', function ($row) {
+                    return $row->created_at ? Carbon::parse($row->created_at)->format('M j, Y') : 'N/A';
+                })
+                ->addColumn('action', function ($row) {
+                    $view = '<a href="'.route('admin.wallets.show', $row->id).'" class="btn btn-sm btn-info" title="View Details"><i class="fas fa-eye"></i></a>';
+                    $edit = '<a href="'.route('admin.wallets.edit', $row->id).'" class="btn btn-sm btn-primary" title="Edit Wallet"><i class="fas fa-edit"></i></a>';
+                    $transactions = '<a href="'.route('admin.wallets.transactions', $row->id).'" class="btn btn-sm btn-primary" title="View Transactions"><i class="fas fa-exchange-alt"></i></a>';
+                    
+                    return $view.' '.$edit.' '.$transactions;
+                })
+                ->rawColumns(['available_balance', 'pending_balance', 'total_balance', 'status', 'action'])
+                ->make(true);
+        }
+
+        return abort(404);
     }
 
     public function show($id)

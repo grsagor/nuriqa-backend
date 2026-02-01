@@ -440,7 +440,10 @@ class OrderController extends Controller
                     // Update each seller's wallet
                     foreach ($sellerEarnings as $sellerId => $amount) {
                         $wallet = Wallet::getOrCreateForUser($sellerId);
-                        $wallet->addEarnings($amount);
+                        // Add to total earnings and move directly to available balance (since payment succeeded)
+                        $wallet->total_earnings += $amount;
+                        $wallet->available_balance += $amount;
+                        $wallet->save();
                     }
                 }
 
@@ -558,7 +561,10 @@ class OrderController extends Controller
                         // Update each seller's wallet
                         foreach ($sellerEarnings as $sellerId => $amount) {
                             $wallet = Wallet::getOrCreateForUser($sellerId);
-                            $wallet->addEarnings($amount);
+                            // Add to total earnings and move directly to available balance (since payment succeeded)
+                            $wallet->total_earnings += $amount;
+                            $wallet->available_balance += $amount;
+                            $wallet->save();
                         }
                     }
 

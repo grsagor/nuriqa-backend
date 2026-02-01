@@ -26,7 +26,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/login', 'login')->name('api.v1.login');
         Route::post('/logout', 'logout')->name('api.v1.logout')->middleware('auth:api');
         Route::get('/my-user-info', 'myUserInfo')->name('api.v1.my-user-info')->middleware('jwt.auth');
-            Route::post('/my-notification-settings', 'updateNotificationSettings')->name('api.v1.my-notification-settings')->middleware('jwt.auth');
+        Route::post('/my-notification-settings', 'updateNotificationSettings')->name('api.v1.my-notification-settings')->middleware('jwt.auth');
+        Route::post('/update-profile', 'updateProfile')->name('api.v1.update-profile')->middleware('jwt.auth');
+        Route::post('/change-password', 'changePassword')->name('api.v1.change-password')->middleware('jwt.auth');
     });
 
     Route::prefix('products')->controller(ProductController::class)->group(function () {

@@ -36,6 +36,16 @@ class Withdrawal extends Model
         return $this->belongsTo(Wallet::class, 'user_id', 'user_id');
     }
 
+    public function processor()
+    {
+        return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(SellerPaymentMethod::class, 'payment_method_id');
+    }
+
     public function approve()
     {
         $this->status = 'approved';

@@ -15,15 +15,27 @@ class WalletController extends Controller
     public function index()
     {
         $user = Auth::user();
+        
+        // Get wallet, creating if it doesn't exist
         $wallet = Wallet::getOrCreateForUser($user->id);
+        
+        // Refresh from database to ensure we have latest values
+        $wallet->refresh();
+        
+        // Log for debugging (remove in production)
+        \Log::info('Wallet balance for user ' . $user->id, [
+            'available_balance' => $wallet->available_balance,
+            'pending_balance' => $wallet->pending_balance,
+            'total_earnings' => $wallet->total_earnings,
+        ]);
         
         return response()->json([
             'success' => true,
             'data' => [
-                'available_balance' => $wallet->available_balance,
-                'pending_balance' => $wallet->pending_balance,
-                'total_earnings' => $wallet->total_earnings,
-                'total_balance' => $wallet->available_balance + $wallet->pending_balance,
+                'available_balance' => (float) $wallet->available_balance,
+                'pending_balance' => (float) $wallet->pending_balance,
+                'total_earnings' => (float) $wallet->total_earnings,
+                'total_balance' => (float) ($wallet->available_balance + $wallet->pending_balance),
             ]
         ]);
     }
@@ -80,6 +92,9 @@ class WalletController extends Controller
             'status' => 'active',
         ]);
 
+        // Refresh to get all attributes including masked_account_details
+        $paymentMethod->refresh();
+
         return response()->json([
             'success' => true,
             'message' => 'Payment method added successfully',
@@ -91,6 +106,7 @@ class WalletController extends Controller
                 'masked_account_details' => $paymentMethod->masked_account_details,
                 'is_default' => $paymentMethod->is_default,
                 'status' => $paymentMethod->status,
+                'created_at' => $paymentMethod->created_at,
             ]
         ], 201);
     }

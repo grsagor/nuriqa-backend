@@ -1,181 +1,191 @@
-@extends('backend.layout.master')
+@extends('backend.layout.app')
 
 @section('title', 'Edit Wallet - ' . $wallet->user->name ?? 'Unknown')
 
 @section('content')
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Edit Wallet</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard.index') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.wallets.index') }}">Wallets</a></li>
-        <li class="breadcrumb-item active">Edit Wallet</li>
-    </ol>
+<div class="page-shell">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-modern">
+        <a href="{{ route('admin.dashboard.index') }}">Dashboard</a>
+        <span>/</span>
+        <a href="{{ route('admin.wallets.index') }}">Wallets</a>
+        <span>/</span>
+        <a href="{{ route('admin.wallets.show', $wallet->id) }}">{{ $wallet->user->name ?? 'Unknown' }}</a>
+        <span>/</span>
+        <span>Edit</span>
+    </nav>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-edit me-1"></i>
-                    Edit Wallet Balance
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.wallets.update', $wallet->id) }}" method="POST">
-                        @csrf
-                        
-                        <!-- User Info -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">User</label>
-                                <input type="text" class="form-control" value="{{ $wallet->user->name ?? 'N/A' }}" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="text" class="form-control" value="{{ $wallet->user->email ?? 'N/A' }}" readonly>
-                            </div>
-                        </div>
-
-                        <!-- Current Balances -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">Current Available Balance</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" class="form-control" value="{{ number_format($wallet->available_balance, 2) }}" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Current Pending Balance</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" class="form-control" value="{{ number_format($wallet->pending_balance, 2) }}" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- New Balances -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="available_balance" class="form-label">New Available Balance *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" 
-                                           id="available_balance" 
-                                           name="available_balance" 
-                                           class="form-control @error('available_balance') is-invalid @enderror" 
-                                           value="{{ old('available_balance', $wallet->available_balance) }}" 
-                                           step="0.01" 
-                                           min="0" 
-                                           required>
-                                </div>
-                                @error('available_balance')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label for="pending_balance" class="form-label">New Pending Balance *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" 
-                                           id="pending_balance" 
-                                           name="pending_balance" 
-                                           class="form-control @error('pending_balance') is-invalid @enderror" 
-                                           value="{{ old('pending_balance', $wallet->pending_balance) }}" 
-                                           step="0.01" 
-                                           min="0" 
-                                           required>
-                                </div>
-                                @error('pending_balance')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <!-- Balance Difference -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">Available Balance Change</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" id="available_change" class="form-control" readonly>
-                                    <span class="input-group-text" id="available_change_sign"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Pending Balance Change</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" id="pending_change" class="form-control" readonly>
-                                    <span class="input-group-text" id="pending_change_sign"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="mb-4">
-                            <label for="notes" class="form-label">Admin Notes</label>
-                            <textarea id="notes" 
-                                      name="notes" 
-                                      class="form-control @error('notes') is-invalid @enderror" 
-                                      rows="4" 
-                                      placeholder="Enter reason for balance adjustment...">{{ old('notes') }}</textarea>
-                            @error('notes')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Warning Message -->
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Warning:</strong> Modifying wallet balances will create an adjustment log. This action should only be performed for legitimate reasons and will be recorded for audit purposes.
-                        </div>
-
-                        <!-- Submit Buttons -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('admin.wallets.show', $wallet->id) }}" class="btn btn-secondary">
-                                <i class="fas fa-times me-1"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-save me-1"></i> Update Wallet
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <!-- Header -->
+    <div class="page-top">
+        <div>
+            <h1 class="page-heading">Edit Wallet</h1>
+            <p class="page-subtitle">Adjust wallet balance</p>
         </div>
+    </div>
 
-        <!-- Quick Info Sidebar -->
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Quick Info
-                </div>
-                <div class="card-body">
-                    <p><strong>Wallet ID:</strong> #{{ $wallet->id }}</p>
-                    <p><strong>User ID:</strong> #{{ $wallet->user_id }}</p>
-                    <p><strong>Created:</strong> {{ $wallet->created_at->format('M j, Y g:i A') }}</p>
-                    <p><strong>Last Updated:</strong> {{ $wallet->updated_at->format('M j, Y g:i A') }}</p>
+    <!-- Content -->
+    <div class="surface">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Edit Wallet Balance</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('admin.wallets.update', $wallet->id) }}" method="POST">
+                            @csrf
+                            
+                            <!-- User Info -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">User</label>
+                                    <input type="text" class="form-control" value="{{ $wallet->user->name ?? 'N/A' }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="text" class="form-control" value="{{ $wallet->user->email ?? 'N/A' }}" readonly>
+                                </div>
+                            </div>
+
+                            <!-- Current Balances -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Current Available Balance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" class="form-control" value="{{ number_format($wallet->available_balance, 2) }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Current Pending Balance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" class="form-control" value="{{ number_format($wallet->pending_balance, 2) }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New Balances -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="available_balance" class="form-label">New Available Balance *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" 
+                                               id="available_balance" 
+                                               name="available_balance" 
+                                               class="form-control @error('available_balance') is-invalid @enderror" 
+                                               value="{{ old('available_balance', $wallet->available_balance) }}" 
+                                               step="0.01" 
+                                               min="0" 
+                                               required>
+                                    </div>
+                                    @error('available_balance')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="pending_balance" class="form-label">New Pending Balance *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" 
+                                               id="pending_balance" 
+                                               name="pending_balance" 
+                                               class="form-control @error('pending_balance') is-invalid @enderror" 
+                                               value="{{ old('pending_balance', $wallet->pending_balance) }}" 
+                                               step="0.01" 
+                                               min="0" 
+                                               required>
+                                    </div>
+                                    @error('pending_balance')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Balance Difference -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Available Balance Change</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" id="available_change" class="form-control" readonly>
+                                        <span class="input-group-text" id="available_change_sign"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Pending Balance Change</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" id="pending_change" class="form-control" readonly>
+                                        <span class="input-group-text" id="pending_change_sign"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label">Admin Notes</label>
+                                <textarea id="notes" 
+                                          name="notes" 
+                                          class="form-control @error('notes') is-invalid @enderror" 
+                                          rows="4" 
+                                          placeholder="Enter reason for balance adjustment...">{{ old('notes') }}</textarea>
+                                @error('notes')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Warning Message -->
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Warning:</strong> Modifying wallet balances will create an adjustment log. This action should only be performed for legitimate reasons and will be recorded for audit purposes.
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ route('admin.wallets.show', $wallet->id) }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i> Update Wallet
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-history me-1"></i>
-                    Recent Adjustments
+            <!-- Quick Info Sidebar -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Wallet ID:</strong> #{{ $wallet->id }}</p>
+                        <p><strong>User ID:</strong> #{{ $wallet->user_id }}</p>
+                        <p><strong>Created:</strong> {{ $wallet->created_at->format('M j, Y g:i A') }}</p>
+                        <p><strong>Last Updated:</strong> {{ $wallet->updated_at->format('M j, Y g:i A') }}</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    @if($wallet->adjustments && $wallet->adjustments->count() > 0)
-                        @foreach($wallet->adjustments->take(5) as $adjustment)
-                            <div class="border-bottom pb-2 mb-2">
-                                <small class="text-muted">{{ $adjustment->created_at->format('M j, Y g:i A') }}</small><br>
-                                <strong>{{ $adjustment->description }}</strong><br>
-                                <span class="badge bg-info">Amount: ${{ number_format($adjustment->amount, 2) }}</span>
-                            </div>
-                        @endforeach
-                    @else
-                        <p class="text-muted">No adjustments found</p>
-                    @endif
-                </div>
+
+                @if($wallet->adjustments && $wallet->adjustments->count() > 0)
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Recent Adjustments</h5>
+                        </div>
+                        <div class="card-body">
+                            @foreach($wallet->adjustments->take(5) as $adjustment)
+                                <div class="border-bottom pb-2 mb-2">
+                                    <small class="text-muted">{{ $adjustment->created_at->format('M j, Y g:i A') }}</small><br>
+                                    <strong>{{ $adjustment->description }}</strong><br>
+                                    <span class="badge bg-info">Amount: ${{ number_format($adjustment->amount, 2) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

@@ -1,63 +1,70 @@
-@extends('backend.layout.master')
+@extends('backend.layout.app')
 
 @section('title', 'Wallet Transactions - ' . $wallet->user->name ?? 'Unknown')
 
 @section('content')
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Wallet Transactions</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard.index') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.wallets.index') }}">Wallets</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.wallets.show', $wallet->id) }}">{{ $wallet->user->name ?? 'Unknown' }}</a></li>
-        <li class="breadcrumb-item active">Transactions</li>
-    </ol>
+<div class="page-shell">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-modern">
+        <a href="{{ route('admin.dashboard.index') }}">Dashboard</a>
+        <span>/</span>
+        <a href="{{ route('admin.wallets.index') }}">Wallets</a>
+        <span>/</span>
+        <a href="{{ route('admin.wallets.show', $wallet->id) }}">{{ $wallet->user->name ?? 'Unknown' }}</a>
+        <span>/</span>
+        <span>Transactions</span>
+    </nav>
 
-    <!-- Wallet Summary -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-wallet me-1"></i>
-                    Wallet Summary - {{ $wallet->user->name ?? 'Unknown' }}
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="text-success">Available Balance</h5>
-                                <h3>${{ number_format($wallet->available_balance, 2) }}</h3>
-                            </div>
+    <!-- Header -->
+    <div class="page-top">
+        <div>
+            <h1 class="page-heading">Wallet Transactions</h1>
+            <p class="page-subtitle">View transaction history for {{ $wallet->user->name ?? 'Unknown' }}</p>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="surface">
+        <!-- Wallet Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Wallet Summary - {{ $wallet->user->name ?? 'Unknown' }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-success">Available Balance</h6>
+                            <h4>${{ number_format($wallet->available_balance, 2) }}</h4>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="text-warning">Pending Balance</h5>
-                                <h3>${{ number_format($wallet->pending_balance, 2) }}</h3>
-                            </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-warning">Pending Balance</h6>
+                            <h4>${{ number_format($wallet->pending_balance, 2) }}</h4>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="text-primary">Total Earnings</h5>
-                                <h3>${{ number_format($wallet->total_earnings, 2) }}</h3>
-                            </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-primary">Total Earnings</h6>
+                            <h4>${{ number_format($wallet->total_earnings, 2) }}</h4>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="text-info">Total Withdrawals</h5>
-                                <h3>${{ number_format($wallet->withdrawals()->where('status', 'completed')->sum('amount'), 2) }}</h3>
-                            </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-info">Total Withdrawals</h6>
+                            <h4>${{ number_format($wallet->withdrawals()->where('status', 'completed')->sum('amount'), 2) }}</h4>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Transaction Filters -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>
-            Filter Transactions
-        </div>
+        <!-- Transaction Filters -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Filter Transactions</h5>
+            </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.wallets.transactions', $wallet->id) }}">
                 <div class="row">
@@ -101,18 +108,16 @@
                 </div>
             </form>
         </div>
-    </div>
 
-    <!-- Withdrawals Table -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fas fa-exchange-alt me-1"></i>
-            Transaction History
-            <a href="{{ route('admin.wallets.show', $wallet->id) }}" class="btn btn-sm btn-secondary float-end">
-                <i class="fas fa-arrow-left me-1"></i> Back to Wallet
-            </a>
-        </div>
-        <div class="card-body">
+        <!-- Withdrawals Table -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Transaction History</h5>
+                <a href="{{ route('admin.wallets.show', $wallet->id) }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Wallet
+                </a>
+            </div>
+            <div class="card-body">
             @if($wallet->withdrawals && $wallet->withdrawals->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-bordered" id="transactionsTable" width="100%" cellspacing="0">
@@ -178,22 +183,20 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.withdrawals.show', $withdrawal->id) }}" class="btn btn-sm btn-info" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            @if($withdrawal->status === 'pending')
-                                                <form method="POST" action="{{ route('admin.withdrawals.approve', $withdrawal->id) }}" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-success" title="Approve" onclick="return confirm('Are you sure you want to approve this withdrawal?')">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                </form>
-                                                <button type="button" class="btn btn-sm btn-danger" title="Reject" onclick="showRejectForm({{ $withdrawal->id }})">
-                                                    <i class="fas fa-times"></i>
+                                        <a href="{{ route('admin.withdrawals.show', $withdrawal->id) }}" class="btn btn-sm btn-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if($withdrawal->status === 'pending')
+                                            <form method="POST" action="{{ route('admin.withdrawals.approve', $withdrawal->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success" title="Approve" onclick="return confirm('Are you sure you want to approve this withdrawal?')">
+                                                    <i class="fas fa-check"></i>
                                                 </button>
-                                            @endif
-                                        </div>
+                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger" title="Reject" onclick="showRejectForm({{ $withdrawal->id }})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -207,9 +210,11 @@
                     <p class="text-muted">This user hasn't made any transactions yet.</p>
                 </div>
             @endif
+            </div>
         </div>
     </div>
 </div>
+@endsection
 
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">

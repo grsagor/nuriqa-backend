@@ -145,6 +145,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
     });
     Route::prefix('wallets')->name('wallets.')->controller(WalletController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/update/{id}', 'update')->name('update');
@@ -152,6 +153,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
     });
     Route::prefix('withdrawals')->name('withdrawals.')->controller(WithdrawalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::post('/{id}/approve', 'approve')->name('approve');
         Route::post('/{id}/reject', 'reject')->name('reject');
