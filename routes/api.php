@@ -7,10 +7,11 @@ use App\Http\Controllers\Api\EVRiController;
 use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\SponsorRequestController;
 use App\Http\Controllers\Api\WalletController;
-use App\Http\Controllers\Api\WithdrawalController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\WithdrawalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/details/{id}', 'show')->name('api.v1.products.show');
         Route::post('/store', 'store')->name('api.v1.products.store')->middleware('jwt.auth');
     });
+
+    Route::get('/products/details/{id}/reviews', [ProductReviewController::class, 'index'])->name('api.v1.products.reviews.index');
+    Route::post('/products/details/{id}/reviews', [ProductReviewController::class, 'store'])->name('api.v1.products.reviews.store')->middleware('jwt.auth');
 
     Route::prefix('wishlist')->controller(WishlistController::class)->middleware('jwt.auth')->group(function () {
         Route::get('/', 'index')->name('api.v1.wishlist.index');

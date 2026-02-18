@@ -389,6 +389,12 @@ class ProductController extends Controller
             // User not authenticated, is_in_wishlist remains false
         }
 
+        $ratingStats = \App\Models\ProductReview::where('product_id', $product->id)
+            ->selectRaw('AVG(rating) as average_rating, COUNT(*) as reviews_count')
+            ->first();
+        $product->average_rating = $ratingStats ? round((float) $ratingStats->average_rating, 1) : null;
+        $product->reviews_count = $ratingStats ? (int) $ratingStats->reviews_count : 0;
+
         return response()->json([
             'success' => true,
             'data' => $product,

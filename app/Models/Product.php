@@ -74,6 +74,11 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
     public static $materials = [
         'cotton' => 'Cotton',
         'polyester' => 'Polyester',
