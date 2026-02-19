@@ -160,6 +160,8 @@ class OrderController extends Controller
                 'billing_last_name' => $request->billing_last_name,
                 'billing_email' => $request->billing_email,
                 'billing_phone' => $request->billing_phone,
+                'billing_address' => $request->billing_address,
+                'additional_info' => $request->additional_info,
                 'donate_anonymous' => $request->donate_anonymous ?? false,
                 'payment_method' => $request->payment_method,
                 'keep_updated' => $request->keep_updated ?? false,
@@ -256,6 +258,8 @@ class OrderController extends Controller
             'billing_last_name' => 'required|string|max:255',
             'billing_email' => 'required|email|max:255',
             'billing_phone' => 'required|string|max:255',
+            'billing_address' => 'nullable|string|max:2000',
+            'additional_info' => 'nullable|string|max:2000',
             'donate_anonymous' => 'nullable|boolean',
             'payment_method' => 'required|in:card,paypal,bank,cod',
             'keep_updated' => 'nullable|boolean',
@@ -307,6 +311,8 @@ class OrderController extends Controller
                 'billing_last_name' => $request->billing_last_name,
                 'billing_email' => $request->billing_email,
                 'billing_phone' => $request->billing_phone,
+                'billing_address' => $request->billing_address,
+                'additional_info' => $request->additional_info,
                 'donate_anonymous' => $request->donate_anonymous ?? false,
                 'payment_method' => $request->payment_method,
                 'keep_updated' => $request->keep_updated ?? false,
@@ -415,28 +421,28 @@ class OrderController extends Controller
 
                 // Only update wallet if transaction wasn't already completed
                 $wasAlreadyCompleted = $transaction->status === 'completed';
-                
+
                 $transaction->update([
                     'status' => 'completed',
                 ]);
 
                 // Add seller wallet balance if this is the first time completing
-                if (!$wasAlreadyCompleted) {
+                if (! $wasAlreadyCompleted) {
                     $transaction->load('sellLines.product');
                     $sellerEarnings = [];
-                    
+
                     foreach ($transaction->sellLines as $sellLine) {
                         if ($sellLine->product && $sellLine->product->owner_id) {
                             $sellerId = $sellLine->product->owner_id;
                             $earnings = (float) $sellLine->subtotal;
-                            
-                            if (!isset($sellerEarnings[$sellerId])) {
+
+                            if (! isset($sellerEarnings[$sellerId])) {
                                 $sellerEarnings[$sellerId] = 0;
                             }
                             $sellerEarnings[$sellerId] += $earnings;
                         }
                     }
-                    
+
                     // Update each seller's wallet
                     foreach ($sellerEarnings as $sellerId => $amount) {
                         $wallet = Wallet::getOrCreateForUser($sellerId);
@@ -533,31 +539,31 @@ class OrderController extends Controller
                     ]);
 
                     $transaction = $payment->transaction;
-                    
+
                     // Only update wallet if transaction wasn't already completed
                     $wasAlreadyCompleted = $transaction->status === 'completed';
-                    
+
                     $transaction->update([
                         'status' => 'completed',
                     ]);
 
                     // Add seller wallet balance if this is the first time completing
-                    if (!$wasAlreadyCompleted) {
+                    if (! $wasAlreadyCompleted) {
                         $transaction->load('sellLines.product');
                         $sellerEarnings = [];
-                        
+
                         foreach ($transaction->sellLines as $sellLine) {
                             if ($sellLine->product && $sellLine->product->owner_id) {
                                 $sellerId = $sellLine->product->owner_id;
                                 $earnings = (float) $sellLine->subtotal;
-                                
-                                if (!isset($sellerEarnings[$sellerId])) {
+
+                                if (! isset($sellerEarnings[$sellerId])) {
                                     $sellerEarnings[$sellerId] = 0;
                                 }
                                 $sellerEarnings[$sellerId] += $earnings;
                             }
                         }
-                        
+
                         // Update each seller's wallet
                         foreach ($sellerEarnings as $sellerId => $amount) {
                             $wallet = Wallet::getOrCreateForUser($sellerId);

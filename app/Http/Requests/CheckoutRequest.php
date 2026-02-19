@@ -26,6 +26,8 @@ class CheckoutRequest extends FormRequest
             'billing_last_name' => 'required|string|max:255',
             'billing_email' => 'required|email|max:255',
             'billing_phone' => 'required|string|max:255',
+            'billing_address' => 'nullable|string|max:2000',
+            'additional_info' => 'nullable|string|max:2000',
             'donate_anonymous' => 'boolean',
             'payment_method' => 'required|in:card,paypal,bank,cod',
             'keep_updated' => 'boolean',

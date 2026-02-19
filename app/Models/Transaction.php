@@ -21,6 +21,8 @@ class Transaction extends Model
         'billing_last_name',
         'billing_email',
         'billing_phone',
+        'billing_address',
+        'additional_info',
         'donate_anonymous',
         'payment_method',
         'keep_updated',
