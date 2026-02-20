@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Withdrawal;
 use App\Models\Wallet;
-use App\Models\User;
+use App\Models\Withdrawal;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Yajra\DataTables\DataTables;
-use Carbon\Carbon;
 
 class WithdrawalController extends Controller
 {
@@ -64,6 +63,7 @@ class WithdrawalController extends Controller
                     if ($row->user) {
                         return '<div><strong>'.$row->user->name.'</strong><br><small class="text-muted">'.$row->user->email.'</small></div>';
                     }
+
                     return 'N/A';
                 })
                 ->addColumn('amount', function ($row) {
@@ -77,6 +77,7 @@ class WithdrawalController extends Controller
                         'rejected' => '<span class="badge bg-danger">Rejected</span>',
                         'cancelled' => '<span class="badge bg-secondary">Cancelled</span>',
                     ];
+
                     return $badges[$row->status] ?? '<span class="badge bg-secondary">'.$row->status.'</span>';
                 })
                 ->addColumn('payment_method', function ($row) {
@@ -84,8 +85,16 @@ class WithdrawalController extends Controller
                         $type = ucfirst($row->paymentMethod->type);
                         $accountName = $row->paymentMethod->account_name ?? 'N/A';
                         $default = $row->paymentMethod->is_default ? '<span class="badge bg-primary">Default</span>' : '';
+
                         return '<div><strong>'.$type.'</strong><br><small class="text-muted">'.$accountName.' '.$default.'</small></div>';
                     }
+                    if ($row->payment_details && is_array($row->payment_details)) {
+                        $type = ucfirst($row->payment_details['type'] ?? $row->payment_method ?? 'N/A');
+                        $accountName = $row->payment_details['account_name'] ?? 'N/A';
+
+                        return '<div><strong>'.$type.'</strong><br><small class="text-muted">'.$accountName.'</small></div>';
+                    }
+
                     return '<span class="text-muted">N/A</span>';
                 })
                 ->addColumn('requested', function ($row) {
@@ -98,29 +107,30 @@ class WithdrawalController extends Controller
                     if ($row->processed_by && $row->processor) {
                         return $row->processor->name;
                     }
+
                     return '-';
                 })
                 ->addColumn('action', function ($row) {
                     $view = '<a href="'.route('admin.withdrawals.show', $row->id).'" class="btn btn-sm btn-info" title="View Details"><i class="fas fa-eye"></i></a>';
-                    
+
                     // Get wallet ID - wallet relationship uses user_id, so we need to find wallet by user_id
                     $wallet = Wallet::where('user_id', $row->user_id)->first();
                     $walletLink = '';
                     if ($wallet) {
                         $walletLink = '<a href="'.route('admin.wallets.show', $wallet->id).'" class="btn btn-sm btn-primary" title="View Wallet"><i class="fas fa-wallet"></i></a>';
                     }
-                    
+
                     $actions = $view;
                     if ($walletLink) {
                         $actions .= ' '.$walletLink;
                     }
-                    
+
                     if ($row->status === 'pending') {
                         $approve = '<form method="POST" action="'.route('admin.withdrawals.approve', $row->id).'" class="d-inline">'.csrf_field().'<button type="submit" class="btn btn-sm btn-success" title="Approve" onclick="return confirm(\'Are you sure you want to approve this withdrawal?\')"><i class="fas fa-check"></i></button></form>';
                         $reject = '<button type="button" class="btn btn-sm btn-danger" onclick="showRejectForm('.$row->id.')" title="Reject"><i class="fas fa-times"></i></button>';
                         $actions .= ' '.$approve.' '.$reject;
                     }
-                    
+
                     return $actions;
                 })
                 ->rawColumns(['id', 'user', 'amount', 'status', 'payment_method', 'action'])
@@ -135,7 +145,7 @@ class WithdrawalController extends Controller
         $withdrawal = Withdrawal::with([
             'user',
             'wallet',
-            'paymentMethod'
+            'paymentMethod',
         ])->findOrFail($id);
 
         return view('backend.pages.withdrawals.show', compact('withdrawal'));
@@ -143,30 +153,31 @@ class WithdrawalController extends Controller
 
     public function approve($id)
     {
-        $withdrawal = Withdrawal::with('wallet')->findOrFail($id);
-        
+        $withdrawal = Withdrawal::with(['wallet', 'user'])->findOrFail($id);
+
         if ($withdrawal->status !== 'pending') {
             return back()->with('error', 'Only pending withdrawals can be approved');
         }
 
-        DB::transaction(function() use ($withdrawal) {
+        $wallet = Wallet::getOrCreateForUser($withdrawal->user_id);
+        if ((float) $withdrawal->amount > (float) $wallet->available_balance) {
+            return back()->with('error', 'Insufficient wallet balance to approve this withdrawal.');
+        }
+
+        DB::transaction(function () use ($withdrawal, $wallet) {
+            $wallet->withdraw($withdrawal->amount);
+
             $withdrawal->update([
-                'status' => 'approved',
+                'status' => 'completed',
                 'processed_at' => now(),
                 'admin_notes' => request('admin_notes'),
-                'processed_by' => auth()->id()
+                'processed_by' => auth()->id(),
             ]);
 
-            // Mark withdrawal as completed for now (in real scenario, this would be done after payment processing)
-            $withdrawal->update([
-                'status' => 'completed'
-            ]);
-
-            // Send notification to user
             try {
                 Mail::to($withdrawal->user->email)->send(new \App\Mail\WithdrawalApproved($withdrawal));
             } catch (\Exception $e) {
-                \Log::error('Failed to send withdrawal approval email: ' . $e->getMessage());
+                \Log::error('Failed to send withdrawal approval email: '.$e->getMessage());
             }
         });
 
@@ -176,35 +187,31 @@ class WithdrawalController extends Controller
     public function reject(Request $request, $id)
     {
         $request->validate([
-            'rejection_reason' => 'required|string|max:1000'
+            'rejection_reason' => 'required|string|max:1000',
         ]);
 
-        $withdrawal = Withdrawal::with('wallet')->findOrFail($id);
-        
+        $withdrawal = Withdrawal::with('user')->findOrFail($id);
+
         if ($withdrawal->status !== 'pending') {
             return back()->with('error', 'Only pending withdrawals can be rejected');
         }
 
-        DB::transaction(function() use ($withdrawal, $request) {
-            // Return the amount to available balance
-            $withdrawal->wallet->increment('available_balance', $withdrawal->amount);
-
+        DB::transaction(function () use ($withdrawal, $request) {
             $withdrawal->update([
                 'status' => 'rejected',
                 'processed_at' => now(),
                 'rejection_reason' => $request->rejection_reason,
-                'processed_by' => auth()->id()
+                'processed_by' => auth()->id(),
             ]);
 
-            // Send notification to user
             try {
                 Mail::to($withdrawal->user->email)->send(new \App\Mail\WithdrawalRejected($withdrawal));
             } catch (\Exception $e) {
-                \Log::error('Failed to send withdrawal rejection email: ' . $e->getMessage());
+                \Log::error('Failed to send withdrawal rejection email: '.$e->getMessage());
             }
         });
 
-        return back()->with('success', 'Withdrawal rejected and amount returned to wallet');
+        return back()->with('success', 'Withdrawal rejected.');
     }
 
     public function statistics()
@@ -226,10 +233,10 @@ class WithdrawalController extends Controller
             COUNT(*) as count,
             SUM(amount) as total
         ')
-        ->where('created_at', '>=', now()->subMonths(12))
-        ->groupBy('month')
-        ->orderBy('month', 'desc')
-        ->get();
+            ->where('created_at', '>=', now()->subMonths(12))
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->get();
 
         return view('backend.pages.withdrawals.statistics', compact('stats', 'monthlyStats'));
     }

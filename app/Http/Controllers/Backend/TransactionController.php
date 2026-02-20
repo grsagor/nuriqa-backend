@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\Wallet;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class TransactionController extends Controller
@@ -53,9 +55,10 @@ class TransactionController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $view = '<button data-url="'.route('admin.transactions.show', $row->id).'" data-modal-parent="#crudModal" class="btn btn-sm btn-info open_modal_btn"><i class="fas fa-eye"></i></button>';
+                    $complete = $row->status === 'pending' ? '<a href="'.route('admin.transactions.complete', $row->id).'" class="btn btn-sm btn-success" onclick="return confirm(\'Mark this order as completed and credit seller wallets?\')"><i class="fas fa-check"></i> Complete</a>' : '';
                     $delete = '<button data-url="'.route('admin.transactions.delete', $row->id).'" class="btn btn-sm btn-danger crud_delete_btn"><i class="fas fa-trash"></i></button>';
 
-                    return $view.' '.$delete;
+                    return $view.' '.$complete.' '.$delete;
                 })
                 ->rawColumns(['invoice_no', 'status', 'action'])
                 ->make(true);
@@ -77,6 +80,53 @@ class TransactionController extends Controller
             'success' => true,
             'html' => $html,
         ]);
+    }
+
+    public function complete($id)
+    {
+        $transaction = Transaction::with('sellLines.product')->find($id);
+        if (! $transaction) {
+            return abort(404);
+        }
+
+        if ($transaction->status === 'completed') {
+            return redirect()->route('admin.transactions.index')
+                ->with('info', 'Transaction is already completed.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $transaction->update(['status' => 'completed']);
+
+            $sellerEarnings = [];
+            foreach ($transaction->sellLines as $sellLine) {
+                if ($sellLine->product && $sellLine->product->owner_id) {
+                    $sellerId = $sellLine->product->owner_id;
+                    $earnings = (float) $sellLine->subtotal;
+                    if (! isset($sellerEarnings[$sellerId])) {
+                        $sellerEarnings[$sellerId] = 0;
+                    }
+                    $sellerEarnings[$sellerId] += $earnings;
+                }
+            }
+
+            foreach ($sellerEarnings as $sellerId => $amount) {
+                $wallet = Wallet::getOrCreateForUser($sellerId);
+                $wallet->total_earnings += $amount;
+                $wallet->available_balance += $amount;
+                $wallet->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.transactions.index')
+                ->with('success', 'Order marked as completed and seller wallets credited.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->route('admin.transactions.index')
+                ->with('error', 'Failed to complete order: '.$e->getMessage());
+        }
     }
 
     public function delete($id)

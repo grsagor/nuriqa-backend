@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\WalletController;
+use App\Http\Controllers\Admin\WithdrawalController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Backend\BrandController;
@@ -15,8 +17,6 @@ use App\Http\Controllers\Backend\SizeController;
 use App\Http\Controllers\Backend\SponsorRequestController;
 use App\Http\Controllers\Backend\TransactionController;
 use App\Http\Controllers\Backend\UserController;
-use App\Http\Controllers\Admin\WalletController;
-use App\Http\Controllers\Admin\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -127,6 +127,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/', 'index')->name('index');
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
+        Route::get('/complete/{id}', 'complete')->name('complete');
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
     Route::prefix('join-us-applications')->name('join-us-applications.')->controller(JoinUsApplicationController::class)->group(function () {

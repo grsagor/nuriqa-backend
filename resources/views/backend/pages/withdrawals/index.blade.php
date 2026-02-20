@@ -54,7 +54,7 @@
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> Rejecting this withdrawal will return the amount to the user's available balance.
+                        <strong>Warning:</strong> Rejecting this withdrawal will cancel the request. The amount remains in the seller's wallet.
                     </div>
                     <div class="mb-3">
                         <label for="rejection_reason" class="form-label">Rejection Reason *</label>

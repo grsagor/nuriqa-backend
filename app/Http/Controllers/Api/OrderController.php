@@ -9,7 +9,6 @@ use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
-use App\Models\Wallet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -419,40 +418,7 @@ class OrderController extends Controller
                     ]),
                 ]);
 
-                // Only update wallet if transaction wasn't already completed
-                $wasAlreadyCompleted = $transaction->status === 'completed';
-
-                $transaction->update([
-                    'status' => 'completed',
-                ]);
-
-                // Add seller wallet balance if this is the first time completing
-                if (! $wasAlreadyCompleted) {
-                    $transaction->load('sellLines.product');
-                    $sellerEarnings = [];
-
-                    foreach ($transaction->sellLines as $sellLine) {
-                        if ($sellLine->product && $sellLine->product->owner_id) {
-                            $sellerId = $sellLine->product->owner_id;
-                            $earnings = (float) $sellLine->subtotal;
-
-                            if (! isset($sellerEarnings[$sellerId])) {
-                                $sellerEarnings[$sellerId] = 0;
-                            }
-                            $sellerEarnings[$sellerId] += $earnings;
-                        }
-                    }
-
-                    // Update each seller's wallet
-                    foreach ($sellerEarnings as $sellerId => $amount) {
-                        $wallet = Wallet::getOrCreateForUser($sellerId);
-                        // Add to total earnings and move directly to available balance (since payment succeeded)
-                        $wallet->total_earnings += $amount;
-                        $wallet->available_balance += $amount;
-                        $wallet->save();
-                    }
-                }
-
+                // Keep transaction as pending; admin will mark complete manually and credit seller wallets
                 DB::commit();
 
                 return response()->json([
@@ -538,42 +504,7 @@ class OrderController extends Controller
                         ]),
                     ]);
 
-                    $transaction = $payment->transaction;
-
-                    // Only update wallet if transaction wasn't already completed
-                    $wasAlreadyCompleted = $transaction->status === 'completed';
-
-                    $transaction->update([
-                        'status' => 'completed',
-                    ]);
-
-                    // Add seller wallet balance if this is the first time completing
-                    if (! $wasAlreadyCompleted) {
-                        $transaction->load('sellLines.product');
-                        $sellerEarnings = [];
-
-                        foreach ($transaction->sellLines as $sellLine) {
-                            if ($sellLine->product && $sellLine->product->owner_id) {
-                                $sellerId = $sellLine->product->owner_id;
-                                $earnings = (float) $sellLine->subtotal;
-
-                                if (! isset($sellerEarnings[$sellerId])) {
-                                    $sellerEarnings[$sellerId] = 0;
-                                }
-                                $sellerEarnings[$sellerId] += $earnings;
-                            }
-                        }
-
-                        // Update each seller's wallet
-                        foreach ($sellerEarnings as $sellerId => $amount) {
-                            $wallet = Wallet::getOrCreateForUser($sellerId);
-                            // Add to total earnings and move directly to available balance (since payment succeeded)
-                            $wallet->total_earnings += $amount;
-                            $wallet->available_balance += $amount;
-                            $wallet->save();
-                        }
-                    }
-
+                    // Keep transaction as pending; admin will mark complete manually and credit seller wallets
                     DB::commit();
                 }
                 break;

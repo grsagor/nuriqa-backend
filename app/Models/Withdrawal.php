@@ -9,6 +9,7 @@ class Withdrawal extends Model
 {
     protected $fillable = [
         'user_id',
+        'payment_method_id',
         'amount',
         'status',
         'payment_method',
@@ -58,12 +59,12 @@ class Withdrawal extends Model
         $this->status = 'rejected';
         $this->rejection_reason = $reason;
         $this->processed_at = now();
-        
+
         // Refund the amount back to available balance
         $wallet = Wallet::getOrCreateForUser($this->user_id);
         $wallet->available_balance += $this->amount;
         $wallet->save();
-        
+
         $this->save();
     }
 

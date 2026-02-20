@@ -71,22 +71,47 @@
                     </div>
                 </div>
 
-                @if($withdrawal->paymentMethod)
+                @if($withdrawal->paymentMethod || $withdrawal->payment_details)
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h5 class="mb-0">Payment Method</h5>
+                            <h5 class="mb-0">Payment Method / Details</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <strong>Type:</strong>
-                                    <p>{{ ucfirst($withdrawal->paymentMethod->type) }}</p>
+                            @if($withdrawal->paymentMethod)
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Type:</strong>
+                                        <p>{{ ucfirst($withdrawal->paymentMethod->type) }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Account Name:</strong>
+                                        <p>{{ $withdrawal->paymentMethod->account_name ?? 'N/A' }}</p>
+                                    </div>
+                                    @if($withdrawal->paymentMethod->provider ?? null)
+                                        <div class="col-md-6 mb-3">
+                                            <strong>Provider:</strong>
+                                            <p>{{ $withdrawal->paymentMethod->provider }}</p>
+                                        </div>
+                                    @endif
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <strong>Account Name:</strong>
-                                    <p>{{ $withdrawal->paymentMethod->account_name ?? 'N/A' }}</p>
+                            @else
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Type:</strong>
+                                        <p>{{ ucfirst($withdrawal->payment_details['type'] ?? $withdrawal->payment_method ?? 'N/A') }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Account Name:</strong>
+                                        <p>{{ $withdrawal->payment_details['account_name'] ?? 'N/A' }}</p>
+                                    </div>
+                                    @if(!empty($withdrawal->payment_details['provider']))
+                                        <div class="col-md-6 mb-3">
+                                            <strong>Provider:</strong>
+                                            <p>{{ $withdrawal->payment_details['provider'] }}</p>
+                                        </div>
+                                    @endif
                                 </div>
-                            </div>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -180,7 +205,7 @@
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> Rejecting this withdrawal will return ${{ number_format($withdrawal->amount, 2) }} to the user's available balance.
+                        <strong>Warning:</strong> Rejecting this withdrawal will cancel the request. The amount remains in the seller's wallet.
                     </div>
                     <div class="mb-3">
                         <label for="rejection_reason" class="form-label">Rejection Reason *</label>
