@@ -76,20 +76,22 @@ class ProductController extends Controller
         $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
         $data['active_listing'] = $request->input('active_listing', 1);
 
-        // Handle discount fields
+        // Handle discount fields (discount column cannot be null)
         if (! $data['discount_enabled']) {
             $data['discount_type'] = null;
             $data['discount'] = 0;
         } else {
-            $data['discount'] = $request->input('discount', 0);
+            $data['discount'] = (float) $request->input('discount', 0);
         }
+        $data['discount'] = (float) ($data['discount'] ?? 0);
 
-        // Handle donation percentage
-        if (! $data['platform_donation']) {
+        // Handle donation percentage (column cannot be null)
+        if (! ($data['platform_donation'] ?? 0)) {
             $data['donation_percentage'] = 0;
         } else {
-            $data['donation_percentage'] = $request->input('donation_percentage', 0);
+            $data['donation_percentage'] = (int) $request->input('donation_percentage', 0);
         }
+        $data['donation_percentage'] = (int) ($data['donation_percentage'] ?? 0);
 
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
@@ -223,20 +225,22 @@ class ProductController extends Controller
         $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
         $data['active_listing'] = $request->input('active_listing', 1);
 
-        // Handle discount fields
+        // Handle discount fields (discount column cannot be null)
         if (! $data['discount_enabled']) {
             $data['discount_type'] = null;
             $data['discount'] = 0;
         } else {
-            $data['discount'] = $request->input('discount', 0);
+            $data['discount'] = (float) $request->input('discount', 0);
         }
+        $data['discount'] = (float) ($data['discount'] ?? 0);
 
-        // Handle donation percentage
-        if (! $data['platform_donation']) {
+        // Handle donation percentage (column cannot be null)
+        if (! ($data['platform_donation'] ?? 0)) {
             $data['donation_percentage'] = 0;
         } else {
-            $data['donation_percentage'] = $request->input('donation_percentage', 0);
+            $data['donation_percentage'] = (int) $request->input('donation_percentage', 0);
         }
+        $data['donation_percentage'] = (int) ($data['donation_percentage'] ?? 0);
 
         // Handle thumbnail removal
         if ($request->has('remove_thumbnail') && $request->remove_thumbnail == '1') {
