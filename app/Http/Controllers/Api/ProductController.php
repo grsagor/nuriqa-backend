@@ -400,4 +400,125 @@ class ProductController extends Controller
             'data' => $product,
         ]);
     }
+
+    public function update(Request $request, string $id)
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $product = Product::where('id', $id)->where('owner_id', $user->id)->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_washed' => 'nullable|boolean',
+            'brand' => 'nullable|string|max:255',
+            'material' => 'nullable|string',
+            'color' => 'nullable|string|max:255',
+            'size_id' => 'required|exists:sizes,id',
+            'category_id' => 'required|exists:categories,id',
+            'type' => 'nullable|string|max:50',
+            'condition' => 'required|in:new,used',
+            'price' => 'nullable|numeric|min:0',
+            'is_free' => 'nullable|boolean',
+            'discount_enabled' => 'nullable|boolean',
+            'discount_type' => 'nullable|in:percentage,flat|required_if:discount_enabled,1',
+            'discount' => 'nullable|numeric|min:0|required_if:discount_enabled,1',
+            'platform_donation' => 'nullable|boolean',
+            'donation_percentage' => 'nullable|numeric|min:0|max:100',
+            'active_listing' => 'nullable|boolean',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10000',
+            'removed_image_ids' => 'nullable|array',
+            'removed_image_ids.*' => 'integer|exists:product_images,id',
+        ]);
+
+        $data = $request->except(['images']);
+        $data['is_washed'] = filter_var($request->input('is_washed'), FILTER_VALIDATE_BOOLEAN);
+        $data['is_free'] = filter_var($request->input('is_free'), FILTER_VALIDATE_BOOLEAN);
+        $data['discount_enabled'] = filter_var($request->input('discount_enabled'), FILTER_VALIDATE_BOOLEAN);
+        $data['platform_donation'] = filter_var($request->input('platform_donation'), FILTER_VALIDATE_BOOLEAN);
+        $data['active_listing'] = filter_var($request->input('active_listing', true), FILTER_VALIDATE_BOOLEAN);
+        $data['type'] = $request->input('type', $product->type);
+
+        if ($data['is_free']) {
+            $data['price'] = 0;
+            $data['discount'] = 0;
+            $data['discount_enabled'] = false;
+            $data['discount_type'] = null;
+            $data['platform_donation'] = false;
+            $data['donation_percentage'] = 0;
+        }
+        if (! $data['discount_enabled']) {
+            $data['discount'] = 0;
+            $data['discount_type'] = null;
+        }
+
+        $product->update($data);
+
+        $removedIds = $request->input('removed_image_ids', []);
+        if (is_array($removedIds) && count($removedIds) > 0) {
+            $toRemove = ProductImage::where('product_id', $product->id)->whereIn('id', $removedIds)->get();
+            $thumbnailWasRemoved = $toRemove->contains('image', $product->thumbnail);
+            foreach ($toRemove as $img) {
+                if ($img->image) {
+                    ImageService::delete($img->image);
+                }
+                $img->delete();
+            }
+            if ($thumbnailWasRemoved) {
+                $firstRemaining = ProductImage::where('product_id', $product->id)->first();
+                $product->update(['thumbnail' => $firstRemaining?->image]);
+            }
+        }
+
+        if ($request->hasFile('images')) {
+            $images = $request->file('images');
+            $thumbnailPath = null;
+            foreach ($images as $index => $image) {
+                $path = ImageService::upload($image, 'products');
+                if ($index === 0) {
+                    $thumbnailPath = $path;
+                }
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image' => $path,
+                ]);
+            }
+            if ($thumbnailPath) {
+                $product->update(['thumbnail' => $thumbnailPath]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product updated successfully',
+            'data' => $product->fresh(['size', 'category', 'images']),
+        ]);
+    }
+
+    public function destroy(string $id)
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $product = Product::where('id', $id)->where('owner_id', $user->id)->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        $product->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product removed successfully',
+        ]);
+    }
 }

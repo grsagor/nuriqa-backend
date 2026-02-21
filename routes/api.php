@@ -39,6 +39,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/my-most-wishlisted', 'myMostWishlisted')->name('api.v1.products.my-most-wishlisted')->middleware('jwt.auth');
         Route::get('/details/{id}', 'show')->name('api.v1.products.show');
         Route::post('/store', 'store')->name('api.v1.products.store')->middleware('jwt.auth');
+        Route::put('/{id}', 'update')->name('api.v1.products.update')->middleware('jwt.auth');
+        Route::post('/{id}', 'update')->name('api.v1.products.update.post')->middleware('jwt.auth'); // POST for FormData (PHP doesn't parse PUT body)
+        Route::delete('/{id}', 'destroy')->name('api.v1.products.destroy')->middleware('jwt.auth');
     });
 
     Route::get('/products/details/{id}/reviews', [ProductReviewController::class, 'index'])->name('api.v1.products.reviews.index');
