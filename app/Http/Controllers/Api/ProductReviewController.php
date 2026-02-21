@@ -13,6 +13,81 @@ use Illuminate\Support\Facades\DB;
 class ProductReviewController extends Controller
 {
     /**
+     * List all reviews for the authenticated seller's products (reviews on products they own).
+     */
+    public function sellerIndex(Request $request)
+    {
+        $sellerId = Auth::id();
+        $productIds = Product::where('owner_id', $sellerId)->pluck('id');
+
+        $query = ProductReview::query()
+            ->whereIn('product_id', $productIds)
+            ->with(['user:id,name,image', 'product:id,title,owner_id'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('rating') && $request->rating !== 'all') {
+            $rating = (int) $request->rating;
+            if ($rating >= 1 && $rating <= 5) {
+                $query->where('rating', $rating);
+            }
+        }
+
+        $sort = $request->get('sort', 'default');
+        if ($sort === 'newest') {
+            $query->orderBy('created_at', 'desc');
+        } elseif ($sort === 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($sort === 'highest') {
+            $query->orderBy('rating', 'desc')->orderBy('created_at', 'desc');
+        } elseif ($sort === 'lowest') {
+            $query->orderBy('rating', 'asc')->orderBy('created_at', 'desc');
+        }
+
+        $perPage = (int) $request->get('per_page', 10);
+        $perPage = $perPage >= 1 && $perPage <= 50 ? $perPage : 10;
+        $reviews = $query->paginate($perPage);
+
+        $summary = ProductReview::query()
+            ->whereIn('product_id', $productIds)
+            ->selectRaw('AVG(rating) as average_rating, COUNT(*) as total_count')
+            ->first();
+
+        $items = $reviews->getCollection()->map(function (ProductReview $review) {
+            return [
+                'id' => $review->id,
+                'rating' => $review->rating,
+                'comment' => $review->comment,
+                'verified_purchase' => $review->verified_purchase,
+                'created_at' => $review->created_at?->toIso8601String(),
+                'user' => [
+                    'id' => $review->user->id,
+                    'name' => $review->user->name,
+                    'image_url' => $review->user->image_url ?? null,
+                ],
+                'product' => [
+                    'id' => $review->product->id,
+                    'title' => $review->product->title,
+                ],
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $items,
+            'pagination' => [
+                'current_page' => $reviews->currentPage(),
+                'last_page' => $reviews->lastPage(),
+                'per_page' => $reviews->perPage(),
+                'total' => $reviews->total(),
+            ],
+            'summary' => [
+                'average_rating' => $summary ? round((float) $summary->average_rating, 1) : 0,
+                'total_count' => $summary ? (int) $summary->total_count : 0,
+            ],
+        ]);
+    }
+
+    /**
      * List reviews for a product.
      */
     public function index(Request $request, string $productId)
