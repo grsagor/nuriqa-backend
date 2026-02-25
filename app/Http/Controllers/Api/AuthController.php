@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\OtpService;
 use App\Services\ImageService;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -365,6 +365,10 @@ class AuthController extends Controller
             'email' => 'sometimes|string|email|max:255|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'address' => 'nullable|string|max:500',
+            'apartment' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -376,7 +380,7 @@ class AuthController extends Controller
         }
 
         try {
-            $data = $request->only(['name', 'email', 'phone']);
+            $data = $request->only(['name', 'email', 'phone', 'address', 'apartment', 'city', 'postal_code']);
 
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -421,7 +425,7 @@ class AuthController extends Controller
 
         try {
             // Verify current password
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (! Hash::check($request->current_password, $user->password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Current password is incorrect',
