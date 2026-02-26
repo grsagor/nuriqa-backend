@@ -92,6 +92,14 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * Get the seller notifications for this user.
+     */
+    public function sellerNotifications()
+    {
+        return $this->hasMany(SellerNotification::class);
+    }
+
+    /**
      * Get the image URL attribute.
      */
     public function getImageUrlAttribute()

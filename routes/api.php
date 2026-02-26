@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductReviewController;
+use App\Http\Controllers\Api\SellerNotificationController;
 use App\Http\Controllers\Api\SponsorRequestController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WishlistController;
@@ -83,6 +84,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/sponsored', 'sponsoredIndex')->name('api.v1.orders.sponsored-index');
         Route::get('/', 'index')->name('api.v1.orders.index');
         Route::get('/{id}', 'show')->name('api.v1.orders.show');
+    });
+
+    Route::prefix('seller/notifications')->controller(SellerNotificationController::class)->middleware('jwt.auth')->group(function () {
+        Route::get('/unread-count', 'unreadCount')->name('api.v1.seller.notifications.unread-count');
+        Route::post('/mark-read', 'markRead')->name('api.v1.seller.notifications.mark-read');
+        Route::get('/', 'index')->name('api.v1.seller.notifications.index');
     });
 
     // Stripe webhook (no auth required)

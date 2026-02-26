@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\SponsorRequest;
+use App\Services\SellerNotificationService;
 use Illuminate\Http\Request;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
@@ -205,6 +206,8 @@ class SponsorRequestController extends Controller
         ]);
 
         $sponsorRequest->load(['product.size', 'product.category', 'product.images', 'product.owner']);
+
+        SellerNotificationService::notifySponsorRequestCreated($sponsorRequest);
 
         return response()->json([
             'success' => true,

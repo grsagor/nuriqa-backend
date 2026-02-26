@@ -9,6 +9,7 @@ use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
+use App\Services\SellerNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -227,6 +228,8 @@ class OrderController extends Controller
 
             DB::commit();
 
+            SellerNotificationService::notifyOrderCreated($transaction);
+
             $transaction->load(['sellLines.product', 'payments']);
 
             return response()->json([
@@ -364,6 +367,8 @@ class OrderController extends Controller
 
             DB::commit();
 
+            SellerNotificationService::notifyOrderCreated($transaction);
+
             $transaction->load(['sellLines.product', 'sellLines.sponsorRequest', 'sellLines.requester', 'sellLines.sponsor', 'payments']);
 
             return response()->json([
@@ -420,6 +425,8 @@ class OrderController extends Controller
 
                 // Keep transaction as pending; admin will mark complete manually and credit seller wallets
                 DB::commit();
+
+                SellerNotificationService::notifyPaymentReceived($transaction->fresh());
 
                 return response()->json([
                     'success' => true,
@@ -506,6 +513,8 @@ class OrderController extends Controller
 
                     // Keep transaction as pending; admin will mark complete manually and credit seller wallets
                     DB::commit();
+
+                    SellerNotificationService::notifyPaymentReceived($payment->transaction->fresh());
                 }
                 break;
 
