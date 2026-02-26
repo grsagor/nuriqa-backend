@@ -102,7 +102,15 @@ class TransactionController extends Controller
             foreach ($transaction->sellLines as $sellLine) {
                 if ($sellLine->product && $sellLine->product->owner_id) {
                     $sellerId = $sellLine->product->owner_id;
-                    $earnings = (float) $sellLine->subtotal;
+                    $subtotal = (float) $sellLine->subtotal;
+
+                    // Deduct platform donation: seller receives (subtotal - donation)
+                    $donationAmount = 0;
+                    if ($sellLine->product->platform_donation && $sellLine->product->donation_percentage > 0) {
+                        $donationAmount = $subtotal * ((float) $sellLine->product->donation_percentage / 100);
+                    }
+                    $earnings = $subtotal - $donationAmount;
+
                     if (! isset($sellerEarnings[$sellerId])) {
                         $sellerEarnings[$sellerId] = 0;
                     }
