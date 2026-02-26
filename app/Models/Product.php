@@ -32,6 +32,7 @@ class Product extends Model
         'platform_donation',
         'donation_percentage',
         'active_listing',
+        'stock',
     ];
 
     protected $appends = [
@@ -51,6 +52,7 @@ class Product extends Model
             'price' => 'decimal:2',
             'discount' => 'decimal:2',
             'donation_percentage' => 'integer',
+            'stock' => 'integer',
         ];
     }
 

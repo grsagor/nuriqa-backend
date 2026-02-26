@@ -52,6 +52,7 @@ class ProductController extends Controller
             'platform_donation' => 'nullable|boolean',
             'donation_percentage' => 'nullable|integer|min:0|max:100',
             'active_listing' => 'nullable|boolean',
+            'stock' => 'nullable|integer|min:0',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -75,6 +76,7 @@ class ProductController extends Controller
         $data['discount_enabled'] = $request->has('discount_enabled') ? 1 : 0;
         $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
         $data['active_listing'] = $request->input('active_listing', 1);
+        $data['stock'] = (int) $request->input('stock', 1);
 
         // Handle discount fields (discount column cannot be null)
         if (! $data['discount_enabled']) {
@@ -206,6 +208,7 @@ class ProductController extends Controller
             'platform_donation' => 'nullable|boolean',
             'donation_percentage' => 'nullable|integer|min:0|max:100',
             'active_listing' => 'nullable|boolean',
+            'stock' => 'nullable|integer|min:0',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -224,6 +227,9 @@ class ProductController extends Controller
         $data['discount_enabled'] = $request->has('discount_enabled') ? 1 : 0;
         $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
         $data['active_listing'] = $request->input('active_listing', 1);
+        if ($request->has('stock')) {
+            $data['stock'] = (int) $request->input('stock', 1);
+        }
 
         // Handle discount fields (discount column cannot be null)
         if (! $data['discount_enabled']) {

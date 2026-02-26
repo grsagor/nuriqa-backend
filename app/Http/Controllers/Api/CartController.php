@@ -34,13 +34,20 @@ class CartController extends Controller
 
         $user = JWTAuth::parseToken()->authenticate();
 
-        // Check if product exists
+        // Check if product exists and has stock
         $product = Product::find($request->product_id);
         if (! $product) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found',
             ], 404);
+        }
+        $quantity = $request->input('quantity', 1);
+        if ($product->stock < $quantity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient stock. Available: '.$product->stock,
+            ], 400);
         }
 
         // Check if already in cart
@@ -49,8 +56,15 @@ class CartController extends Controller
             ->first();
 
         if ($existingCart) {
-            // Update quantity
-            $existingCart->quantity += $request->input('quantity', 1);
+            // Update quantity (ensure we don't exceed stock)
+            $newQuantity = $existingCart->quantity + $quantity;
+            if ($product->stock < $newQuantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock. Available: '.$product->stock,
+                ], 400);
+            }
+            $existingCart->quantity = $newQuantity;
             $existingCart->save();
 
             $existingCart->load(['product.size', 'product.category', 'product.images', 'product.owner']);
@@ -65,7 +79,7 @@ class CartController extends Controller
         $cart = Cart::create([
             'user_id' => $user->id,
             'product_id' => $request->product_id,
-            'quantity' => $request->input('quantity', 1),
+            'quantity' => $quantity,
         ]);
 
         $cart->load(['product.size', 'product.category', 'product.images', 'product.owner']);
@@ -94,6 +108,14 @@ class CartController extends Controller
                 'success' => false,
                 'message' => 'Cart item not found',
             ], 404);
+        }
+
+        $cart->load('product');
+        if ($cart->product && $cart->product->stock < $request->quantity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient stock. Available: '.$cart->product->stock,
+            ], 400);
         }
 
         $cart->quantity = $request->quantity;

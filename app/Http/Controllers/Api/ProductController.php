@@ -19,6 +19,11 @@ class ProductController extends Controller
     {
         $query = Product::with(['size', 'category']);
 
+        // Hide out-of-stock products from public listing (sellers still see their own)
+        if (! $request->filled('myproduct')) {
+            $query->where('stock', '>', 0);
+        }
+
         if ($request->filled('myproduct')) {
             try {
                 $user = JWTAuth::parseToken()->authenticate();
@@ -266,6 +271,8 @@ class ProductController extends Controller
         // Upload date fallback
         $data['upload_date'] = now()->toDateString();
         $data['type'] = $request->type;
+        // Seller products: one listing = one item, stock always 1
+        $data['stock'] = 1;
 
         $product = Product::create($data);
 
@@ -370,6 +377,13 @@ class ProductController extends Controller
         ])->find($id);
 
         if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        if ($product->stock <= 0) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found',

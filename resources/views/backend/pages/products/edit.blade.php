@@ -169,6 +169,11 @@
             <div class="border-bottom pb-3 mb-4">
                 <h6 class="text-muted mb-3">Listing</h6>
                 <div class="mb-3">
+                    <label for="stock" class="form-label fw-semibold">Stock</label>
+                    <input type="number" name="stock" id="stock" class="form-control" placeholder="1" min="0" value="{{ $product->stock ?? 1 }}">
+                    <div class="form-text">Available quantity. Product is hidden from the frontend when stock is 0.</div>
+                </div>
+                <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <label class="form-label fw-semibold mb-0">Active Listing</label>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\Cart;
+use App\Models\Product;
 use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
@@ -117,12 +118,19 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // Validate that products exist
+            // Validate that products exist and have sufficient stock
             foreach ($cartItems as $cartItem) {
                 if (! $cartItem->product) {
                     return response()->json([
                         'success' => false,
                         'message' => 'One or more products in your cart no longer exist.',
+                    ], 400);
+                }
+                $quantity = $requestedQuantities[$cartItem->id] ?? $cartItem->quantity;
+                if ($cartItem->product->stock < $quantity) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock for \"{$cartItem->product->title}\". Available: {$cartItem->product->stock}.",
                     ], 400);
                 }
             }
@@ -167,7 +175,7 @@ class OrderController extends Controller
                 'keep_updated' => $request->keep_updated ?? false,
             ]);
 
-            // Create transaction sell lines using quantities from request
+            // Create transaction sell lines using quantities from request and decrement stock
             foreach ($cartItems as $cartItem) {
                 $product = $cartItem->product;
                 // Use quantity from request if provided, otherwise use cart quantity
@@ -182,6 +190,8 @@ class OrderController extends Controller
                     'unit_price' => $unitPrice,
                     'subtotal' => $lineSubtotal,
                 ]);
+
+                Product::where('id', $product->id)->decrement('stock', $quantity);
             }
 
             // Handle payment based on payment method
@@ -288,6 +298,13 @@ class OrderController extends Controller
                 ], 404);
             }
 
+            if ($product->stock < 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This item is currently out of stock.',
+                ], 400);
+            }
+
             // Calculate totals
             $productPrice = (float) ($product->price ?? 0);
             $subtotal = $productPrice;
@@ -331,6 +348,8 @@ class OrderController extends Controller
                 'unit_price' => $productPrice,
                 'subtotal' => $productPrice,
             ]);
+
+            Product::where('id', $product->id)->decrement('stock', 1);
 
             // Handle payment
             if ($request->payment_method === 'card') {
