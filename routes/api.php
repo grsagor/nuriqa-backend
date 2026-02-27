@@ -46,6 +46,8 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::get('/products/details/{id}/reviews', [ProductReviewController::class, 'index'])->name('api.v1.products.reviews.index');
+    Route::get('/products/details/{id}/reviews/me', [ProductReviewController::class, 'myReview'])->name('api.v1.products.reviews.me')->middleware('jwt.auth');
+    Route::put('/products/details/{id}/reviews/me', [ProductReviewController::class, 'updateMyReview'])->name('api.v1.products.reviews.update-me')->middleware('jwt.auth');
     Route::post('/products/details/{id}/reviews', [ProductReviewController::class, 'store'])->name('api.v1.products.reviews.store')->middleware('jwt.auth');
 
     Route::get('/seller/reviews', [ProductReviewController::class, 'sellerIndex'])->name('api.v1.seller.reviews.index')->middleware('jwt.auth');

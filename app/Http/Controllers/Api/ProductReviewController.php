@@ -168,7 +168,7 @@ class ProductReviewController extends Controller
         if ($existing) {
             return response()->json([
                 'success' => false,
-                'message' => 'You have already reviewed this product.',
+                'message' => 'You have already reviewed this product. Use the edit option to update your review.',
             ], 422);
         }
 
@@ -202,6 +202,96 @@ class ProductReviewController extends Controller
                 ],
             ],
         ], 201);
+    }
+
+    /**
+     * Get the authenticated user's review for a product (if any).
+     */
+    public function myReview(Request $request, string $productId)
+    {
+        $product = Product::find($productId);
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        $review = ProductReview::where('product_id', $productId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (! $review) {
+            return response()->json([
+                'success' => true,
+                'data' => null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $review->id,
+                'rating' => $review->rating,
+                'comment' => $review->comment,
+                'verified_purchase' => $review->verified_purchase,
+                'created_at' => $review->created_at?->toIso8601String(),
+                'updated_at' => $review->updated_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's review for a product.
+     */
+    public function updateMyReview(Request $request, string $productId)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:2000',
+        ]);
+
+        $user = Auth::user();
+        $product = Product::find($productId);
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        $review = ProductReview::where('product_id', $productId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $review) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have not reviewed this product yet.',
+            ], 404);
+        }
+
+        $review->update([
+            'rating' => $request->rating,
+            'comment' => $request->comment,
+        ]);
+
+        $this->updateSellerRating($product->owner_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Review updated successfully.',
+            'data' => [
+                'id' => $review->id,
+                'rating' => $review->rating,
+                'comment' => $review->comment,
+                'verified_purchase' => $review->verified_purchase,
+                'created_at' => $review->created_at?->toIso8601String(),
+                'updated_at' => $review->updated_at?->toIso8601String(),
+            ],
+        ]);
     }
 
     private function hasUserPurchasedProduct(int $userId, int $productId): bool
