@@ -415,6 +415,104 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Get similar products (same category, then relax material/condition). Limit 4, in stock, no duplicates.
+     */
+    public function similar(string $id)
+    {
+        $current = Product::select('id', 'category_id', 'material', 'condition')->find($id);
+
+        if (! $current || $current->category_id === null) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $limit = 4;
+        $productIds = [];
+        $excludeId = (int) $id;
+        $categoryId = $current->category_id;
+        $material = $current->material;
+        $condition = $current->condition;
+
+        $collectedIds = [];
+
+        $runQuery = function (bool $withMaterial, bool $withCondition, int $take) use ($excludeId, $categoryId, $material, $condition, &$collectedIds) {
+            $q = Product::query()
+                ->where('id', '!=', $excludeId)
+                ->where('stock', '>', 0)
+                ->where('category_id', $categoryId)
+                ->whereNotIn('id', $collectedIds);
+            if ($withMaterial && $material !== null && $material !== '') {
+                $q->where('material', $material);
+            }
+            if ($withCondition && $condition !== null && $condition !== '') {
+                $q->where('condition', $condition);
+            }
+
+            $ids = $q->latest()->limit($take)->pluck('id')->toArray();
+            $collectedIds = array_merge($collectedIds, $ids);
+
+            return $ids;
+        };
+
+        // 1) category + material + condition
+        $ids = $runQuery(true, true, $limit);
+        if (count($ids) >= $limit) {
+            $productIds = array_slice($ids, 0, $limit);
+        } else {
+            // 2) without material (category + condition)
+            $runQuery(false, true, $limit - count($collectedIds));
+            if (count($collectedIds) >= $limit) {
+                $productIds = array_slice($collectedIds, 0, $limit);
+            } else {
+                // 3) without condition (category + material)
+                $runQuery(true, false, $limit - count($collectedIds));
+                if (count($collectedIds) >= $limit) {
+                    $productIds = array_slice($collectedIds, 0, $limit);
+                } else {
+                    // 4) without material and condition (category only)
+                    $runQuery(false, false, $limit - count($collectedIds));
+                    $productIds = array_slice($collectedIds, 0, $limit);
+                }
+            }
+        }
+
+        if (empty($productIds)) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $products = Product::with(['size', 'category'])
+            ->whereIn('id', $productIds)
+            ->orderByRaw('FIELD(id, '.implode(',', array_map('intval', $productIds)).')')
+            ->get();
+
+        $wishlistProductIds = [];
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if ($user) {
+                $wishlistProductIds = Wishlist::where('user_id', $user->id)
+                    ->whereIn('product_id', $productIds)
+                    ->pluck('product_id')
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+        }
+
+        $products->each(function ($product) use ($wishlistProductIds) {
+            $product->is_in_wishlist = in_array($product->id, $wishlistProductIds);
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $products->values()->all(),
+        ]);
+    }
+
     public function update(Request $request, string $id)
     {
         $user = JWTAuth::parseToken()->authenticate();

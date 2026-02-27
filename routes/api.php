@@ -35,6 +35,7 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('products')->controller(ProductController::class)->group(function () {
         Route::get('/', 'index')->name('api.v1.products.index');
+        Route::get('/similar/{id}', 'similar')->name('api.v1.products.similar');
         Route::get('/categories', 'categories')->name('api.v1.products.categories');
         Route::get('/sizes', 'sizes')->name('api.v1.products.sizes');
         Route::get('/my-most-wishlisted', 'myMostWishlisted')->name('api.v1.products.my-most-wishlisted')->middleware('jwt.auth');
