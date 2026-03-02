@@ -634,6 +634,49 @@ class OrderController extends Controller
     }
 
     /**
+     * Allow a seller to update the status of a transaction that contains their products.
+     * Sellers can only change the high-level transaction status; payment status remains system-controlled.
+     */
+    public function sellerUpdateStatus(Request $request, string $id): JsonResponse
+    {
+        $seller = JWTAuth::parseToken()->authenticate();
+
+        $request->validate([
+            'status' => 'required|in:pending,completed,failed',
+        ]);
+
+        $transaction = Transaction::query()
+            ->where('id', $id)
+            ->whereHas('sellLines.product', function ($q) use ($seller) {
+                $q->where('owner_id', $seller->id);
+            })
+            ->with('payments')
+            ->firstOrFail();
+
+        // Prevent marking as completed before payment has succeeded
+        if ($request->status === 'completed') {
+            $payment = $transaction->payments->first();
+
+            if (! $payment || $payment->status !== 'succeeded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order cannot be marked as completed until payment has succeeded.',
+                ], 422);
+            }
+        }
+
+        $transaction->update([
+            'status' => $request->status,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order status updated successfully',
+            'data' => $transaction->fresh(['user', 'payments', 'sellLines.product']),
+        ]);
+    }
+
+    /**
      * Get orders where the authenticated user is the sponsor
      */
     public function sponsoredIndex(Request $request): JsonResponse

@@ -130,6 +130,13 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/complete/{id}', 'complete')->name('complete');
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
+    Route::prefix('merchandise-transactions')->name('merchandise-transactions.')->controller(TransactionController::class)->group(function () {
+        Route::get('/', 'merchandiseIndex')->name('index');
+        Route::get('/list', 'merchandiseList')->name('list');
+        Route::get('/show/{id}', 'show')->name('show');
+        Route::get('/complete/{id}', 'complete')->name('complete');
+        Route::delete('/delete/{id}', 'delete')->name('delete');
+    });
     Route::prefix('join-us-applications')->name('join-us-applications.')->controller(JoinUsApplicationController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/list', 'list')->name('list');

@@ -84,6 +84,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/sponsor-checkout', 'sponsorCheckout')->name('api.v1.orders.sponsor-checkout');
         Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment');
         Route::get('/seller', 'sellerIndex')->name('api.v1.orders.seller-index');
+        Route::put('/seller/{id}/status', 'sellerUpdateStatus')->name('api.v1.orders.seller-update-status');
         Route::get('/sponsored', 'sponsoredIndex')->name('api.v1.orders.sponsored-index');
         Route::get('/', 'index')->name('api.v1.orders.index');
         Route::get('/{id}', 'show')->name('api.v1.orders.show');

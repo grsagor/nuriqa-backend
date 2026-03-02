@@ -64,8 +64,8 @@ class ProductController extends Controller
         // Auto-assign owner_id from current authenticated user
         $data['owner_id'] = auth()->id();
 
-        // Set type to 'seller' for admin-created products
-        $data['type'] = 'seller';
+        // Admin-created products are merchandise
+        $data['type'] = 'merchandise';
 
         // Admin can only create merchandise products (not free)
         $data['is_free'] = 0;

@@ -69,6 +69,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
                     Transactions
                 </a>
+                <a class="nav-link {{ Request::segment(2) == 'merchandise-transactions' ? 'active' : '' }}" href="{{ route('admin.merchandise-transactions.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-shopping-bag"></i></div>
+                    Merchandise Transactions
+                </a>
                 <a class="nav-link {{ Request::segment(2) == 'wallets' ? 'active' : '' }}" href="{{ route('admin.wallets.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
                     Wallets
