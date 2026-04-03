@@ -12,7 +12,7 @@ return new class extends Migration
 
             // Drop foreign key constraint first
             if (Schema::hasColumn('products', 'condition_id')) {
-                $table->dropForeign('products_condition_id_foreign');
+                $table->dropForeign(['condition_id']);
                 $table->dropColumn('condition_id');
             }
 

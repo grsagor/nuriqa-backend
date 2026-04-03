@@ -12,16 +12,14 @@ class OtpService
 {
     public static function generate(string $email): string
     {
-        $otpCode = app()->environment(['local', 'testing'])
-            ? '123456'
-            : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $otpCode = str_pad((string) random_int(0, 999_999), 6, '0', STR_PAD_LEFT);
 
         $user = User::where('email', $email)->first();
 
         if ($user) {
             $user->update([
                 'otp' => $otpCode,
-                'otp_expires_at' => Carbon::now()->addMinutes(15),
+                'otp_expires_at' => Carbon::now()->addMinutes(config('otp.expires_minutes')),
             ]);
 
             self::sendOtp($email, $otpCode);
