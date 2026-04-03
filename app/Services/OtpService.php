@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Mail\OtpVerificationMail;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class OtpService
 {
@@ -20,6 +23,8 @@ class OtpService
                 'otp' => $otpCode,
                 'otp_expires_at' => Carbon::now()->addMinutes(15),
             ]);
+
+            self::sendOtp($email, $otpCode);
         }
 
         return $otpCode;
@@ -55,8 +60,13 @@ class OtpService
 
     private static function sendOtp(string $email, string $code): void
     {
-        // Implementation for sending OTP via email/SMS
-        // This is where you would integrate with your email service
-        // or SMS service provider
+        try {
+            Mail::to($email)->send(new OtpVerificationMail($code));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send OTP email', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
