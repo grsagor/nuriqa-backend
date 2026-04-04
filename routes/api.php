@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\EVRiController;
 use App\Http\Controllers\Api\JoinUsController;
+use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductReviewController;
@@ -104,6 +105,10 @@ Route::prefix('v1')->group(function () {
 
     // Contact Form (no auth required)
     Route::post('/contact', [ContactController::class, 'store'])->name('api.v1.contact.store');
+
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('api.v1.newsletter.subscribe');
 
     // EVRi Integration
     Route::get('/evri/authenticate', [EVRiController::class, 'authenticate'])->name('api.v1.evri.authenticate');

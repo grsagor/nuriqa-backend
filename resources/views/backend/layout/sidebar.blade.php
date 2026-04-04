@@ -91,6 +91,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-envelope"></i></div>
                     Contact Messages
                 </a>
+                <a class="nav-link {{ Request::segment(2) == 'newsletter-subscribers' ? 'active' : '' }}" href="{{ route('admin.newsletter-subscribers.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-paper-plane"></i></div>
+                    Newsletter subscribers
+                </a>
 
                 {{-- <div class="sb-sidenav-menu-heading">Interface</div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts"

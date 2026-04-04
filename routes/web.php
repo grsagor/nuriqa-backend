@@ -11,6 +11,7 @@ use App\Http\Controllers\Backend\ContactController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\JoinUsApplicationController;
 use App\Http\Controllers\Backend\LanguageController;
+use App\Http\Controllers\Backend\NewsletterSubscriberController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\SizeController;
@@ -149,6 +150,12 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/', 'index')->name('index');
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
+        Route::delete('/delete/{id}', 'delete')->name('delete');
+    });
+    Route::prefix('newsletter-subscribers')->name('newsletter-subscribers.')->controller(NewsletterSubscriberController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/export-csv', 'exportCsv')->name('export-csv');
+        Route::get('/list', 'list')->name('list');
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
     Route::prefix('wallets')->name('wallets.')->controller(WalletController::class)->group(function () {
