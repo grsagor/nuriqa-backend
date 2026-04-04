@@ -18,7 +18,7 @@ class NewsletterSubscriberFactory extends Factory
     {
         return [
             'email' => fake()->unique()->safeEmail(),
-            'locale' => fake()->randomElement(['en', 'ar', 'ur', 'bn']),
+            'locale' => fake()->randomElement(['en', 'ar', 'ur', 'ur-latn', 'bn']),
         ];
     }
 }

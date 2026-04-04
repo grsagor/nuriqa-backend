@@ -18,7 +18,7 @@ class NewsletterSubscribeRequest extends FormRequest
     {
         return [
             'email' => 'required|email|max:255',
-            'locale' => 'nullable|string|in:en,ar,ur,bn',
+            'locale' => 'nullable|string|in:en,ar,ur,ur-latn,bn',
         ];
     }
 
@@ -30,7 +30,7 @@ class NewsletterSubscribeRequest extends FormRequest
         return [
             'email.required' => 'Email is required',
             'email.email' => 'Please provide a valid email address',
-            'locale.in' => 'Locale must be one of: en, ar, ur, bn',
+            'locale.in' => 'Locale must be one of: en, ar, ur, ur-latn, bn',
         ];
     }
 }
