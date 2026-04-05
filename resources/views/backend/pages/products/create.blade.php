@@ -2,7 +2,13 @@
     @csrf
     <div class="modal-content">
         <div class="modal-header header-bg text-white">
-            <h1 class="modal-title fs-5" id="crudModalLabel">Create Product (Merchandise Only)</h1>
+            <h1 class="modal-title fs-5" id="crudModalLabel">
+                @if(($catalogType ?? '') === 'hajra')
+                    Create Hajra Product
+                @else
+                    Create Merchandise Product
+                @endif
+            </h1>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -30,6 +36,8 @@
                         @endif
                     </select>
                 </div>
+
+                <input type="hidden" name="type" value="{{ $catalogType ?? 'merchandise' }}">
             </div>
 
             <!-- Details Information -->

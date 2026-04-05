@@ -178,7 +178,7 @@ class ProductController extends Controller
             'size_id' => 'required|exists:sizes,id',
             'category_id' => 'required|exists:categories,id',
 
-            'type' => 'nullable|string|max:50',
+            'type' => 'nullable|in:seller',
             'condition' => 'required|in:new,used',
 
             'price' => 'nullable|numeric|min:0',
@@ -270,7 +270,8 @@ class ProductController extends Controller
 
         // Upload date fallback
         $data['upload_date'] = now()->toDateString();
-        $data['type'] = $request->type;
+        // Marketplace listings from the API are always seller-owned
+        $data['type'] = 'seller';
         // Seller products: one listing = one item, stock always 1
         $data['stock'] = 1;
 
@@ -537,7 +538,6 @@ class ProductController extends Controller
             'color' => 'nullable|string|max:255',
             'size_id' => 'required|exists:sizes,id',
             'category_id' => 'required|exists:categories,id',
-            'type' => 'nullable|string|max:50',
             'condition' => 'required|in:new,used',
             'price' => 'nullable|numeric|min:0',
             'is_free' => 'nullable|boolean',
@@ -559,7 +559,7 @@ class ProductController extends Controller
         $data['discount_enabled'] = filter_var($request->input('discount_enabled'), FILTER_VALIDATE_BOOLEAN);
         $data['platform_donation'] = filter_var($request->input('platform_donation'), FILTER_VALIDATE_BOOLEAN);
         $data['active_listing'] = filter_var($request->input('active_listing', true), FILTER_VALIDATE_BOOLEAN);
-        $data['type'] = $request->input('type', $product->type);
+        $data['type'] = $product->type;
 
         if ($data['is_free']) {
             $data['price'] = 0;

@@ -90,9 +90,13 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
     Route::prefix('products')->name('products.')->controller(ProductController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
+        Route::get('/', function () {
+            return redirect()->route('admin.products.merchandise.index');
+        })->name('index');
+        Route::get('/merchandise', 'merchandiseIndex')->name('merchandise.index');
+        Route::get('/hajra', 'hajraIndex')->name('hajra.index');
         Route::get('/list', 'list')->name('list');
-        Route::get('/create', 'create')->name('create');
+        Route::get('/create/{catalogType}', 'create')->name('create')->where('catalogType', 'merchandise|hajra');
         Route::post('/store', 'store')->name('store');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::put('/update/{id}', 'update')->name('update');
@@ -134,6 +138,13 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
     Route::prefix('merchandise-transactions')->name('merchandise-transactions.')->controller(TransactionController::class)->group(function () {
         Route::get('/', 'merchandiseIndex')->name('index');
         Route::get('/list', 'merchandiseList')->name('list');
+        Route::get('/show/{id}', 'show')->name('show');
+        Route::get('/complete/{id}', 'complete')->name('complete');
+        Route::delete('/delete/{id}', 'delete')->name('delete');
+    });
+    Route::prefix('hajra-transactions')->name('hajra-transactions.')->controller(TransactionController::class)->group(function () {
+        Route::get('/', 'hajraIndex')->name('index');
+        Route::get('/list', 'hajraList')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::get('/complete/{id}', 'complete')->name('complete');
         Route::delete('/delete/{id}', 'delete')->name('delete');

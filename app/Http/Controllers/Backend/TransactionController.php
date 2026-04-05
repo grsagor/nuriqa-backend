@@ -22,9 +22,68 @@ class TransactionController extends Controller
             $data = Transaction::with(['user', 'sellLines.product'])
                 ->whereHas('sellLines.product', function ($query) {
                     $query->where(function ($q) {
-                        $q->whereNull('type')
-                            ->orWhere('type', '!=', 'merchandise');
+                        $q->where('type', 'seller')
+                            ->orWhereNull('type');
                     });
+                })
+                ->select('id', 'user_id', 'invoice_no', 'status', 'total', 'payment_method', 'created_at')
+                ->latest();
+
+            return DataTables::of($data)
+                ->addColumn('user', function ($row) {
+                    return $row->user ? $row->user->name : 'N/A';
+                })
+                ->addColumn('invoice_no', function ($row) {
+                    return '<div class="fw-bold">'.$row->invoice_no.'</div>';
+                })
+                ->addColumn('total', function ($row) {
+                    return '£'.number_format($row->total, 2);
+                })
+                ->addColumn('status', function ($row) {
+                    $badgeClass = match ($row->status) {
+                        'pending' => 'bg-warning',
+                        'processing' => 'bg-info',
+                        'completed' => 'bg-success',
+                        'cancelled' => 'bg-danger',
+                        default => 'bg-secondary'
+                    };
+
+                    return '<span class="badge '.$badgeClass.'">'.ucfirst($row->status).'</span>';
+                })
+                ->addColumn('payment_method', function ($row) {
+                    return $row->payment_method ? ucfirst($row->payment_method) : 'N/A';
+                })
+                ->addColumn('items_count', function ($row) {
+                    return $row->sellLines ? $row->sellLines->count() : 0;
+                })
+                ->addColumn('created_at', function ($row) {
+                    return Carbon::parse($row->created_at)->format('d M Y H:i');
+                })
+                ->addColumn('action', function ($row) {
+                    $view = '<button data-url="'.route('admin.transactions.show', $row->id).'" data-modal-parent="#crudModal" class="btn btn-sm btn-info open_modal_btn"><i class="fas fa-eye"></i></button>';
+                    $complete = $row->status === 'pending' ? '<a href="'.route('admin.transactions.complete', $row->id).'" class="btn btn-sm btn-success" onclick="return confirm(\'Mark this order as completed and credit seller wallets?\')"><i class="fas fa-check"></i> Complete</a>' : '';
+                    $delete = '<button data-url="'.route('admin.transactions.delete', $row->id).'" class="btn btn-sm btn-danger crud_delete_btn"><i class="fas fa-trash"></i></button>';
+
+                    return $view.' '.$complete.' '.$delete;
+                })
+                ->rawColumns(['invoice_no', 'status', 'action'])
+                ->make(true);
+        }
+
+        return abort(404);
+    }
+
+    public function hajraIndex()
+    {
+        return view('backend.pages.transactions.hajra');
+    }
+
+    public function hajraList()
+    {
+        if (request()->ajax()) {
+            $data = Transaction::with(['user', 'sellLines.product'])
+                ->whereHas('sellLines.product', function ($query) {
+                    $query->where('type', 'hajra');
                 })
                 ->select('id', 'user_id', 'invoice_no', 'status', 'total', 'payment_method', 'created_at')
                 ->latest();

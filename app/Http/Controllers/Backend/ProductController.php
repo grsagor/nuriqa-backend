@@ -14,18 +14,37 @@ use Yajra\DataTables\DataTables;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function merchandiseIndex()
     {
-        return view('backend.pages.products.index');
+        return view('backend.pages.products.index', [
+            'catalogType' => 'merchandise',
+            'pageTitle' => 'Merchandise products',
+            'pageSubtitle' => 'Create and manage merchandise catalog listings',
+            'breadcrumbLabel' => 'Merchandise products',
+        ]);
     }
 
-    public function create()
+    public function hajraIndex()
     {
+        return view('backend.pages.products.index', [
+            'catalogType' => 'hajra',
+            'pageTitle' => 'Hajra products',
+            'pageSubtitle' => 'Create and manage Hajra catalog listings',
+            'breadcrumbLabel' => 'Hajra products',
+        ]);
+    }
+
+    public function create(string $catalogType)
+    {
+        if (! in_array($catalogType, ['merchandise', 'hajra'], true)) {
+            abort(404);
+        }
+
         $sizes = Size::pluck('name', 'id');
         $categories = Category::pluck('name', 'id');
         $materials = Product::$materials;
 
-        $html = view('backend.pages.products.create', compact('sizes', 'categories', 'materials'))->render();
+        $html = view('backend.pages.products.create', compact('sizes', 'categories', 'materials', 'catalogType'))->render();
 
         return response()->json([
             'success' => true,
@@ -38,6 +57,7 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'type' => 'required|in:merchandise,hajra',
             'brand' => 'required|string|max:255',
             'material' => 'required|string|in:'.implode(',', array_keys(Product::$materials)),
             'color' => 'required|string|max:255',
@@ -64,10 +84,9 @@ class ProductController extends Controller
         // Auto-assign owner_id from current authenticated user
         $data['owner_id'] = auth()->id();
 
-        // Admin-created products are merchandise
-        $data['type'] = 'merchandise';
+        $data['type'] = $request->input('type');
 
-        // Admin can only create merchandise products (not free)
+        // Admin catalog products (merchandise / hajra) are paid listings
         $data['is_free'] = 0;
 
         // Handle boolean fields
@@ -124,14 +143,18 @@ class ProductController extends Controller
         ]);
     }
 
-    public function list()
+    public function list(Request $request)
     {
         if (request()->ajax()) {
-            $data = Product::with(['owner', 'size', 'category'])
-                ->select('id', 'owner_id', 'title', 'price', 'thumbnail', 'location', 'is_featured', 'upload_date', 'created_at')
+            $query = Product::with(['owner', 'size', 'category'])
+                ->select('id', 'owner_id', 'title', 'type', 'price', 'thumbnail', 'location', 'is_featured', 'upload_date', 'created_at')
                 ->latest();
 
-            return DataTables::of($data)
+            if ($request->filled('type') && in_array($request->query('type'), ['merchandise', 'hajra'], true)) {
+                $query->where('type', $request->query('type'));
+            }
+
+            return DataTables::of($query)
                 ->addColumn('thumbnail', function ($row) {
                     $imagePath = $row->thumbnail_url;
 
@@ -144,6 +167,9 @@ class ProductController extends Controller
                     }
 
                     return $title;
+                })
+                ->addColumn('type', function ($row) {
+                    return $row->type ? '<span class="badge bg-secondary">'.e($row->type).'</span>' : '<span class="text-muted">—</span>';
                 })
                 ->addColumn('owner', function ($row) {
                     return $row->owner ? $row->owner->name : 'N/A';
@@ -163,7 +189,7 @@ class ProductController extends Controller
 
                     return $edit.' '.$delete;
                 })
-                ->rawColumns(['thumbnail', 'title', 'location', 'action'])
+                ->rawColumns(['thumbnail', 'title', 'type', 'location', 'action'])
                 ->make(true);
         }
 
@@ -194,6 +220,7 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'type' => 'required|in:merchandise,hajra,seller',
             'brand' => 'required|string|max:255',
             'material' => 'required|string|in:'.implode(',', array_keys(Product::$materials)),
             'color' => 'required|string|max:255',

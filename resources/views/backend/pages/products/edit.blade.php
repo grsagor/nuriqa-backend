@@ -32,6 +32,22 @@
                         @endif
                     </select>
                 </div>
+
+                @if(in_array($product->type ?? '', ['merchandise', 'hajra'], true))
+                    <div class="mb-3">
+                        <label for="type" class="form-label fw-semibold">Catalog type <span class="text-danger">*</span></label>
+                        <select name="type" id="type" class="form-select" required>
+                            <option value="merchandise" {{ ($product->type ?? '') === 'merchandise' ? 'selected' : '' }}>Merchandise</option>
+                            <option value="hajra" {{ ($product->type ?? '') === 'hajra' ? 'selected' : '' }}>Hajra</option>
+                        </select>
+                    </div>
+                @else
+                    <input type="hidden" name="type" value="{{ $product->type ?? 'seller' }}">
+                    <div class="mb-3">
+                        <span class="form-label fw-semibold d-block">Listing type</span>
+                        <span class="badge bg-info text-dark">{{ $product->type ?? 'seller' }}</span>
+                    </div>
+                @endif
             </div>
 
             <!-- Details Information -->
