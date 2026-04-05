@@ -416,9 +416,10 @@ class ProductController extends Controller
     }
 
     /**
-     * Get similar products (same category, then relax material/condition). Limit 4, in stock, no duplicates.
+     * Get similar products (same category, then relax material/condition). In stock, no duplicates.
+     * Optional query: limit (1–10). Defaults to 4 when omitted for backward compatibility.
      */
-    public function similar(string $id)
+    public function similar(Request $request, string $id)
     {
         $current = Product::select('id', 'category_id', 'material', 'condition')->find($id);
 
@@ -429,7 +430,9 @@ class ProductController extends Controller
             ]);
         }
 
-        $limit = 4;
+        $limit = $request->filled('limit')
+            ? min(max((int) $request->query('limit'), 1), 10)
+            : 4;
         $productIds = [];
         $excludeId = (int) $id;
         $categoryId = $current->category_id;
