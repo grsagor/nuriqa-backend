@@ -1,3 +1,71 @@
+/**
+ * Admin product create/edit modal (loaded via AJAX into #crudModal).
+ * Inline <script> in injected HTML does not run; handlers must live here.
+ */
+function syncAdminProductHajraFree() {
+    const $m = $('#crudModal');
+    const $free = $m.find('#is_free_hajra');
+    if (!$free.length) {
+        return;
+    }
+
+    const typeEl = $m.find('#type').get(0);
+    const catalogIsHajra = !typeEl || typeEl.value === 'hajra';
+    const on = catalogIsHajra && $free.is(':checked');
+
+    const $paidHolder = $m.find('#hajraPaidPricingHolder');
+    const $donationNote = $m.find('#hajraDonationFreeNote');
+    const $donationControls = $m.find('#hajraDonationControls');
+    const $price = $m.find('#price');
+    const $discEn = $m.find('#discount_enabled');
+    const $platDon = $m.find('#platform_donation');
+    const $discFields = $m.find('#discountFields');
+    const $donFields = $m.find('#donationFields');
+
+    if ($paidHolder.length) {
+        $paidHolder.toggle(!on);
+    }
+    if ($donationNote.length) {
+        $donationNote.toggleClass('d-none', !on);
+    }
+    if ($donationControls.length) {
+        $donationControls.toggle(!on);
+    }
+
+    if ($price.length) {
+        $price.prop('required', !on);
+        $price.prop('readOnly', on);
+        $price.toggleClass('bg-light', on);
+        if (on) {
+            $price.val('0');
+        }
+    }
+
+    if ($discEn.length) {
+        $discEn.prop('disabled', on);
+        if (on) {
+            $discEn.prop('checked', false);
+        }
+    }
+
+    if ($discFields.length) {
+        const showDisc = !on && $discEn.length && $discEn.is(':checked');
+        $discFields.toggle(showDisc);
+    }
+
+    if ($platDon.length) {
+        $platDon.prop('disabled', on);
+        if (on) {
+            $platDon.prop('checked', false);
+        }
+    }
+
+    if ($donFields.length) {
+        const showDon = !on && $platDon.length && $platDon.is(':checked');
+        $donFields.toggle(showDon);
+    }
+}
+
 const Toast = Swal.mixin({
     toast: true,
     position: 'top-end',
@@ -14,23 +82,72 @@ function initDataTable(selector, columns, ajaxUrl, customOptions = {}) {
     
     const defaults = {
         processing: true,
-        // serverSide: true,
+        serverSide: true,
         responsive: true,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,
         ajax: {
             url: ajaxUrl,
-            type: 'GET'
+            type: 'GET',
         },
         columns: columns,
-        // ordering: true,
-        order: []
+        order: [],
     };
     const options = $.extend(true, {}, defaults, customOptions);
     return $(selector).DataTable(options);
 }
 
 $(document).ready(function () {
+    $('#crudModal').on('shown.bs.modal', function () {
+        syncAdminProductHajraFree();
+    });
+
+    $(document).on('change', '#crudModal #condition', function () {
+        const $m = $('#crudModal');
+        const $washed = $m.find('#washedSection');
+        if (this.value === 'used') {
+            $washed.show();
+        } else {
+            $washed.hide();
+            $m.find('#washed_no').prop('checked', true);
+        }
+    });
+
+    $(document).on('change', '#crudModal #discount_enabled', function () {
+        const $m = $('#crudModal');
+        $m.find('#discountFields').toggle($(this).is(':checked'));
+        syncAdminProductHajraFree();
+    });
+
+    $(document).on('change', '#crudModal #platform_donation', function () {
+        const $m = $('#crudModal');
+        $m.find('#donationFields').toggle($(this).is(':checked'));
+        syncAdminProductHajraFree();
+    });
+
+    $(document).on('click', '#crudModal .donation-preset', function (e) {
+        e.preventDefault();
+        const $m = $('#crudModal');
+        const value = $(this).data('value');
+        $m.find('#donation_percentage').val(value);
+        $m.find('.donation-preset').removeClass('active');
+        $(this).addClass('active');
+    });
+
+    $(document).on('change', '#crudModal #type', function () {
+        const $m = $('#crudModal');
+        const isHajra = this.value === 'hajra';
+        $m.find('#hajraFreeRow').toggle(isHajra);
+        if (!isHajra) {
+            $m.find('#is_free_hajra').prop('checked', false);
+        }
+        syncAdminProductHajraFree();
+    });
+
+    $(document).on('change', '#crudModal #is_free_hajra', function () {
+        syncAdminProductHajraFree();
+    });
+
     // Image preview functionality
     $(document).on('change', '.image-preview-input', function (e) {
         const input = this;
@@ -140,6 +257,7 @@ $(document).ready(function () {
                 if (response.success) {
                     $(parent).html(response.html);
                     $(parent).modal('show');
+                    syncAdminProductHajraFree();
                 } else {
                     console.error(response.message || 'Unknown error');
                     alert('Failed to load modal content');

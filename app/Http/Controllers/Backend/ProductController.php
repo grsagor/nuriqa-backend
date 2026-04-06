@@ -10,6 +10,7 @@ use App\Models\Size;
 use App\Services\ImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
 
 class ProductController extends Controller
@@ -64,7 +65,12 @@ class ProductController extends Controller
             'size_id' => 'required|exists:sizes,id',
             'category_id' => 'required|exists:categories,id',
             'condition' => 'required|in:new,used',
-            'price' => 'required|numeric|min:0',
+            'price' => [
+                Rule::requiredIf(fn () => ! ($request->input('type') === 'hajra' && $request->has('is_free'))),
+                'numeric',
+                'min:0',
+            ],
+            'is_free' => 'nullable|boolean',
             'is_washed' => 'nullable|in:0,1',
             'discount_enabled' => 'nullable|boolean',
             'discount_type' => 'nullable|in:percentage,flat',
@@ -86,33 +92,48 @@ class ProductController extends Controller
 
         $data['type'] = $request->input('type');
 
-        // Admin catalog products (merchandise / hajra) are paid listings
-        $data['is_free'] = 0;
+        $isHajraFree = $request->input('type') === 'hajra' && $request->has('is_free');
+
+        if ($isHajraFree) {
+            $data['is_free'] = 1;
+            $data['price'] = 0;
+            $data['discount_enabled'] = 0;
+            $data['discount_type'] = null;
+            $data['discount'] = 0;
+            $data['platform_donation'] = 0;
+            $data['donation_percentage'] = 0;
+        } else {
+            $data['is_free'] = 0;
+        }
 
         // Handle boolean fields
         $data['is_washed'] = $request->input('is_washed', 0);
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
-        $data['discount_enabled'] = $request->has('discount_enabled') ? 1 : 0;
-        $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
+        if (! $isHajraFree) {
+            $data['discount_enabled'] = $request->has('discount_enabled') ? 1 : 0;
+            $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
+        }
         $data['active_listing'] = $request->input('active_listing', 1);
         $data['stock'] = (int) $request->input('stock', 1);
 
         // Handle discount fields (discount column cannot be null)
-        if (! $data['discount_enabled']) {
-            $data['discount_type'] = null;
-            $data['discount'] = 0;
-        } else {
-            $data['discount'] = (float) $request->input('discount', 0);
-        }
-        $data['discount'] = (float) ($data['discount'] ?? 0);
+        if (! $isHajraFree) {
+            if (! $data['discount_enabled']) {
+                $data['discount_type'] = null;
+                $data['discount'] = 0;
+            } else {
+                $data['discount'] = (float) $request->input('discount', 0);
+            }
+            $data['discount'] = (float) ($data['discount'] ?? 0);
 
-        // Handle donation percentage (column cannot be null)
-        if (! ($data['platform_donation'] ?? 0)) {
-            $data['donation_percentage'] = 0;
-        } else {
-            $data['donation_percentage'] = (int) $request->input('donation_percentage', 0);
+            // Handle donation percentage (column cannot be null)
+            if (! ($data['platform_donation'] ?? 0)) {
+                $data['donation_percentage'] = 0;
+            } else {
+                $data['donation_percentage'] = (int) $request->input('donation_percentage', 0);
+            }
+            $data['donation_percentage'] = (int) ($data['donation_percentage'] ?? 0);
         }
-        $data['donation_percentage'] = (int) ($data['donation_percentage'] ?? 0);
 
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
@@ -147,7 +168,7 @@ class ProductController extends Controller
     {
         if (request()->ajax()) {
             $query = Product::with(['owner', 'size', 'category'])
-                ->select('id', 'owner_id', 'title', 'type', 'price', 'thumbnail', 'location', 'is_featured', 'upload_date', 'created_at')
+                ->select('id', 'owner_id', 'title', 'type', 'price', 'thumbnail', 'location', 'is_featured', 'upload_date', 'created_at', 'is_free')
                 ->latest();
 
             if ($request->filled('type') && in_array($request->query('type'), ['merchandise', 'hajra'], true)) {
@@ -175,6 +196,10 @@ class ProductController extends Controller
                     return $row->owner ? $row->owner->name : 'N/A';
                 })
                 ->addColumn('price', function ($row) {
+                    if ($row->is_free) {
+                        return '<span class="badge bg-success">Free</span>';
+                    }
+
                     return $row->price ? '$'.number_format($row->price, 2) : 'N/A';
                 })
                 ->addColumn('location', function ($row) {
@@ -189,7 +214,7 @@ class ProductController extends Controller
 
                     return $edit.' '.$delete;
                 })
-                ->rawColumns(['thumbnail', 'title', 'type', 'location', 'action'])
+                ->rawColumns(['thumbnail', 'title', 'type', 'price', 'location', 'action'])
                 ->make(true);
         }
 
@@ -227,7 +252,12 @@ class ProductController extends Controller
             'size_id' => 'required|exists:sizes,id',
             'category_id' => 'required|exists:categories,id',
             'condition' => 'required|in:new,used',
-            'price' => 'required|numeric|min:0',
+            'price' => [
+                Rule::requiredIf(fn () => ! ($request->input('type') === 'hajra' && $request->has('is_free'))),
+                'numeric',
+                'min:0',
+            ],
+            'is_free' => 'nullable|boolean',
             'is_washed' => 'nullable|in:0,1',
             'discount_enabled' => 'nullable|boolean',
             'discount_type' => 'nullable|in:percentage,flat',
@@ -248,32 +278,51 @@ class ProductController extends Controller
         $product = Product::find($request->id);
         $data = $request->except(['images', 'thumbnail', 'remove_images', 'remove_thumbnail']);
 
+        $isHajraFree = ($request->input('type') === 'hajra') && $request->has('is_free');
+
+        if ($request->input('type') !== 'hajra') {
+            $data['is_free'] = 0;
+        } else {
+            $data['is_free'] = $request->has('is_free') ? 1 : 0;
+        }
+
         // Handle boolean fields
         $data['is_washed'] = $request->input('is_washed', 0);
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
-        $data['discount_enabled'] = $request->has('discount_enabled') ? 1 : 0;
-        $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
+        if ($isHajraFree) {
+            $data['discount_enabled'] = 0;
+            $data['platform_donation'] = 0;
+            $data['price'] = 0;
+            $data['discount_type'] = null;
+            $data['discount'] = 0;
+            $data['donation_percentage'] = 0;
+        } else {
+            $data['discount_enabled'] = $request->has('discount_enabled') ? 1 : 0;
+            $data['platform_donation'] = $request->has('platform_donation') ? 1 : 0;
+        }
         $data['active_listing'] = $request->input('active_listing', 1);
         if ($request->has('stock')) {
             $data['stock'] = (int) $request->input('stock', 1);
         }
 
-        // Handle discount fields (discount column cannot be null)
-        if (! $data['discount_enabled']) {
-            $data['discount_type'] = null;
-            $data['discount'] = 0;
-        } else {
-            $data['discount'] = (float) $request->input('discount', 0);
-        }
-        $data['discount'] = (float) ($data['discount'] ?? 0);
+        if (! $isHajraFree) {
+            // Handle discount fields (discount column cannot be null)
+            if (! $data['discount_enabled']) {
+                $data['discount_type'] = null;
+                $data['discount'] = 0;
+            } else {
+                $data['discount'] = (float) $request->input('discount', 0);
+            }
+            $data['discount'] = (float) ($data['discount'] ?? 0);
 
-        // Handle donation percentage (column cannot be null)
-        if (! ($data['platform_donation'] ?? 0)) {
-            $data['donation_percentage'] = 0;
-        } else {
-            $data['donation_percentage'] = (int) $request->input('donation_percentage', 0);
+            // Handle donation percentage (column cannot be null)
+            if (! ($data['platform_donation'] ?? 0)) {
+                $data['donation_percentage'] = 0;
+            } else {
+                $data['donation_percentage'] = (int) $request->input('donation_percentage', 0);
+            }
+            $data['donation_percentage'] = (int) ($data['donation_percentage'] ?? 0);
         }
-        $data['donation_percentage'] = (int) ($data['donation_percentage'] ?? 0);
 
         // Handle thumbnail removal
         if ($request->has('remove_thumbnail') && $request->remove_thumbnail == '1') {

@@ -19,13 +19,8 @@ class TransactionController extends Controller
     public function list()
     {
         if (request()->ajax()) {
+            // All rows in `transactions` (line items may be missing on legacy data).
             $data = Transaction::with(['user', 'sellLines.product'])
-                ->whereHas('sellLines.product', function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('type', 'seller')
-                            ->orWhereNull('type');
-                    });
-                })
                 ->select('id', 'user_id', 'invoice_no', 'status', 'total', 'payment_method', 'created_at')
                 ->latest();
 

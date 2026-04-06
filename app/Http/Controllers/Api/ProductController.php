@@ -47,7 +47,17 @@ class ProductController extends Controller
             $query->whereIn('size_id', $request->sizes);
         }
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
+            $type = $request->type;
+            if ($type === 'seller') {
+                // Marketplace listings: explicit seller type or legacy rows before `type` was backfilled.
+                $query->where(function ($q) {
+                    $q->where('type', 'seller')
+                        ->orWhereNull('type')
+                        ->orWhere('type', '');
+                });
+            } else {
+                $query->where('type', $type);
+            }
         }
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -384,24 +394,28 @@ class ProductController extends Controller
             ], 404);
         }
 
-        if ($product->stock <= 0) {
+        $authUser = null;
+        try {
+            $authUser = JWTAuth::parseToken()->authenticate();
+        } catch (\Exception $e) {
+            // unauthenticated
+        }
+
+        $viewerIsOwner = $authUser && (int) $product->owner_id === (int) $authUser->id;
+
+        // Hide out-of-stock from public; seller must still open their listing to edit
+        if ($product->stock <= 0 && ! $viewerIsOwner) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found',
             ], 404);
         }
 
-        // Check if user is authenticated and if product is in their wishlist
         $product->is_in_wishlist = false;
-        try {
-            $user = JWTAuth::parseToken()->authenticate();
-            if ($user) {
-                $product->is_in_wishlist = Wishlist::where('user_id', $user->id)
-                    ->where('product_id', $product->id)
-                    ->exists();
-            }
-        } catch (\Exception $e) {
-            // User not authenticated, is_in_wishlist remains false
+        if ($authUser) {
+            $product->is_in_wishlist = Wishlist::where('user_id', $authUser->id)
+                ->where('product_id', $product->id)
+                ->exists();
         }
 
         $ratingStats = \App\Models\ProductReview::where('product_id', $product->id)

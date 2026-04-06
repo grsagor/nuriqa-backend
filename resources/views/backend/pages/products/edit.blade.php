@@ -41,6 +41,17 @@
                             <option value="hajra" {{ ($product->type ?? '') === 'hajra' ? 'selected' : '' }}>Hajra</option>
                         </select>
                     </div>
+                    <div class="mb-3 p-3 rounded border border-secondary bg-light" id="hajraFreeRow" style="display: {{ ($product->type ?? '') === 'hajra' ? 'block' : 'none' }};">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <label class="form-label fw-semibold mb-0" for="is_free_hajra">Free product</label>
+                                <p class="text-muted small mb-0">No item price at checkout (delivery fees may still apply).</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_free" id="is_free_hajra" value="1" {{ (!empty($product->is_free)) ? 'checked' : '' }}>
+                            </div>
+                        </div>
+                    </div>
                 @else
                     <input type="hidden" name="type" value="{{ $product->type ?? 'seller' }}">
                     <div class="mb-3">
@@ -119,6 +130,9 @@
             <!-- Pricing Information -->
             <div class="border-bottom pb-3 mb-4">
                 <h6 class="text-muted mb-3">Pricing Information</h6>
+                @if(in_array($product->type ?? '', ['merchandise', 'hajra'], true))
+                <div id="hajraPaidPricingHolder">
+                @endif
                 <div class="mb-3">
                     <label for="price" class="form-label fw-semibold">Price <span class="text-danger">*</span></label>
                     <input type="number" name="price" id="price" class="form-control" value="{{ $product->price ?? '' }}" placeholder="0.00" step="0.01" min="0" required>
@@ -151,11 +165,18 @@
                         </div>
                     </div>
                 </div>
+                @if(in_array($product->type ?? '', ['merchandise', 'hajra'], true))
+                </div>
+                @endif
             </div>
 
             <!-- Donation Information -->
             <div class="border-bottom pb-3 mb-4">
                 <h6 class="text-muted mb-3">Donation Information</h6>
+                @if(in_array($product->type ?? '', ['merchandise', 'hajra'], true))
+                <p class="text-muted small mb-3 {{ (($product->type ?? '') === 'hajra' && !empty($product->is_free)) ? '' : 'd-none' }}" id="hajraDonationFreeNote">Platform donation applies to paid listings only.</p>
+                <div id="hajraDonationControls">
+                @endif
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>
@@ -179,6 +200,9 @@
                         <input type="number" name="donation_percentage" id="donation_percentage" class="form-control" value="{{ $product->donation_percentage ?? 0 }}" placeholder="Enter donation percentage" min="0" max="100">
                     </div>
                 </div>
+                @if(in_array($product->type ?? '', ['merchandise', 'hajra'], true))
+                </div>
+                @endif
             </div>
 
             <!-- Listing -->
@@ -268,52 +292,4 @@
         </div>
     </div>
 </form>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Show/hide washed section based on condition
-    const conditionSelect = document.getElementById('condition');
-    const washedSection = document.getElementById('washedSection');
-    
-    if (conditionSelect) {
-        conditionSelect.addEventListener('change', function() {
-            if (this.value === 'used') {
-                washedSection.style.display = 'block';
-            } else {
-                washedSection.style.display = 'none';
-                document.getElementById('washed_no').checked = true;
-            }
-        });
-    }
-
-    // Show/hide discount fields
-    const discountEnabled = document.getElementById('discount_enabled');
-    const discountFields = document.getElementById('discountFields');
-    
-    if (discountEnabled) {
-        discountEnabled.addEventListener('change', function() {
-            discountFields.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-
-    // Show/hide donation fields
-    const platformDonation = document.getElementById('platform_donation');
-    const donationFields = document.getElementById('donationFields');
-    
-    if (platformDonation) {
-        platformDonation.addEventListener('change', function() {
-            donationFields.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-
-    // Donation percentage presets
-    document.querySelectorAll('.donation-preset').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const value = this.getAttribute('data-value');
-            document.getElementById('donation_percentage').value = value;
-            document.querySelectorAll('.donation-preset').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-});
-</script>
+{{-- Product modal behavior: public/assets/js/crud.js (AJAX inject does not run inline scripts) --}}
