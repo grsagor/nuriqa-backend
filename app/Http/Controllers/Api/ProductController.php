@@ -334,7 +334,9 @@ class ProductController extends Controller
 
     public function sizes(Request $request)
     {
-        $sizes = Size::all();
+        $sizes = Size::all()
+            ->sort(fn (Size $a, Size $b) => Size::compareForDisplay($a, $b))
+            ->values();
 
         return response()->json([
             'success' => true,
