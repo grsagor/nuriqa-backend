@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\LanguageController;
 use App\Http\Controllers\Backend\NewsletterSubscriberController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\RoleController;
+use App\Http\Controllers\Backend\SellerReportController;
 use App\Http\Controllers\Backend\SizeController;
 use App\Http\Controllers\Backend\SponsorRequestController;
 use App\Http\Controllers\Backend\TransactionController;
@@ -162,6 +163,12 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::delete('/delete/{id}', 'delete')->name('delete');
+    });
+    Route::prefix('seller-reports')->name('seller-reports.')->controller(SellerReportController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/list', 'list')->name('list');
+        Route::get('/show/{id}', 'show')->name('show');
+        Route::post('/{id}/status', 'updateStatus')->name('update-status');
     });
     Route::prefix('newsletter-subscribers')->name('newsletter-subscribers.')->controller(NewsletterSubscriberController::class)->group(function () {
         Route::get('/', 'index')->name('index');

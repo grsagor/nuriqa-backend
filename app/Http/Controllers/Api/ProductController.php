@@ -37,6 +37,11 @@ class ProductController extends Controller
             $query->where('owner_id', $user->id);
         }
 
+        if ($request->filled('owner_id') && ! $request->filled('myproduct')) {
+            $query->where('owner_id', (int) $request->owner_id);
+            $query->where('active_listing', 1);
+        }
+
         if ($request->filled('condition')) {
             $query->where('condition', $request->condition);
         }

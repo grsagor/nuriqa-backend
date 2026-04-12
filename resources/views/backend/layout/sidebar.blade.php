@@ -99,6 +99,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-envelope"></i></div>
                     Contact Messages
                 </a>
+                <a class="nav-link {{ Request::segment(2) == 'seller-reports' ? 'active' : '' }}" href="{{ route('admin.seller-reports.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-flag"></i></div>
+                    Seller reports
+                </a>
                 <a class="nav-link {{ Request::segment(2) == 'newsletter-subscribers' ? 'active' : '' }}" href="{{ route('admin.newsletter-subscribers.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-paper-plane"></i></div>
                     Newsletter subscribers

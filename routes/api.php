@@ -9,7 +9,9 @@ use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductReviewController;
+use App\Http\Controllers\Api\PublicSellerController;
 use App\Http\Controllers\Api\SellerNotificationController;
+use App\Http\Controllers\Api\SellerReportController;
 use App\Http\Controllers\Api\SponsorRequestController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WishlistController;
@@ -53,6 +55,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/products/details/{id}/reviews', [ProductReviewController::class, 'store'])->name('api.v1.products.reviews.store')->middleware('jwt.auth');
 
     Route::get('/seller/reviews', [ProductReviewController::class, 'sellerIndex'])->name('api.v1.seller.reviews.index')->middleware('jwt.auth');
+
+    Route::get('/sellers/{id}/profile', [PublicSellerController::class, 'show'])->name('api.v1.sellers.profile.show');
+    Route::get('/sellers/{sellerId}/reviews', [ProductReviewController::class, 'publicSellerReviews'])->name('api.v1.sellers.reviews.index');
+
+    Route::post('/seller-reports', [SellerReportController::class, 'store'])
+        ->middleware(['jwt.auth', 'throttle:20,1'])
+        ->name('api.v1.seller-reports.store');
 
     Route::prefix('wishlist')->controller(WishlistController::class)->middleware('jwt.auth')->group(function () {
         Route::get('/', 'index')->name('api.v1.wishlist.index');
