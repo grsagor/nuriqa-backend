@@ -1,0 +1,2980 @@
+{
+  "info": {
+    "name": "Nuriqa Backend API v1",
+    "_postman_id": "64363861-376c-44ce-93e1-ee2bd4e3ba2b",
+    "description": "Auto-generated from Laravel route:list --path=api --json, with example bodies aligned to controller validation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "GET api/v1/my-user-info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/my-user-info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "my-user-info"
+              ]
+            },
+            "description": "Route name: api.v1.my-user-info\nAction: App\\Http\\Controllers\\Api\\AuthController@myUserInfo\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/change-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "change-password"
+              ]
+            },
+            "description": "Route name: api.v1.change-password\nAction: App\\Http\\Controllers\\Api\\AuthController@changePassword\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"oldsecret12\",\n  \"new_password\": \"newsecret12\",\n  \"new_password_confirmation\": \"newsecret12\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Route name: api.v1.login\nAction: App\\Http\\Controllers\\Api\\AuthController@login\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"password\": \"secret12\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "logout"
+              ]
+            },
+            "description": "Route name: api.v1.logout\nAction: App\\Http\\Controllers\\Api\\AuthController@logout\nMiddleware: api, Illuminate\\Auth\\Middleware\\Authenticate:api"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/my-notification-settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/my-notification-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "my-notification-settings"
+              ]
+            },
+            "description": "Route name: api.v1.my-notification-settings\nAction: App\\Http\\Controllers\\Api\\AuthController@updateNotificationSettings\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification_settings\": {\n    \"emailNotifications\": true,\n    \"requestedItemsUpdate\": false,\n    \"sponsoredItemsUpdate\": true,\n    \"orderedItemsUpdate\": true,\n    \"newItemRequest\": true,\n    \"newOrderRequest\": true,\n    \"paymentReceive\": true,\n    \"paymentWithdrawal\": true,\n    \"reviewThanksReceive\": true,\n    \"nuriqaUpdates\": true,\n    \"hajiqUpdates\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/resend-otp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resend-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "resend-otp"
+              ]
+            },
+            "description": "Route name: api.v1.resend-otp\nAction: App\\Http\\Controllers\\Api\\AuthController@resendOtp\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "signup"
+              ]
+            },
+            "description": "Route name: api.v1.signup\nAction: App\\Http\\Controllers\\Api\\AuthController@signup\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"secret12\",\n  \"password_confirmation\": \"secret12\",\n  \"phone\": \"+441234567890\",\n  \"role_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/update-profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/update-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "update-profile"
+              ]
+            },
+            "description": "Route name: api.v1.update-profile\nAction: App\\Http\\Controllers\\Api\\AuthController@updateProfile\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Jane Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "jane@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "+441234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "123 High Street",
+                  "type": "text"
+                },
+                {
+                  "key": "apartment",
+                  "value": "Flat 4B",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "London",
+                  "type": "text"
+                },
+                {
+                  "key": "postal_code",
+                  "value": "SW1A 1AA",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/verify-otp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "verify-otp"
+              ]
+            },
+            "description": "Route name: api.v1.verify-otp\nAction: App\\Http\\Controllers\\Api\\AuthController@verifyOtp\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "DELETE api/v1/cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart"
+              ]
+            },
+            "description": "Route name: api.v1.cart.clear\nAction: App\\Http\\Controllers\\Api\\CartController@clear\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE api/v1/cart/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.cart.destroy\nAction: App\\Http\\Controllers\\Api\\CartController@destroy\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart"
+              ]
+            },
+            "description": "Route name: api.v1.cart.index\nAction: App\\Http\\Controllers\\Api\\CartController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart"
+              ]
+            },
+            "description": "Route name: api.v1.cart.store\nAction: App\\Http\\Controllers\\Api\\CartController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT api/v1/cart/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.cart.update\nAction: App\\Http\\Controllers\\Api\\CartController@update\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "POST api/v1/contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contact",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contact"
+              ]
+            },
+            "description": "Route name: api.v1.contact.store\nAction: App\\Http\\Controllers\\Api\\ContactController@store\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"+441234567890\",\n  \"subject\": \"Question about an order\",\n  \"message\": \"Hello, I need help with my recent purchase.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Evri",
+      "item": [
+        {
+          "name": "GET api/v1/evri/authenticate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/authenticate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "authenticate"
+              ]
+            },
+            "description": "Route name: api.v1.evri.authenticate\nAction: App\\Http\\Controllers\\Api\\EVRiController@authenticate\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/evri/rates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/rates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "rates"
+              ]
+            },
+            "description": "Route name: api.v1.evri.rates\nAction: App\\Http\\Controllers\\Api\\EVRiController@getRates\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from_postcode\": \"SW1A1AA\",\n  \"to_postcode\": \"M11AE\",\n  \"weight_g\": 500,\n  \"length_cm\": 30,\n  \"width_cm\": 20,\n  \"height_cm\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/evri/shipments/{shipment}/tracking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/shipments/{shipment}/tracking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "shipments",
+                "{shipment}",
+                "tracking"
+              ]
+            },
+            "description": "Route name: api.v1.evri.tracking\nAction: App\\Http\\Controllers\\Api\\EVRiController@getTrackingInfo\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/evri/shipments/{shipment}/cancel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/shipments/{shipment}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "shipments",
+                "{shipment}",
+                "cancel"
+              ]
+            },
+            "description": "Route name: api.v1.evri.cancel\nAction: App\\Http\\Controllers\\Api\\EVRiController@cancelLabel\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/evri/tracking/update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/tracking/update",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "tracking",
+                "update"
+              ]
+            },
+            "description": "Route name: api.v1.evri.update-tracking\nAction: App\\Http\\Controllers\\Api\\EVRiController@updateTracking\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tracking_number\": \"EVRI123456789GB\",\n  \"status\": \"in_transit\",\n  \"timestamp\": \"2026-04-19T12:34:56Z\",\n  \"location\": \"London Hub\",\n  \"notes\": \"Scanned at depot\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/evri/transactions/{transaction}/create-label",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/transactions/{transaction}/create-label",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "transactions",
+                "{transaction}",
+                "create-label"
+              ]
+            },
+            "description": "Route name: api.v1.evri.create-label\nAction: App\\Http\\Controllers\\Api\\EVRiController@createLabel\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address_to\": {\n    \"name\": \"Recipient Name\",\n    \"address_line_1\": \"10 Downing Street\",\n    \"city\": \"London\",\n    \"postcode\": \"SW1A 2AA\",\n    \"country\": \"GB\",\n    \"phone\": \"+441234567890\",\n    \"email\": \"recipient@example.com\"\n  },\n  \"address_from\": {\n    \"name\": \"Sender Name\",\n    \"address_line_1\": \"221B Baker Street\",\n    \"city\": \"London\",\n    \"postcode\": \"NW1 6XE\",\n    \"country\": \"GB\",\n    \"phone\": \"+449876543210\",\n    \"email\": \"sender@example.com\"\n  },\n  \"package_details\": {\n    \"weight_g\": 500,\n    \"length_cm\": 30,\n    \"width_cm\": 20,\n    \"height_cm\": 10\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/evri/validate-address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/validate-address",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "validate-address"
+              ]
+            },
+            "description": "Route name: api.v1.evri.validate-address\nAction: App\\Http\\Controllers\\Api\\EVRiController@validateAddress\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"address_line_1\": \"10 Downing Street\",\n  \"city\": \"London\",\n  \"postcode\": \"SW1A 2AA\",\n  \"country\": \"GB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/evri/webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/evri/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "evri",
+                "webhook"
+              ]
+            },
+            "description": "Route name: api.v1.evri.webhook\nAction: App\\Http\\Controllers\\Api\\EVRiController@webhook\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tracking_number\": \"EVRI123456789GB\",\n  \"status\": \"delivered\",\n  \"timestamp\": \"2026-04-19T15:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Join Us",
+      "item": [
+        {
+          "name": "POST api/v1/join-us",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/join-us",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "join-us"
+              ]
+            },
+            "description": "Route name: api.v1.join-us.store\nAction: App\\Http\\Controllers\\Api\\JoinUsController@store\nMiddleware: api",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "type",
+                  "value": "model",
+                  "type": "text"
+                },
+                {
+                  "key": "full_name",
+                  "value": "Jane Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "jane@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "+441234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "age",
+                  "value": "25",
+                  "type": "text"
+                },
+                {
+                  "key": "gender",
+                  "value": "female",
+                  "type": "text"
+                },
+                {
+                  "key": "nationality",
+                  "value": "British",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "123 High Street",
+                  "type": "text"
+                },
+                {
+                  "key": "apartment_suite_unit",
+                  "value": "Flat 4B",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "London",
+                  "type": "text"
+                },
+                {
+                  "key": "postal_code",
+                  "value": "SW1A 1AA",
+                  "type": "text"
+                },
+                {
+                  "key": "height",
+                  "value": "170 cm",
+                  "type": "text"
+                },
+                {
+                  "key": "weight",
+                  "value": "60 kg",
+                  "type": "text"
+                },
+                {
+                  "key": "comfort_preferences",
+                  "value": "[\"modest\", \"long_sleeve\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "model_experiences",
+                  "value": "[\"runway\", \"photoshoot\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "model_motivation",
+                  "value": "I want to support the mission.",
+                  "type": "text"
+                },
+                {
+                  "key": "model_images",
+                  "value": "[\"https://example.com/photo1.jpg\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "agreements",
+                  "value": "[\"terms\", \"privacy\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Newsletter",
+      "item": [
+        {
+          "name": "POST api/v1/newsletter/subscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/newsletter/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "newsletter",
+                "subscribe"
+              ]
+            },
+            "description": "Route name: api.v1.newsletter.subscribe\nAction: App\\Http\\Controllers\\Api\\NewsletterController@store\nMiddleware: api, Illuminate\\Routing\\Middleware\\ThrottleRequests:20,1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"locale\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "GET api/v1/orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "description": "Route name: api.v1.orders.index\nAction: App\\Http\\Controllers\\Api\\OrderController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/orders/seller",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/seller",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "seller"
+              ]
+            },
+            "description": "Route name: api.v1.orders.seller-index\nAction: App\\Http\\Controllers\\Api\\OrderController@sellerIndex\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/orders/sponsored",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/sponsored",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "sponsored"
+              ]
+            },
+            "description": "Route name: api.v1.orders.sponsored-index\nAction: App\\Http\\Controllers\\Api\\OrderController@sponsoredIndex\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/orders/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.orders.show\nAction: App\\Http\\Controllers\\Api\\OrderController@show\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/orders/checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "checkout"
+              ]
+            },
+            "description": "Route name: api.v1.orders.checkout\nAction: App\\Http\\Controllers\\Api\\OrderController@checkout\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"billing_first_name\": \"Jane\",\n  \"billing_last_name\": \"Doe\",\n  \"billing_email\": \"jane@example.com\",\n  \"billing_phone\": \"+441234567890\",\n  \"billing_address\": \"123 High Street, London\",\n  \"additional_info\": \"Leave at reception\",\n  \"donate_anonymous\": false,\n  \"payment_method\": \"card\",\n  \"keep_updated\": true,\n  \"agree_terms\": true,\n  \"cart_items\": [\n    {\n      \"id\": 1,\n      \"quantity\": 2\n    }\n  ],\n  \"payment_intent_id\": \"pi_xxxxxxxxxxxxxxxxxxxxxxxx\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/orders/confirm-payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/confirm-payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "confirm-payment"
+              ]
+            },
+            "description": "Route name: api.v1.orders.confirm-payment\nAction: App\\Http\\Controllers\\Api\\OrderController@confirmPayment\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_intent_id\": \"pi_xxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"transaction_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/orders/create-payment-intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/create-payment-intent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "create-payment-intent"
+              ]
+            },
+            "description": "Route name: api.v1.orders.create-payment-intent\nAction: App\\Http\\Controllers\\Api\\OrderController@createPaymentIntent\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 12.34,\n  \"currency\": \"gbp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/orders/sponsor-checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/sponsor-checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "sponsor-checkout"
+              ]
+            },
+            "description": "Route name: api.v1.orders.sponsor-checkout\nAction: App\\Http\\Controllers\\Api\\OrderController@sponsorCheckout\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sponsor_request_id\": 1,\n  \"billing_first_name\": \"Jane\",\n  \"billing_last_name\": \"Doe\",\n  \"billing_email\": \"jane@example.com\",\n  \"billing_phone\": \"+441234567890\",\n  \"billing_address\": \"123 High Street, London\",\n  \"additional_info\": null,\n  \"donate_anonymous\": false,\n  \"payment_method\": \"card\",\n  \"keep_updated\": true,\n  \"agree_terms\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT api/v1/orders/seller/{id}/status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/seller/{id}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "seller",
+                "{id}",
+                "status"
+              ]
+            },
+            "description": "Route name: api.v1.orders.seller-update-status\nAction: App\\Http\\Controllers\\Api\\OrderController@sellerUpdateStatus\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "DELETE api/v1/products/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.products.destroy\nAction: App\\Http\\Controllers\\Api\\ProductController@destroy\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "description": "Route name: api.v1.products.index\nAction: App\\Http\\Controllers\\Api\\ProductController@index\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "categories"
+              ]
+            },
+            "description": "Route name: api.v1.products.categories\nAction: App\\Http\\Controllers\\Api\\ProductController@categories\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/details/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/details/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "details",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.products.show\nAction: App\\Http\\Controllers\\Api\\ProductController@show\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/details/{id}/reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/details/{id}/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "details",
+                "{id}",
+                "reviews"
+              ]
+            },
+            "description": "Route name: api.v1.products.reviews.index\nAction: App\\Http\\Controllers\\Api\\ProductReviewController@index\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/details/{id}/reviews/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/details/{id}/reviews/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "details",
+                "{id}",
+                "reviews",
+                "me"
+              ]
+            },
+            "description": "Route name: api.v1.products.reviews.me\nAction: App\\Http\\Controllers\\Api\\ProductReviewController@myReview\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/my-most-wishlisted",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/my-most-wishlisted",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "my-most-wishlisted"
+              ]
+            },
+            "description": "Route name: api.v1.products.my-most-wishlisted\nAction: App\\Http\\Controllers\\Api\\ProductController@myMostWishlisted\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/similar/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/similar/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "similar",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.products.similar\nAction: App\\Http\\Controllers\\Api\\ProductController@similar\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/products/sizes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/sizes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "sizes"
+              ]
+            },
+            "description": "Route name: api.v1.products.sizes\nAction: App\\Http\\Controllers\\Api\\ProductController@sizes\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/products/details/{id}/reviews",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/details/{id}/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "details",
+                "{id}",
+                "reviews"
+              ]
+            },
+            "description": "Route name: api.v1.products.reviews.store\nAction: App\\Http\\Controllers\\Api\\ProductReviewController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great item, fast shipping.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/products/store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/store",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "store"
+              ]
+            },
+            "description": "Route name: api.v1.products.store\nAction: App\\Http\\Controllers\\Api\\ProductController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Example product title",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Short description",
+                  "type": "text"
+                },
+                {
+                  "key": "is_washed",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "brand",
+                  "value": "Example Brand",
+                  "type": "text"
+                },
+                {
+                  "key": "material",
+                  "value": "Cotton",
+                  "type": "text"
+                },
+                {
+                  "key": "color",
+                  "value": "Blue",
+                  "type": "text"
+                },
+                {
+                  "key": "size_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "category_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "seller",
+                  "type": "text"
+                },
+                {
+                  "key": "condition",
+                  "value": "new",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "25.00",
+                  "type": "text"
+                },
+                {
+                  "key": "is_free",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "discount_enabled",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "platform_donation",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "active_listing",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/products/{id}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.products.update.post\nAction: App\\Http\\Controllers\\Api\\ProductController@update\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Updated product title",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Updated description",
+                  "type": "text"
+                },
+                {
+                  "key": "is_washed",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "brand",
+                  "value": "Example Brand",
+                  "type": "text"
+                },
+                {
+                  "key": "material",
+                  "value": "Cotton",
+                  "type": "text"
+                },
+                {
+                  "key": "color",
+                  "value": "Navy",
+                  "type": "text"
+                },
+                {
+                  "key": "size_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "category_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "condition",
+                  "value": "used",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "20.00",
+                  "type": "text"
+                },
+                {
+                  "key": "is_free",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "discount_enabled",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "platform_donation",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "active_listing",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "removed_image_ids[]",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT api/v1/products/details/{id}/reviews/me",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/details/{id}/reviews/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "details",
+                "{id}",
+                "reviews",
+                "me"
+              ]
+            },
+            "description": "Route name: api.v1.products.reviews.update-me\nAction: App\\Http\\Controllers\\Api\\ProductReviewController@updateMyReview\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Updated review text.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT api/v1/products/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.products.update\nAction: App\\Http\\Controllers\\Api\\ProductController@update\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Updated product title",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Updated description",
+                  "type": "text"
+                },
+                {
+                  "key": "is_washed",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "brand",
+                  "value": "Example Brand",
+                  "type": "text"
+                },
+                {
+                  "key": "material",
+                  "value": "Cotton",
+                  "type": "text"
+                },
+                {
+                  "key": "color",
+                  "value": "Navy",
+                  "type": "text"
+                },
+                {
+                  "key": "size_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "category_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "condition",
+                  "value": "used",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "20.00",
+                  "type": "text"
+                },
+                {
+                  "key": "is_free",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "discount_enabled",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "platform_donation",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "active_listing",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "removed_image_ids[]",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Seller",
+      "item": [
+        {
+          "name": "GET api/v1/seller/notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/seller/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "seller",
+                "notifications"
+              ]
+            },
+            "description": "Route name: api.v1.seller.notifications.index\nAction: App\\Http\\Controllers\\Api\\SellerNotificationController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/seller/notifications/unread-count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/seller/notifications/unread-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "seller",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Route name: api.v1.seller.notifications.unread-count\nAction: App\\Http\\Controllers\\Api\\SellerNotificationController@unreadCount\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/seller/reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/seller/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "seller",
+                "reviews"
+              ]
+            },
+            "description": "Route name: api.v1.seller.reviews.index\nAction: App\\Http\\Controllers\\Api\\ProductReviewController@sellerIndex\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/seller/notifications/mark-read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/seller/notifications/mark-read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "seller",
+                "notifications",
+                "mark-read"
+              ]
+            },
+            "description": "Route name: api.v1.seller.notifications.mark-read\nAction: App\\Http\\Controllers\\Api\\SellerNotificationController@markRead\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Seller Reports",
+      "item": [
+        {
+          "name": "POST api/v1/seller-reports",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/seller-reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "seller-reports"
+              ]
+            },
+            "description": "Route name: api.v1.seller-reports.store\nAction: App\\Http\\Controllers\\Api\\SellerReportController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate, Illuminate\\Routing\\Middleware\\ThrottleRequests:20,1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reported_user_id\": 2,\n  \"reason\": \"Inappropriate behaviour\",\n  \"details\": \"Additional context goes here.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sellers",
+      "item": [
+        {
+          "name": "GET api/v1/sellers/{id}/profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sellers/{id}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sellers",
+                "{id}",
+                "profile"
+              ]
+            },
+            "description": "Route name: api.v1.sellers.profile.show\nAction: App\\Http\\Controllers\\Api\\PublicSellerController@show\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/sellers/{sellerId}/reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sellers/{sellerId}/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sellers",
+                "{sellerId}",
+                "reviews"
+              ]
+            },
+            "description": "Route name: api.v1.sellers.reviews.index\nAction: App\\Http\\Controllers\\Api\\ProductReviewController@publicSellerReviews\nMiddleware: api"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sponsor Requests",
+      "item": [
+        {
+          "name": "GET api/v1/sponsor-requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sponsor-requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sponsor-requests"
+              ]
+            },
+            "description": "Route name: api.v1.sponsor-requests.index\nAction: App\\Http\\Controllers\\Api\\SponsorRequestController@index\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/sponsor-requests/my-requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sponsor-requests/my-requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sponsor-requests",
+                "my-requests"
+              ]
+            },
+            "description": "Route name: api.v1.sponsor-requests.my-requests\nAction: App\\Http\\Controllers\\Api\\SponsorRequestController@myRequests\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/sponsor-requests/seller",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sponsor-requests/seller",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sponsor-requests",
+                "seller"
+              ]
+            },
+            "description": "Route name: api.v1.sponsor-requests.seller-index\nAction: App\\Http\\Controllers\\Api\\SponsorRequestController@sellerIndex\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/sponsor-requests/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sponsor-requests/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sponsor-requests",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.sponsor-requests.show\nAction: App\\Http\\Controllers\\Api\\SponsorRequestController@show\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/sponsor-requests/{id}/public",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sponsor-requests/{id}/public",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sponsor-requests",
+                "{id}",
+                "public"
+              ]
+            },
+            "description": "Route name: api.v1.sponsor-requests.public-show\nAction: App\\Http\\Controllers\\Api\\SponsorRequestController@publicShow\nMiddleware: api"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/sponsor-requests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sponsor-requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sponsor-requests"
+              ]
+            },
+            "description": "Route name: api.v1.sponsor-requests.store\nAction: App\\Http\\Controllers\\Api\\SponsorRequestController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"request_reason\": \"I would like to sponsor this item for a family member.\",\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"+441234567890\",\n  \"address\": \"123 High Street\",\n  \"apartment\": \"Flat 4B\",\n  \"city\": \"London\",\n  \"postal_code\": \"SW1A 1AA\",\n  \"additional_info\": \"Please contact me after approval.\",\n  \"keep_updated\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stripe",
+      "item": [
+        {
+          "name": "POST api/v1/stripe/webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stripe/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stripe",
+                "webhook"
+              ]
+            },
+            "description": "Route name: api.v1.stripe.webhook\nAction: App\\Http\\Controllers\\Api\\OrderController@handleWebhook\nMiddleware: api",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_test_webhook\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {}\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "DELETE api/v1/wallet/payment-methods/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/payment-methods/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "payment-methods",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.payment-methods.delete\nAction: App\\Http\\Controllers\\Api\\WalletController@deletePaymentMethod\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/wallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.index\nAction: App\\Http\\Controllers\\Api\\WalletController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/wallet/balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/balance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "balance"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.balance\nAction: App\\Http\\Controllers\\Api\\WalletController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/wallet/payment-methods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/payment-methods",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "payment-methods"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.payment-methods\nAction: App\\Http\\Controllers\\Api\\WalletController@paymentMethods\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/wallet/transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "transactions"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.transactions\nAction: App\\Http\\Controllers\\Api\\WalletController@transactions\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/wallet/payment-methods",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/payment-methods",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "payment-methods"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.payment-methods.store\nAction: App\\Http\\Controllers\\Api\\WalletController@storePaymentMethod\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"bank_account\",\n  \"provider\": \"Barclays\",\n  \"account_name\": \"Jane Doe\",\n  \"account_details\": {\n    \"sort_code\": \"12-34-56\",\n    \"account_number\": \"12345678\"\n  },\n  \"is_default\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/wallet/payment-methods/{id}/set-default",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/payment-methods/{id}/set-default",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "payment-methods",
+                "{id}",
+                "set-default"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.payment-methods.set-default\nAction: App\\Http\\Controllers\\Api\\WalletController@setDefaultPaymentMethod\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT api/v1/wallet/payment-methods/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wallet/payment-methods/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wallet",
+                "payment-methods",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.wallet.payment-methods.update\nAction: App\\Http\\Controllers\\Api\\WalletController@updatePaymentMethod\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_name\": \"Jane Doe\",\n  \"account_details\": {\n    \"sort_code\": \"12-34-56\",\n    \"account_number\": \"87654321\"\n  },\n  \"is_default\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "DELETE api/v1/wishlist/product/{productId}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist/product/{productId}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wishlist",
+                "product",
+                "{productId}"
+              ]
+            },
+            "description": "Route name: api.v1.wishlist.destroy-by-product\nAction: App\\Http\\Controllers\\Api\\WishlistController@destroyByProduct\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE api/v1/wishlist/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wishlist",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.wishlist.destroy\nAction: App\\Http\\Controllers\\Api\\WishlistController@destroy\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/wishlist",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wishlist"
+              ]
+            },
+            "description": "Route name: api.v1.wishlist.index\nAction: App\\Http\\Controllers\\Api\\WishlistController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/wishlist/check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist/check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wishlist",
+                "check"
+              ]
+            },
+            "description": "Route name: api.v1.wishlist.check\nAction: App\\Http\\Controllers\\Api\\WishlistController@check\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/wishlist",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "wishlist"
+              ]
+            },
+            "description": "Route name: api.v1.wishlist.store\nAction: App\\Http\\Controllers\\Api\\WishlistController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Withdrawals",
+      "item": [
+        {
+          "name": "GET api/v1/withdrawals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/withdrawals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "withdrawals"
+              ]
+            },
+            "description": "Route name: api.v1.withdrawals.index\nAction: App\\Http\\Controllers\\Api\\WithdrawalController@index\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/withdrawals/limits",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/withdrawals/limits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "withdrawals",
+                "limits"
+              ]
+            },
+            "description": "Route name: api.v1.withdrawals.limits\nAction: App\\Http\\Controllers\\Api\\WithdrawalController@withdrawalLimits\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "GET api/v1/withdrawals/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/withdrawals/{id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "withdrawals",
+                "{id}"
+              ]
+            },
+            "description": "Route name: api.v1.withdrawals.show\nAction: App\\Http\\Controllers\\Api\\WithdrawalController@show\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        },
+        {
+          "name": "POST api/v1/withdrawals",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/withdrawals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "withdrawals"
+              ]
+            },
+            "description": "Route name: api.v1.withdrawals.store\nAction: App\\Http\\Controllers\\Api\\WithdrawalController@store\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50,\n  \"payment_method_id\": 1,\n  \"notes\": \"Please process ASAP\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT api/v1/withdrawals/{id}/cancel",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/withdrawals/{id}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "withdrawals",
+                "{id}",
+                "cancel"
+              ]
+            },
+            "description": "Route name: api.v1.withdrawals.cancel\nAction: App\\Http\\Controllers\\Api\\WithdrawalController@cancel\nMiddleware: api, PHPOpenSourceSaver\\JWTAuth\\Http\\Middleware\\Authenticate"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}
