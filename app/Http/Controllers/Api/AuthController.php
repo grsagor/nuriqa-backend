@@ -40,9 +40,11 @@ class AuthController extends Controller
             $data = $request->all();
             $data['password'] = Hash::make($request->password);
 
-            // Set default role if not provided
+            // Set default role if not provided (single account type: full marketplace access)
             if (! isset($data['role_id']) || empty($data['role_id'])) {
-                $defaultRole = Role::where('name', 'user')->first();
+                $defaultRole = Role::where('name', 'user')->first()
+                    ?? Role::where('name', 'customer')->first()
+                    ?? Role::where('name', 'seller')->first();
                 $data['role_id'] = $defaultRole ? $defaultRole->id : null;
             }
 
