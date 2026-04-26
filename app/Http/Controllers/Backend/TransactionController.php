@@ -222,11 +222,13 @@ class TransactionController extends Controller
                 if ($sellLine->product && $sellLine->product->owner_id) {
                     $sellerId = $sellLine->product->owner_id;
                     $subtotal = (float) $sellLine->subtotal;
-
-                    // Deduct platform donation: seller receives (subtotal - donation)
-                    $donationAmount = 0;
-                    if ($sellLine->product->platform_donation && $sellLine->product->donation_percentage > 0) {
-                        $donationAmount = $subtotal * ((float) $sellLine->product->donation_percentage / 100);
+                    if ($sellLine->getRawOriginal('donation_amount') === null) {
+                        $donationAmount = 0.0;
+                        if ($sellLine->product->platform_donation && (int) $sellLine->product->donation_percentage > 0) {
+                            $donationAmount = $subtotal * ((float) $sellLine->product->donation_percentage / 100);
+                        }
+                    } else {
+                        $donationAmount = (float) $sellLine->donation_amount;
                     }
                     $earnings = $subtotal - $donationAmount;
 

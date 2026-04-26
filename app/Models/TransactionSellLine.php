@@ -16,6 +16,8 @@ class TransactionSellLine extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'platform_fee_amount',
+        'donation_amount',
     ];
 
     protected function casts(): array
@@ -24,6 +26,8 @@ class TransactionSellLine extends Model
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
+            'platform_fee_amount' => 'decimal:2',
+            'donation_amount' => 'decimal:2',
         ];
     }
 

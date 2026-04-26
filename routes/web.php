@@ -12,6 +12,7 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\JoinUsApplicationController;
 use App\Http\Controllers\Backend\LanguageController;
 use App\Http\Controllers\Backend\NewsletterSubscriberController;
+use App\Http\Controllers\Backend\PlatformSettingController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\SellerReportController;
@@ -44,6 +45,10 @@ Route::controller(ProfileController::class)->group(function () {
 Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
     Route::prefix('dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+    });
+    Route::prefix('platform-settings')->name('platform-settings.')->controller(PlatformSettingController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/update', 'update')->name('update');
     });
     Route::prefix('roles')->name('roles.')->controller(RoleController::class)->group(function () {
         Route::get('/', 'index')->name('index');

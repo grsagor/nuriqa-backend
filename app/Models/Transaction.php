@@ -13,6 +13,8 @@ class Transaction extends Model
         'invoice_no',
         'status',
         'subtotal',
+        'platform_fee_total',
+        'donation_total',
         'tax',
         'delivery_fee',
         'coupon_discount',
@@ -32,6 +34,8 @@ class Transaction extends Model
     {
         return [
             'subtotal' => 'decimal:2',
+            'platform_fee_total' => 'decimal:2',
+            'donation_total' => 'decimal:2',
             'tax' => 'decimal:2',
             'delivery_fee' => 'decimal:2',
             'coupon_discount' => 'decimal:2',

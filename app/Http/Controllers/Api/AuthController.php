@@ -24,7 +24,8 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
+            'phone_country_code' => 'required|string|regex:/^\+[1-9]\d{0,3}$/',
+            'phone_number' => 'required|string|regex:/^\d{5,20}$/',
             'role_id' => 'nullable|exists:roles,id',
         ]);
 
@@ -39,6 +40,20 @@ class AuthController extends Controller
         try {
             $data = $request->all();
             $data['password'] = Hash::make($request->password);
+            $data['phone'] = $this->formatPhoneNumber(
+                (string) $request->input('phone_country_code'),
+                (string) $request->input('phone_number')
+            );
+
+            if (User::where('phone', $data['phone'])->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'phone_number' => ['The phone number has already been taken.'],
+                    ],
+                ], 422);
+            }
 
             // Set default role if not provided (single account type: full marketplace access)
             if (! isset($data['role_id']) || empty($data['role_id'])) {
@@ -50,13 +65,13 @@ class AuthController extends Controller
 
             $user = User::create($data);
 
-            $otpCode = OtpService::generate($user->email);
+            $otpCode = OtpService::generateForUser($user);
 
             $debugOtpData = config('app.debug') ? ['otp_code' => $otpCode] : [];
 
             return response()->json([
                 'success' => true,
-                'message' => 'User registered successfully. Please verify your email with the OTP sent.',
+                'message' => 'User registered successfully. Please verify your phone with the OTP sent.',
                 'data' => [
                     'user' => [
                         'id' => $user->id,
@@ -85,7 +100,7 @@ class AuthController extends Controller
     public function resendOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'identifier' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -97,9 +112,12 @@ class AuthController extends Controller
         }
 
         try {
-            $email = $request->email;
+            $identifier = (string) $request->input('identifier');
 
-            $user = User::where('email', $email)->first();
+            $user = User::query()
+                ->where('email', $identifier)
+                ->orWhere('phone', $identifier)
+                ->first();
             if (! $user) {
                 return response()->json([
                     'success' => false,
@@ -110,11 +128,11 @@ class AuthController extends Controller
             if ($user->email_verified_at) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Email already verified',
+                    'message' => 'Phone already verified',
                 ]);
             }
 
-            $otpCode = OtpService::generate($user->email);
+            $otpCode = OtpService::generateForUser($user);
             $debugOtpData = config('app.debug') ? ['otp_code' => $otpCode] : [];
 
             return response()->json([
@@ -218,7 +236,7 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'identifier' => 'required|string',
             'otp' => 'required|string|size:6',
         ]);
 
@@ -231,11 +249,14 @@ class AuthController extends Controller
         }
 
         try {
-            $email = $request->email;
+            $identifier = (string) $request->input('identifier');
             $otp = $request->otp;
 
             // Get the user first
-            $user = User::where('email', $email)->first();
+            $user = User::query()
+                ->where('email', $identifier)
+                ->orWhere('phone', $identifier)
+                ->first();
 
             if (! $user) {
                 return response()->json([
@@ -249,7 +270,7 @@ class AuthController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Email already verified',
+                    'message' => 'Phone already verified',
                     'data' => [
                         'user' => [
                             'id' => $user->id,
@@ -268,7 +289,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            if (! OtpService::verify($email, $otp)) {
+            if (! OtpService::verify($identifier, $otp)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid or expired OTP',
@@ -449,5 +470,13 @@ class AuthController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function formatPhoneNumber(string $countryCode, string $phoneNumber): string
+    {
+        $normalizedCountryCode = trim($countryCode);
+        $digitsOnlyPhone = preg_replace('/\D+/', '', $phoneNumber) ?? '';
+
+        return $normalizedCountryCode.$digitsOnlyPhone;
     }
 }

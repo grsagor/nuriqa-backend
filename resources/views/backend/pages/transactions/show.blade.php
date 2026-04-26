@@ -42,7 +42,10 @@
                             <tr>
                                 <th>Product</th>
                                 <th>Quantity</th>
-                                <th>Price</th>
+                                <th>Seller unit</th>
+                                <th>Line (seller)</th>
+                                <th>Buyer protection fee</th>
+                                <th>Donation (seller share)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,14 +54,25 @@
                                     <td>{{ $line->product->title ?? 'N/A' }}</td>
                                     <td>{{ $line->quantity }}</td>
                                     <td>£{{ number_format($line->unit_price, 2) }}</td>
+                                    <td>£{{ number_format($line->subtotal, 2) }}</td>
+                                    <td>£{{ number_format($line->platform_fee_amount ?? 0, 2) }}</td>
+                                    <td>£{{ number_format($line->donation_amount ?? 0, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <strong>Subtotal:</strong>
+                    <strong>Subtotal (items incl. buyer protection fee):</strong>
                     <p>£{{ number_format($transaction->subtotal, 2) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Buyer protection fee (total):</strong>
+                    <p>£{{ number_format($transaction->platform_fee_total ?? 0, 2) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Donation from seller listings (total):</strong>
+                    <p>£{{ number_format($transaction->donation_total ?? 0, 2) }}</p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <strong>Tax:</strong>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PlatformFeeService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,6 +38,9 @@ class Product extends Model
 
     protected $appends = [
         'thumbnail_url',
+        'platform_fee_percentage',
+        'platform_fee_amount',
+        'unit_price_including_platform_fee',
     ];
 
     protected function casts(): array
@@ -102,5 +106,24 @@ class Product extends Model
         $thumbnailPath = public_path($this->thumbnail);
 
         return file_exists($thumbnailPath) ? asset($this->thumbnail) : asset('assets/img/utils/no-image.png');
+    }
+
+    public function getPlatformFeePercentageAttribute(): float
+    {
+        return PlatformFeeService::feePercentage();
+    }
+
+    public function getPlatformFeeAmountAttribute(): float
+    {
+        $unit = (float) ($this->price ?? 0);
+
+        return PlatformFeeService::platformFeeAmountForUnitPrice($unit, $this);
+    }
+
+    public function getUnitPriceIncludingPlatformFeeAttribute(): float
+    {
+        $unit = (float) ($this->price ?? 0);
+
+        return PlatformFeeService::unitPriceIncludingPlatformFee($unit, $this);
     }
 }

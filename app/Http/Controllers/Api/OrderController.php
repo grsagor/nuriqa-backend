@@ -10,6 +10,7 @@ use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
+use App\Services\PlatformFeeService;
 use App\Services\SellerNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -135,18 +136,25 @@ class OrderController extends Controller
                 }
             }
 
-            // Calculate totals using quantities from request
+            // Calculate totals using quantities from request (subtotal = buyer line totals incl. buyer protection fee)
             $subtotal = 0;
+            $platformFeeTotal = 0;
+            $donationTotal = 0;
             $tax = 0;
             $deliveryFee = 15.00;
             $couponDiscount = 0;
 
             foreach ($cartItems as $cartItem) {
                 $product = $cartItem->product;
-                // Use quantity from request if provided, otherwise use cart quantity
                 $quantity = $requestedQuantities[$cartItem->id] ?? $cartItem->quantity;
-                $price = (float) ($product->price ?? 0);
-                $subtotal += $price * $quantity;
+                $unitPrice = (float) ($product->price ?? 0);
+                $sellerSubtotal = round($unitPrice * $quantity, 2);
+                $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($sellerSubtotal, $product);
+                $lineDonation = PlatformFeeService::donationAmountForLine($sellerSubtotal, $product);
+                $lineBuyer = $sellerSubtotal + $linePlatformFee;
+                $subtotal += $lineBuyer;
+                $platformFeeTotal += $linePlatformFee;
+                $donationTotal += $lineDonation;
             }
 
             $total = $subtotal + $tax + $deliveryFee - $couponDiscount;
@@ -160,6 +168,8 @@ class OrderController extends Controller
                 'invoice_no' => $invoiceNo,
                 'status' => 'pending',
                 'subtotal' => $subtotal,
+                'platform_fee_total' => $platformFeeTotal,
+                'donation_total' => $donationTotal,
                 'tax' => $tax,
                 'delivery_fee' => $deliveryFee,
                 'coupon_discount' => $couponDiscount,
@@ -178,10 +188,11 @@ class OrderController extends Controller
             // Create transaction sell lines using quantities from request and decrement stock
             foreach ($cartItems as $cartItem) {
                 $product = $cartItem->product;
-                // Use quantity from request if provided, otherwise use cart quantity
                 $quantity = $requestedQuantities[$cartItem->id] ?? $cartItem->quantity;
                 $unitPrice = (float) ($product->price ?? 0);
-                $lineSubtotal = $unitPrice * $quantity;
+                $lineSubtotal = round($unitPrice * $quantity, 2);
+                $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($lineSubtotal, $product);
+                $lineDonation = PlatformFeeService::donationAmountForLine($lineSubtotal, $product);
 
                 TransactionSellLine::create([
                     'transaction_id' => $transaction->id,
@@ -189,6 +200,8 @@ class OrderController extends Controller
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'subtotal' => $lineSubtotal,
+                    'platform_fee_amount' => $linePlatformFee,
+                    'donation_amount' => $lineDonation,
                 ]);
 
                 Product::where('id', $product->id)->decrement('stock', $quantity);
@@ -305,9 +318,13 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // Calculate totals
             $productPrice = (float) ($product->price ?? 0);
-            $subtotal = $productPrice;
+            $sellerSubtotal = round($productPrice, 2);
+            $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($sellerSubtotal, $product);
+            $lineDonation = PlatformFeeService::donationAmountForLine($sellerSubtotal, $product);
+            $subtotal = $sellerSubtotal + $linePlatformFee;
+            $platformFeeTotal = $linePlatformFee;
+            $donationTotal = $lineDonation;
             $tax = 0;
             $deliveryFee = 15.00;
             $couponDiscount = 0;
@@ -322,6 +339,8 @@ class OrderController extends Controller
                 'invoice_no' => $invoiceNo,
                 'status' => 'pending',
                 'subtotal' => $subtotal,
+                'platform_fee_total' => $platformFeeTotal,
+                'donation_total' => $donationTotal,
                 'tax' => $tax,
                 'delivery_fee' => $deliveryFee,
                 'coupon_discount' => $couponDiscount,
@@ -337,7 +356,6 @@ class OrderController extends Controller
                 'keep_updated' => $request->keep_updated ?? false,
             ]);
 
-            // Create transaction sell line with sponsor tracking
             TransactionSellLine::create([
                 'transaction_id' => $transaction->id,
                 'product_id' => $product->id,
@@ -346,7 +364,9 @@ class OrderController extends Controller
                 'sponsor_user_id' => $sponsor->id,
                 'quantity' => 1,
                 'unit_price' => $productPrice,
-                'subtotal' => $productPrice,
+                'subtotal' => $sellerSubtotal,
+                'platform_fee_amount' => $linePlatformFee,
+                'donation_amount' => $lineDonation,
             ]);
 
             Product::where('id', $product->id)->decrement('stock', 1);

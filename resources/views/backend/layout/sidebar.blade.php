@@ -7,6 +7,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                     Dashboard
                 </a>
+                <a class="nav-link {{ request()->routeIs('admin.platform-settings.*') ? 'active' : '' }}" href="{{ route('admin.platform-settings.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-percentage"></i></div>
+                    Buyer protection fee
+                </a>
 
                 <div class="sb-sidenav-menu-heading">Users</div>
                 {{-- <a class="nav-link {{ Request::segment(2) == 'languages' ? 'active' : '' }}" href="{{ route('admin.languages.index') }}">
