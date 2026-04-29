@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EVRiController;
 use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\NewsletterController;
@@ -152,5 +153,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', 'show')->name('api.v1.withdrawals.show');
             Route::put('/{id}/cancel', 'cancel')->name('api.v1.withdrawals.cancel');
         });
+    });
+
+    Route::prefix('conversations')->controller(ConversationController::class)->middleware('jwt.auth')->group(function () {
+        Route::get('/', 'index')->name('api.v1.conversations.index');
+        Route::post('/', 'store')->name('api.v1.conversations.store');
+        Route::get('/{id}', 'show')->whereNumber('id')->name('api.v1.conversations.show');
+        Route::get('/{id}/messages', 'messages')->whereNumber('id')->name('api.v1.conversations.messages');
+        Route::post('/{id}/messages', 'storeMessage')->whereNumber('id')->name('api.v1.conversations.messages.store');
+        Route::post('/{id}/upload', 'upload')->whereNumber('id')->name('api.v1.conversations.upload');
+        Route::post('/{id}/read', 'markRead')->whereNumber('id')->name('api.v1.conversations.read');
     });
 });
