@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ForgotPasswordResetRequest;
+use App\Http\Requests\ForgotPasswordSendOtpRequest;
+use App\Http\Requests\ForgotPasswordVerifyOtpRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ImageService;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -470,6 +475,147 @@ class AuthController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Send a password-reset OTP to the user's email and phone (same delivery as signup OTP).
+     */
+    public function forgotPassword(ForgotPasswordSendOtpRequest $request): \Illuminate\Http\JsonResponse
+    {
+        $lookup = $this->forgotPasswordResolveLookup($request);
+        if ($lookup === null || $lookup === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => [
+                    'identifier' => ['Could not read your email or phone.'],
+                ],
+            ], 422);
+        }
+
+        $user = $this->findUserByEmailOrPhone($lookup);
+
+        if ($user) {
+            OtpService::generateForUser($user);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'If an account exists for this email or phone, we sent a verification code.',
+        ]);
+    }
+
+    /**
+     * Verify the OTP and return a short-lived reset token (not a login JWT).
+     */
+    public function forgotPasswordVerifyOtp(ForgotPasswordVerifyOtpRequest $request): \Illuminate\Http\JsonResponse
+    {
+        $lookup = $this->forgotPasswordResolveLookup($request);
+        if ($lookup === null || $lookup === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => [
+                    'identifier' => ['Could not read your email or phone.'],
+                ],
+            ], 422);
+        }
+
+        $user = $this->findUserByEmailOrPhone($lookup);
+        $otp = (string) $request->validated('otp');
+
+        if (! $user || ! OtpService::matchesActiveOtp($user, $otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired verification code.',
+            ], 400);
+        }
+
+        OtpService::clearOtpFields($user);
+
+        $plainToken = Str::random(64);
+        Cache::put($this->passwordResetCacheKey($plainToken), $user->id, now()->addMinutes(15));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification successful. You can set a new password.',
+            'data' => [
+                'reset_token' => $plainToken,
+            ],
+        ]);
+    }
+
+    public function forgotPasswordReset(ForgotPasswordResetRequest $request): \Illuminate\Http\JsonResponse
+    {
+        $token = (string) $request->validated('reset_token');
+        $cacheKey = $this->passwordResetCacheKey($token);
+        $userId = Cache::pull($cacheKey);
+
+        if (! $userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This reset link has expired. Please start again.',
+            ], 400);
+        }
+
+        $user = User::query()->find($userId);
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        $user->password = $request->validated('password');
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully. You can log in with your new password.',
+        ]);
+    }
+
+    private function passwordResetCacheKey(string $token): string
+    {
+        return 'password_reset_token:'.hash('sha256', $token);
+    }
+
+    private function forgotPasswordResolveLookup(Request $request): ?string
+    {
+        $hasPair = $request->filled('phone_country_code') && $request->filled('phone_number');
+
+        if ($hasPair) {
+            return $this->formatPhoneNumber(
+                (string) $request->input('phone_country_code'),
+                (string) $request->input('phone_number')
+            );
+        }
+
+        $rawId = $request->input('identifier');
+        if (! is_string($rawId)) {
+            return null;
+        }
+
+        $id = trim($rawId);
+        if ($id === '') {
+            return null;
+        }
+
+        if (filter_var($id, FILTER_VALIDATE_EMAIL)) {
+            return $id;
+        }
+
+        return preg_replace('/\s+/', '', $id) ?: null;
+    }
+
+    private function findUserByEmailOrPhone(string $lookup): ?User
+    {
+        return User::query()
+            ->where(function ($query) use ($lookup) {
+                $query->where('email', $lookup)
+                    ->orWhere('phone', $lookup);
+            })
+            ->first();
     }
 
     private function formatPhoneNumber(string $countryCode, string $phoneNumber): string

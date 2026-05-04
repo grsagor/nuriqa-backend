@@ -235,3 +235,78 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
 }
+
+/* Dashboard stat cards */
+.stat-card {
+    border-radius: 12px;
+    padding: 1.25rem 1.35rem;
+    background: #fff;
+    border: 1px solid #e8e0dc;
+    box-shadow: 0 1px 2px rgba(89, 69, 69, 0.06);
+    height: 100%;
+}
+
+.stat-card__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 0.35rem;
+}
+
+.stat-card__value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+.stat-card__hint {
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    color: #9ca3af;
+}
+
+.stat-card__hint a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.stat-card__hint a:hover {
+    text-decoration: underline;
+}
+
+.stat-card--primary {
+    border-left: 4px solid #594545;
+}
+
+.stat-card--success {
+    border-left: 4px solid #15803d;
+}
+
+.stat-card--accent {
+    border-left: 4px solid #b45309;
+}
+
+.stat-card--warning {
+    border-left: 4px solid #ca8a04;
+}
+
+/* Chart.js 2: maintainAspectRatio:false needs a bounded parent or the canvas can grow unbounded (layout thrash / huge height). */
+.dashboard-revenue-chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    overflow: hidden;
+}
+
+.dashboard-order-type-chart-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    height: 260px;
+    margin: 0 auto;
+    overflow: hidden;
+}

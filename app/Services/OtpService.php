@@ -65,6 +65,30 @@ class OtpService
         return false;
     }
 
+    /**
+     * Whether the user currently has a non-expired OTP matching the given code (no DB mutation).
+     */
+    public static function matchesActiveOtp(User $user, string $code): bool
+    {
+        if ($user->otp === null || $user->otp_expires_at === null) {
+            return false;
+        }
+
+        if (! hash_equals((string) $user->otp, $code)) {
+            return false;
+        }
+
+        return Carbon::now()->lt(Carbon::parse($user->otp_expires_at));
+    }
+
+    public static function clearOtpFields(User $user): void
+    {
+        $user->forceFill([
+            'otp' => null,
+            'otp_expires_at' => null,
+        ])->save();
+    }
+
     public static function isVerified(string $email): bool
     {
         return User::where('email', $email)
