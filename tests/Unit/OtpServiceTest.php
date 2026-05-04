@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Mail\OtpVerificationMail;
 use App\Models\User;
 use App\Services\OtpService;
 use Carbon\Carbon;
@@ -26,6 +27,8 @@ class OtpServiceTest extends TestCase
         $user = User::factory()->unverified()->create(['email' => 'otp-test@example.com']);
 
         $returned = OtpService::generate($user->email);
+
+        Mail::assertNotSent(OtpVerificationMail::class);
 
         $user->refresh();
 

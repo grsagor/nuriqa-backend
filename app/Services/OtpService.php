@@ -12,7 +12,10 @@ use Twilio\Rest\Client;
 
 class OtpService
 {
-    public static function generate(string $email): string
+    /**
+     * @param  array{send_email?: bool, send_sms?: bool}  $delivery
+     */
+    public static function generate(string $email, array $delivery = []): string
     {
         $user = User::where('email', $email)->first();
 
@@ -20,10 +23,17 @@ class OtpService
             return '';
         }
 
-        return self::generateForUser($user);
+        if ($delivery === []) {
+            $delivery = self::defaultRegistrationDelivery();
+        }
+
+        return self::generateForUser($user, $delivery);
     }
 
-    public static function generateForUser(User $user): string
+    /**
+     * @param  array{send_email?: bool, send_sms?: bool}  $delivery
+     */
+    public static function generateForUser(User $user, array $delivery = []): string
     {
         $otpCode = str_pad((string) random_int(0, 999_999), 6, '0', STR_PAD_LEFT);
 
@@ -32,12 +42,39 @@ class OtpService
             'otp_expires_at' => Carbon::now()->addMinutes(config('otp.expires_minutes')),
         ]);
 
-        if ((bool) config('otp.send_email', false)) {
+        if ($delivery === []) {
+            $delivery = [
+                'send_email' => (bool) config('otp.send_email', false),
+                'send_sms' => true,
+            ];
+        }
+
+        $sendEmail = (bool) ($delivery['send_email'] ?? false);
+        $sendSms = array_key_exists('send_sms', $delivery)
+            ? (bool) $delivery['send_sms']
+            : true;
+
+        if ($sendEmail) {
             self::sendOtpEmail($user->email, $otpCode);
         }
-        self::sendOtpSms($user->phone, $otpCode);
+        if ($sendSms) {
+            self::sendOtpSms($user->phone, $otpCode);
+        }
 
         return $otpCode;
+    }
+
+    /**
+     * Registration / verify-phone flows: SMS only.
+     *
+     * @return array{send_email: bool, send_sms: bool}
+     */
+    public static function defaultRegistrationDelivery(): array
+    {
+        return [
+            'send_email' => false,
+            'send_sms' => true,
+        ];
     }
 
     public static function verify(string $emailOrPhone, string $code): bool

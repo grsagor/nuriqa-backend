@@ -70,7 +70,7 @@ class AuthController extends Controller
 
             $user = User::create($data);
 
-            $otpCode = OtpService::generateForUser($user);
+            $otpCode = OtpService::generateForUser($user, OtpService::defaultRegistrationDelivery());
 
             $debugOtpData = config('app.debug') ? ['otp_code' => $otpCode] : [];
 
@@ -137,7 +137,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            $otpCode = OtpService::generateForUser($user);
+            $otpCode = OtpService::generateForUser($user, OtpService::defaultRegistrationDelivery());
             $debugOtpData = config('app.debug') ? ['otp_code' => $otpCode] : [];
 
             return response()->json([
@@ -478,7 +478,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Send a password-reset OTP to the user's email and phone (same delivery as signup OTP).
+     * Send one password-reset OTP; deliver by SMS always, and by email when OTP_SEND_EMAIL is true.
      */
     public function forgotPassword(ForgotPasswordSendOtpRequest $request): \Illuminate\Http\JsonResponse
     {
@@ -496,7 +496,10 @@ class AuthController extends Controller
         $user = $this->findUserByEmailOrPhone($lookup);
 
         if ($user) {
-            OtpService::generateForUser($user);
+            OtpService::generateForUser($user, [
+                'send_email' => (bool) config('otp.send_email', false),
+                'send_sms' => true,
+            ]);
         }
 
         return response()->json([

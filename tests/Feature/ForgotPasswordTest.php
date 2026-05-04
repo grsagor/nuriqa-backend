@@ -2,18 +2,28 @@
 
 namespace Tests\Feature;
 
+use App\Mail\OtpVerificationMail;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ForgotPasswordTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['otp.send_email' => true]);
+    }
+
     public function test_forgot_password_flow_with_email_sets_new_password(): void
     {
+        Mail::fake();
+
         $user = User::factory()->create([
             'email' => 'reset-me@example.com',
             'phone' => '+447700900111',
@@ -23,6 +33,8 @@ class ForgotPasswordTest extends TestCase
         $this->postJson('/api/v1/forgot-password', [
             'identifier' => 'reset-me@example.com',
         ])->assertOk()->assertJson(['success' => true]);
+
+        Mail::assertSent(OtpVerificationMail::class);
 
         $user->refresh();
         $user->forceFill([
@@ -50,6 +62,8 @@ class ForgotPasswordTest extends TestCase
 
     public function test_forgot_password_accepts_phone_country_and_number_pair(): void
     {
+        Mail::fake();
+
         $user = User::factory()->create([
             'email' => 'u2@example.com',
             'phone' => '+447700900222',
@@ -60,6 +74,8 @@ class ForgotPasswordTest extends TestCase
             'phone_country_code' => '+44',
             'phone_number' => '7700900222',
         ])->assertOk();
+
+        Mail::assertSent(OtpVerificationMail::class);
 
         $user->refresh();
         $user->forceFill([
@@ -85,6 +101,8 @@ class ForgotPasswordTest extends TestCase
 
     public function test_forgot_password_verify_rejects_bad_otp(): void
     {
+        Mail::fake();
+
         $user = User::factory()->create([
             'email' => 'bad@example.com',
             'phone' => '+447700900333',
@@ -95,6 +113,8 @@ class ForgotPasswordTest extends TestCase
             'identifier' => 'bad@example.com',
         ])->assertOk();
 
+        Mail::assertSent(OtpVerificationMail::class);
+
         $user->forceFill([
             'otp' => '000000',
             'otp_expires_at' => Carbon::now()->addMinutes(10),
@@ -104,5 +124,23 @@ class ForgotPasswordTest extends TestCase
             'identifier' => 'bad@example.com',
             'otp' => '999999',
         ])->assertStatus(400);
+    }
+
+    public function test_forgot_password_skips_email_when_otp_send_email_is_false(): void
+    {
+        config(['otp.send_email' => false]);
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'email' => 'no-mail@example.com',
+            'phone' => '+447700900444',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->postJson('/api/v1/forgot-password', [
+            'identifier' => 'no-mail@example.com',
+        ])->assertOk();
+
+        Mail::assertNothingSent();
     }
 }
