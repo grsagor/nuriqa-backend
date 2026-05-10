@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\ProductPriceOffer;
 use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
 use App\Services\PlatformFeeService;
+use App\Services\ProductPriceOfferService;
 use App\Services\SellerNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,28 +138,97 @@ class OrderController extends Controller
                 }
             }
 
-            // Calculate totals using quantities from request (subtotal = buyer line totals incl. buyer protection fee)
+            // Calculate totals: optional approved offer lowers seller unit; pay_unit_price >= resolved adds voluntary donation only.
             $subtotal = 0;
             $platformFeeTotal = 0;
             $donationTotal = 0;
+            $voluntaryDonationOrderTotal = 0;
             $tax = 0;
             $deliveryFee = 15.00;
             $couponDiscount = 0;
 
+            $payUnitByCartId = collect($request->cart_items)->keyBy('id')->map(function ($item) {
+                if (! is_array($item) || ! array_key_exists('pay_unit_price', $item) || $item['pay_unit_price'] === null || $item['pay_unit_price'] === '') {
+                    return null;
+                }
+
+                return round((float) $item['pay_unit_price'], 2);
+            });
+
+            $checkoutLines = [];
+
             foreach ($cartItems as $cartItem) {
                 $product = $cartItem->product;
                 $quantity = $requestedQuantities[$cartItem->id] ?? $cartItem->quantity;
-                $unitPrice = (float) ($product->price ?? 0);
-                $sellerSubtotal = round($unitPrice * $quantity, 2);
+
+                $offer = null;
+                if (! $product->is_free && ProductPriceOfferService::listSellerUnitPrice($product) > 0) {
+                    $offer = ProductPriceOffer::query()
+                        ->where('buyer_id', $user->id)
+                        ->where('product_id', $product->id)
+                        ->where('status', ProductPriceOffer::STATUS_APPROVED)
+                        ->whereNull('consumed_at')
+                        ->where(function ($q): void {
+                            $q->whereNull('approved_until')
+                                ->orWhere('approved_until', '>', now());
+                        })
+                        ->lockForUpdate()
+                        ->orderByDesc('id')
+                        ->first();
+                }
+
+                $listUnit = ProductPriceOfferService::listSellerUnitPrice($product);
+                $resolvedUnit = $offer ? round((float) $offer->offered_unit_price, 2) : $listUnit;
+
+                if (! $product->is_free && $resolvedUnit <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid price for one or more items.',
+                    ], 400);
+                }
+
+                $requestedPayUnit = $payUnitByCartId[$cartItem->id] ?? null;
+                if ($requestedPayUnit !== null) {
+                    if ($requestedPayUnit + 0.0001 < $resolvedUnit) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Pay amount cannot be less than the agreed price for "'.$product->title.'".',
+                        ], 422);
+                    }
+                    if ($requestedPayUnit > $resolvedUnit + 1_000_000) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Pay amount is too large for "'.$product->title.'".',
+                        ], 422);
+                    }
+                }
+
+                $paySellerUnit = $requestedPayUnit !== null ? $requestedPayUnit : $resolvedUnit;
+                $voluntaryLine = round(max(0, ($paySellerUnit - $resolvedUnit) * $quantity), 2);
+                $voluntaryDonationOrderTotal += $voluntaryLine;
+
+                $sellerSubtotal = round($resolvedUnit * $quantity, 2);
                 $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($sellerSubtotal, $product);
                 $lineDonation = PlatformFeeService::donationAmountForLine($sellerSubtotal, $product);
                 $lineBuyer = $sellerSubtotal + $linePlatformFee;
                 $subtotal += $lineBuyer;
                 $platformFeeTotal += $linePlatformFee;
-                $donationTotal += $lineDonation;
+                $donationTotal += $lineDonation + $voluntaryLine;
+
+                $checkoutLines[] = [
+                    'cartItem' => $cartItem,
+                    'product' => $product,
+                    'quantity' => $quantity,
+                    'resolvedUnit' => $resolvedUnit,
+                    'sellerSubtotal' => $sellerSubtotal,
+                    'linePlatformFee' => $linePlatformFee,
+                    'lineDonation' => $lineDonation,
+                    'voluntaryLine' => $voluntaryLine,
+                    'offer' => $offer,
+                ];
             }
 
-            $total = $subtotal + $tax + $deliveryFee - $couponDiscount;
+            $total = $subtotal + $tax + $deliveryFee - $couponDiscount + $voluntaryDonationOrderTotal;
 
             // Generate invoice number
             $invoiceNo = $this->generateInvoiceNumber();
@@ -185,26 +256,38 @@ class OrderController extends Controller
                 'keep_updated' => $request->keep_updated ?? false,
             ]);
 
-            // Create transaction sell lines using quantities from request and decrement stock
-            foreach ($cartItems as $cartItem) {
-                $product = $cartItem->product;
-                $quantity = $requestedQuantities[$cartItem->id] ?? $cartItem->quantity;
-                $unitPrice = (float) ($product->price ?? 0);
-                $lineSubtotal = round($unitPrice * $quantity, 2);
-                $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($lineSubtotal, $product);
-                $lineDonation = PlatformFeeService::donationAmountForLine($lineSubtotal, $product);
+            // Create transaction sell lines and decrement stock; consume approved offers once.
+            $offersToConsume = [];
+            foreach ($checkoutLines as $row) {
+                $product = $row['product'];
+                $quantity = $row['quantity'];
+                $resolvedUnit = $row['resolvedUnit'];
+                $lineSubtotal = $row['sellerSubtotal'];
 
                 TransactionSellLine::create([
                     'transaction_id' => $transaction->id,
                     'product_id' => $product->id,
                     'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
+                    'unit_price' => $resolvedUnit,
                     'subtotal' => $lineSubtotal,
-                    'platform_fee_amount' => $linePlatformFee,
-                    'donation_amount' => $lineDonation,
+                    'platform_fee_amount' => $row['linePlatformFee'],
+                    'donation_amount' => $row['lineDonation'],
+                    'voluntary_donation_amount' => $row['voluntaryLine'],
                 ]);
 
                 Product::where('id', $product->id)->decrement('stock', $quantity);
+
+                if ($row['offer'] !== null) {
+                    $offersToConsume[$row['offer']->id] = $row['offer'];
+                }
+            }
+
+            foreach ($offersToConsume as $offerModel) {
+                $offerModel->forceFill([
+                    'status' => ProductPriceOffer::STATUS_CONSUMED,
+                    'consumed_at' => now(),
+                    'transaction_id' => $transaction->id,
+                ])->save();
             }
 
             // Handle payment based on payment method

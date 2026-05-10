@@ -35,6 +35,7 @@ class CheckoutRequest extends FormRequest
             'cart_items' => 'required|array|min:1',
             'cart_items.*.id' => 'required|integer',
             'cart_items.*.quantity' => 'required|integer|min:1',
+            'cart_items.*.pay_unit_price' => 'nullable|numeric|min:0',
             'payment_intent_id' => 'nullable|string',
         ];
     }

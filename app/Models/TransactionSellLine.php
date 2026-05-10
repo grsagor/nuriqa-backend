@@ -18,6 +18,7 @@ class TransactionSellLine extends Model
         'subtotal',
         'platform_fee_amount',
         'donation_amount',
+        'voluntary_donation_amount',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class TransactionSellLine extends Model
             'subtotal' => 'decimal:2',
             'platform_fee_amount' => 'decimal:2',
             'donation_amount' => 'decimal:2',
+            'voluntary_donation_amount' => 'decimal:2',
         ];
     }
 

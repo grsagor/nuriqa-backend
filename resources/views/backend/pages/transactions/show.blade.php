@@ -45,7 +45,8 @@
                                 <th>Seller unit</th>
                                 <th>Line (seller)</th>
                                 <th>Buyer protection fee</th>
-                                <th>Donation (seller share)</th>
+                                <th>Donation (listing %)</th>
+                                <th>Extra donation (buyer)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,6 +58,7 @@
                                     <td>£{{ number_format($line->subtotal, 2) }}</td>
                                     <td>£{{ number_format($line->platform_fee_amount ?? 0, 2) }}</td>
                                     <td>£{{ number_format($line->donation_amount ?? 0, 2) }}</td>
+                                    <td>£{{ number_format($line->voluntary_donation_amount ?? 0, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductPriceOffer;
 use App\Models\Size;
 use App\Models\Wishlist;
 use App\Services\ImageService;
+use App\Services\ProductPriceOfferService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -430,6 +432,30 @@ class ProductController extends Controller
             ->first();
         $product->average_rating = $ratingStats ? round((float) $ratingStats->average_rating, 1) : null;
         $product->reviews_count = $ratingStats ? (int) $ratingStats->reviews_count : 0;
+
+        $product->my_price_offer = null;
+        if ($authUser && ! $viewerIsOwner && ! $product->is_free && ProductPriceOfferService::listSellerUnitPrice($product) > 0) {
+            $approved = ProductPriceOfferService::activeApprovedOfferFor((int) $authUser->id, (int) $product->id);
+            $pending = ProductPriceOffer::query()
+                ->where('buyer_id', $authUser->id)
+                ->where('product_id', $product->id)
+                ->where('status', ProductPriceOffer::STATUS_PENDING)
+                ->orderByDesc('id')
+                ->first();
+            $product->my_price_offer = [
+                'pending' => $pending ? [
+                    'id' => $pending->id,
+                    'offered_unit_price' => (float) $pending->offered_unit_price,
+                    'status' => $pending->status,
+                ] : null,
+                'approved' => $approved ? [
+                    'id' => $approved->id,
+                    'offered_unit_price' => (float) $approved->offered_unit_price,
+                    'approved_until' => $approved->approved_until?->toIso8601String(),
+                    'status' => $approved->status,
+                ] : null,
+            ];
+        }
 
         return response()->json([
             'success' => true,

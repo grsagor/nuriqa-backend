@@ -10,6 +10,11 @@ class PlatformFeeService
 {
     public const CACHE_KEY = 'platform_settings.fee_percentage';
 
+    /**
+     * Minimum buyer protection (platform) fee per cart line at checkout, in the storefront currency (GBP).
+     */
+    public const MIN_LINE_BUYER_PROTECTION_AMOUNT = 1.0;
+
     public static function feePercentage(): float
     {
         return (float) Cache::remember(self::CACHE_KEY, 300, function () {
@@ -36,19 +41,17 @@ class PlatformFeeService
 
     public static function platformFeeAmountForUnitPrice(float $unitPrice, Product $product): float
     {
-        if (! self::isPaidProductPrice($product, $unitPrice)) {
-            return 0.0;
-        }
         $pct = self::feePercentage();
+        $feeFromPct = 0.0;
+        if (self::isPaidProductPrice($product, $unitPrice) && $unitPrice > 0) {
+            $feeFromPct = round($unitPrice * $pct / 100, 2);
+        }
 
-        return round($unitPrice * $pct / 100, 2);
+        return round(max($feeFromPct, self::MIN_LINE_BUYER_PROTECTION_AMOUNT), 2);
     }
 
     public static function unitPriceIncludingPlatformFee(float $unitPrice, Product $product): float
     {
-        if (! self::isPaidProductPrice($product, $unitPrice)) {
-            return 0.0;
-        }
         $fee = self::platformFeeAmountForUnitPrice($unitPrice, $product);
 
         return round((float) $unitPrice + $fee, 2);
@@ -56,15 +59,13 @@ class PlatformFeeService
 
     public static function platformFeeAmountForSellerSubtotal(float $sellerSubtotal, Product $product): float
     {
-        if (! self::isPaidProductPrice($product, (float) $product->price)) {
-            return 0.0;
-        }
-        if ($sellerSubtotal <= 0) {
-            return 0.0;
-        }
         $pct = self::feePercentage();
+        $feeFromPct = 0.0;
+        if (self::isPaidProductPrice($product, (float) $product->price) && $sellerSubtotal > 0) {
+            $feeFromPct = round($sellerSubtotal * $pct / 100, 2);
+        }
 
-        return round($sellerSubtotal * $pct / 100, 2);
+        return round(max($feeFromPct, self::MIN_LINE_BUYER_PROTECTION_AMOUNT), 2);
     }
 
     public static function donationAmountForLine(float $sellerSubtotal, Product $product): float

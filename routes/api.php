@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductPriceOfferController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\PublicSellerController;
 use App\Http\Controllers\Api\SellerNotificationController;
@@ -81,6 +82,14 @@ Route::prefix('v1')->group(function () {
         Route::delete('/', 'clear')->name('api.v1.cart.clear');
         Route::put('/{id}', 'update')->name('api.v1.cart.update');
         Route::delete('/{id}', 'destroy')->name('api.v1.cart.destroy');
+    });
+
+    Route::prefix('product-price-offers')->controller(ProductPriceOfferController::class)->middleware('jwt.auth')->group(function () {
+        Route::post('/', 'store')->name('api.v1.product-price-offers.store');
+        Route::get('/mine', 'myOffers')->name('api.v1.product-price-offers.mine');
+        Route::get('/seller', 'sellerIndex')->name('api.v1.product-price-offers.seller-index');
+        Route::post('/{id}/approve', 'approve')->name('api.v1.product-price-offers.approve');
+        Route::post('/{id}/decline', 'decline')->name('api.v1.product-price-offers.decline');
     });
 
     Route::prefix('sponsor-requests')->controller(SponsorRequestController::class)->group(function () {
