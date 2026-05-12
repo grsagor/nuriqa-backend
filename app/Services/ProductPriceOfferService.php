@@ -118,4 +118,67 @@ class ProductPriceOfferService
             ]
         );
     }
+
+    public static function notifyBuyerOfferApproved(ProductPriceOffer $offer): void
+    {
+        $offer->loadMissing('product');
+        $product = $offer->product;
+        if (! $product || (int) $offer->buyer_id < 1) {
+            return;
+        }
+
+        $until = $offer->approved_until
+            ? Carbon::parse($offer->approved_until)->format('M j, Y')
+            : null;
+
+        $description = sprintf(
+            'Your offer of £%s on "%s" has been approved.%s',
+            number_format((float) $offer->offered_unit_price, 2),
+            $product->title,
+            $until ? " Complete checkout before {$until}." : ''
+        );
+
+        SellerNotification::updateOrCreate(
+            [
+                'user_id' => (int) $offer->buyer_id,
+                'type' => 'price_offer_response',
+                'entity_id' => $offer->id,
+            ],
+            [
+                'entity_type' => ProductPriceOffer::class,
+                'title' => 'Offer approved',
+                'description' => $description,
+                'read' => 0,
+            ]
+        );
+    }
+
+    public static function notifyBuyerOfferDeclined(ProductPriceOffer $offer): void
+    {
+        $offer->loadMissing('product');
+        $product = $offer->product;
+        if (! $product || (int) $offer->buyer_id < 1) {
+            return;
+        }
+
+        $description = sprintf(
+            'Your offer of £%s on "%s" was declined by the seller.',
+            number_format((float) $offer->offered_unit_price, 2),
+            $product->title
+        );
+
+        SellerNotification::updateOrCreate(
+            [
+                'user_id' => (int) $offer->buyer_id,
+                'type' => 'price_offer_response',
+                'entity_id' => $offer->id,
+            ],
+            [
+                'entity_type' => ProductPriceOffer::class,
+                'title' => 'Offer declined',
+                'description' => $description,
+                'read' => 0,
+            ]
+        );
+    }
 }

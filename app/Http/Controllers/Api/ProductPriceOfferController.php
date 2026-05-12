@@ -169,6 +169,8 @@ class ProductPriceOfferController extends Controller
             (int) $offer->id
         );
 
+        ProductPriceOfferService::notifyBuyerOfferApproved($offer);
+
         return response()->json([
             'success' => true,
             'message' => 'Offer approved. The buyer can check out at this price until '.$until->toIso8601String(),
@@ -196,6 +198,8 @@ class ProductPriceOfferController extends Controller
         }
 
         $offer->forceFill(['status' => ProductPriceOffer::STATUS_DECLINED])->save();
+
+        ProductPriceOfferService::notifyBuyerOfferDeclined($offer);
 
         return response()->json([
             'success' => true,

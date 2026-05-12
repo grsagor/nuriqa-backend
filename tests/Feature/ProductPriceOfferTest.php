@@ -117,4 +117,56 @@ class ProductPriceOfferTest extends TestCase
         $this->assertNotNull($offer->consumed_at);
         $this->assertSame(Transaction::query()->first()->id, $offer->transaction_id);
     }
+
+    public function test_buyer_is_notified_when_offer_is_approved(): void
+    {
+        $seller = User::factory()->create();
+        $buyer = User::factory()->create();
+        $product = $this->seedPaidProduct($seller);
+
+        $offer = ProductPriceOffer::query()->create([
+            'product_id' => $product->id,
+            'buyer_id' => $buyer->id,
+            'offered_unit_price' => 200.00,
+            'status' => ProductPriceOffer::STATUS_PENDING,
+        ]);
+
+        $sellerToken = JWTAuth::fromUser($seller);
+        $this->withHeader('Authorization', 'Bearer '.$sellerToken)
+            ->postJson("/api/v1/product-price-offers/{$offer->id}/approve")
+            ->assertOk();
+
+        $this->assertDatabaseHas('seller_notifications', [
+            'user_id' => $buyer->id,
+            'type' => 'price_offer_response',
+            'entity_id' => $offer->id,
+            'title' => 'Offer approved',
+        ]);
+    }
+
+    public function test_buyer_is_notified_when_offer_is_declined(): void
+    {
+        $seller = User::factory()->create();
+        $buyer = User::factory()->create();
+        $product = $this->seedPaidProduct($seller);
+
+        $offer = ProductPriceOffer::query()->create([
+            'product_id' => $product->id,
+            'buyer_id' => $buyer->id,
+            'offered_unit_price' => 200.00,
+            'status' => ProductPriceOffer::STATUS_PENDING,
+        ]);
+
+        $sellerToken = JWTAuth::fromUser($seller);
+        $this->withHeader('Authorization', 'Bearer '.$sellerToken)
+            ->postJson("/api/v1/product-price-offers/{$offer->id}/decline")
+            ->assertOk();
+
+        $this->assertDatabaseHas('seller_notifications', [
+            'user_id' => $buyer->id,
+            'type' => 'price_offer_response',
+            'entity_id' => $offer->id,
+            'title' => 'Offer declined',
+        ]);
+    }
 }
