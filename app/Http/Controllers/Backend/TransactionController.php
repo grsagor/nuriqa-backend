@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\TransactionPayment;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,7 @@ class TransactionController extends Controller
     {
         if (request()->ajax()) {
             // All rows in `transactions` (line items may be missing on legacy data).
-            $data = Transaction::with(['user', 'sellLines.product'])
+            $data = Transaction::with(['user', 'sellLines.product', 'latestPayment'])
                 ->select('id', 'user_id', 'invoice_no', 'status', 'total', 'payment_method', 'created_at')
                 ->latest();
 
@@ -46,7 +47,7 @@ class TransactionController extends Controller
                     return '<span class="badge '.$badgeClass.'">'.ucfirst($row->status).'</span>';
                 })
                 ->addColumn('payment_method', function ($row) {
-                    return $row->payment_method ? ucfirst($row->payment_method) : 'N/A';
+                    return $this->formatPaymentSummary($row);
                 })
                 ->addColumn('items_count', function ($row) {
                     return $row->sellLines ? $row->sellLines->count() : 0;
@@ -76,7 +77,7 @@ class TransactionController extends Controller
     public function hajraList()
     {
         if (request()->ajax()) {
-            $data = Transaction::with(['user', 'sellLines.product'])
+            $data = Transaction::with(['user', 'sellLines.product', 'latestPayment'])
                 ->whereHas('sellLines.product', function ($query) {
                     $query->where('type', 'hajra');
                 })
@@ -105,7 +106,7 @@ class TransactionController extends Controller
                     return '<span class="badge '.$badgeClass.'">'.ucfirst($row->status).'</span>';
                 })
                 ->addColumn('payment_method', function ($row) {
-                    return $row->payment_method ? ucfirst($row->payment_method) : 'N/A';
+                    return $this->formatPaymentSummary($row);
                 })
                 ->addColumn('items_count', function ($row) {
                     return $row->sellLines ? $row->sellLines->count() : 0;
@@ -135,7 +136,7 @@ class TransactionController extends Controller
     public function merchandiseList()
     {
         if (request()->ajax()) {
-            $data = Transaction::with(['user', 'sellLines.product'])
+            $data = Transaction::with(['user', 'sellLines.product', 'latestPayment'])
                 ->whereHas('sellLines.product', function ($query) {
                     $query->where('type', 'merchandise');
                 })
@@ -164,7 +165,7 @@ class TransactionController extends Controller
                     return '<span class="badge '.$badgeClass.'">'.ucfirst($row->status).'</span>';
                 })
                 ->addColumn('payment_method', function ($row) {
-                    return $row->payment_method ? ucfirst($row->payment_method) : 'N/A';
+                    return $this->formatPaymentSummary($row);
                 })
                 ->addColumn('items_count', function ($row) {
                     return $row->sellLines ? $row->sellLines->count() : 0;
@@ -203,7 +204,7 @@ class TransactionController extends Controller
 
     public function complete($id)
     {
-        $transaction = Transaction::with('sellLines.product')->find($id);
+        $transaction = Transaction::with(['sellLines.product', 'latestPayment'])->find($id);
         if (! $transaction) {
             return abort(404);
         }
@@ -211,6 +212,12 @@ class TransactionController extends Controller
         if ($transaction->status === 'completed') {
             return redirect()->back()
                 ->with('info', 'Transaction is already completed.');
+        }
+
+        $payment = $transaction->latestPayment;
+        if ($payment && in_array($payment->payment_method, ['stripe', 'paypal'], true) && $payment->status !== 'succeeded') {
+            return redirect()->back()
+                ->with('error', 'Order cannot be marked as completed until the payment succeeds.');
         }
 
         DB::beginTransaction();
@@ -271,5 +278,26 @@ class TransactionController extends Controller
             'success' => true,
             'message' => 'Transaction deleted successfully',
         ]);
+    }
+
+    private function formatPaymentSummary(Transaction $transaction): string
+    {
+        $payment = $transaction->latestPayment;
+        if (! $payment) {
+            return $transaction->payment_method ? ucfirst($transaction->payment_method) : 'N/A';
+        }
+
+        return $this->paymentProviderLabel($payment).' ('.ucfirst($payment->status).')';
+    }
+
+    private function paymentProviderLabel(TransactionPayment $payment): string
+    {
+        return match ($payment->payment_method) {
+            'stripe' => 'Stripe',
+            'paypal' => 'PayPal',
+            'bank' => 'Bank',
+            'cod' => 'Cash-on-Delivery',
+            default => ucfirst($payment->payment_method),
+        };
     }
 }

@@ -26,7 +26,7 @@
                     <th>User</th>
                     <th>Total</th>
                     <th>Items</th>
-                    <th>Payment Method</th>
+                    <th>Payment</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th class="text-end">Actions</th>

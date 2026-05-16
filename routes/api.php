@@ -106,6 +106,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/checkout', 'checkout')->name('api.v1.orders.checkout');
         Route::post('/sponsor-checkout', 'sponsorCheckout')->name('api.v1.orders.sponsor-checkout');
         Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment');
+        Route::post('/paypal/create-order', 'createPayPalOrder')->name('api.v1.orders.paypal.create-order');
+        Route::post('/paypal/capture-order', 'capturePayPalOrder')->name('api.v1.orders.paypal.capture-order');
         Route::get('/seller', 'sellerIndex')->name('api.v1.orders.seller-index');
         Route::put('/seller/{id}/status', 'sellerUpdateStatus')->name('api.v1.orders.seller-update-status');
         Route::get('/sponsored', 'sponsoredIndex')->name('api.v1.orders.sponsored-index');

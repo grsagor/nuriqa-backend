@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Transaction extends Model
 {
@@ -58,6 +59,11 @@ class Transaction extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(TransactionPayment::class);
+    }
+
+    public function latestPayment(): HasOne
+    {
+        return $this->hasOne(TransactionPayment::class)->latestOfMany();
     }
 
     public function shipments(): HasMany

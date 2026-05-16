@@ -11,6 +11,7 @@ use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
+use App\Services\PayPalService;
 use App\Services\PlatformFeeService;
 use App\Services\ProductPriceOfferService;
 use App\Services\SellerNotificationService;
@@ -24,18 +25,9 @@ use Stripe\StripeClient;
 
 class OrderController extends Controller
 {
-    private StripeClient $stripe;
+    private ?StripeClient $stripe = null;
 
-    public function __construct()
-    {
-        $secretKey = config('services.stripe.secret') ?? env('STRIPE_SECRET');
-
-        if (empty($secretKey)) {
-            throw new \RuntimeException('Stripe secret key is not configured. Please set STRIPE_SECRET in your .env file.');
-        }
-
-        $this->stripe = new StripeClient($secretKey);
-    }
+    public function __construct(private PayPalService $payPalService) {}
 
     /**
      * Create Stripe Payment Intent
@@ -52,7 +44,7 @@ class OrderController extends Controller
         $currency = $request->currency ?? 'gbp';
 
         try {
-            $paymentIntent = $this->stripe->paymentIntents->create([
+            $paymentIntent = $this->stripe()->paymentIntents->create([
                 'amount' => (int) round($amount),
                 'currency' => strtolower($currency),
                 'automatic_payment_methods' => [
@@ -324,6 +316,10 @@ class OrderController extends Controller
                     'amount' => $total,
                     'currency' => 'GBP',
                     'status' => 'pending',
+                    'metadata' => [
+                        'billing_email' => $request->billing_email,
+                        'billing_phone' => $request->billing_phone,
+                    ],
                 ]);
             }
 
@@ -481,6 +477,10 @@ class OrderController extends Controller
                     'amount' => $total,
                     'currency' => 'GBP',
                     'status' => 'pending',
+                    'metadata' => [
+                        'billing_email' => $request->billing_email,
+                        'billing_phone' => $request->billing_phone,
+                    ],
                 ]);
             }
 
@@ -524,7 +524,7 @@ class OrderController extends Controller
 
         try {
             // Retrieve payment intent from Stripe
-            $paymentIntent = $this->stripe->paymentIntents->retrieve($request->payment_intent_id);
+            $paymentIntent = $this->stripe()->paymentIntents->retrieve($request->payment_intent_id);
 
             $transaction = Transaction::where('id', $request->transaction_id)
                 ->where('user_id', $user->id)
@@ -587,6 +587,168 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to confirm payment',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    public function createPayPalOrder(Request $request): JsonResponse
+    {
+        $request->validate([
+            'transaction_id' => 'required|exists:transactions,id',
+        ]);
+
+        $user = JWTAuth::parseToken()->authenticate();
+
+        try {
+            $transaction = Transaction::query()
+                ->where('id', $request->transaction_id)
+                ->where('user_id', $user->id)
+                ->with('payments')
+                ->firstOrFail();
+
+            if ($transaction->payment_method !== 'paypal') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This transaction is not using PayPal.',
+                ], 422);
+            }
+
+            $payment = $transaction->payments()
+                ->where('payment_method', 'paypal')
+                ->latest('id')
+                ->firstOrFail();
+
+            if ($payment->status === 'succeeded') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PayPal payment is already completed.',
+                    'data' => [
+                        'transaction' => $transaction->fresh(['sellLines.product', 'payments']),
+                        'paypal_order_id' => $payment->metadata['paypal_order_id'] ?? null,
+                    ],
+                ]);
+            }
+
+            $paypalOrder = $this->payPalService->createOrder($transaction, $payment);
+
+            $payment->update([
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'paypal_order_id' => $paypalOrder['id'] ?? null,
+                    'paypal_create_order_response' => $paypalOrder,
+                ]),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PayPal order created successfully.',
+                'data' => [
+                    'paypal_order_id' => $paypalOrder['id'] ?? null,
+                    'transaction_id' => $transaction->id,
+                    'paypal_order' => $paypalOrder,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('PayPal Create Order Error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create PayPal order. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    public function capturePayPalOrder(Request $request): JsonResponse
+    {
+        $request->validate([
+            'transaction_id' => 'required|exists:transactions,id',
+            'paypal_order_id' => 'required|string',
+        ]);
+
+        $user = JWTAuth::parseToken()->authenticate();
+
+        try {
+            $transaction = Transaction::query()
+                ->where('id', $request->transaction_id)
+                ->where('user_id', $user->id)
+                ->with('payments')
+                ->firstOrFail();
+
+            $payment = $transaction->payments()
+                ->where('payment_method', 'paypal')
+                ->latest('id')
+                ->firstOrFail();
+
+            $existingOrderId = $payment->metadata['paypal_order_id'] ?? null;
+            if ($existingOrderId && $existingOrderId !== $request->paypal_order_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'PayPal order does not match this transaction.',
+                ], 422);
+            }
+
+            $paypalOrder = $this->payPalService->captureOrder($request->paypal_order_id);
+            $capture = $paypalOrder['purchase_units'][0]['payments']['captures'][0] ?? null;
+            $paypalStatus = strtoupper((string) ($paypalOrder['status'] ?? ''));
+            $captureStatus = strtoupper((string) ($capture['status'] ?? ''));
+
+            DB::beginTransaction();
+
+            if ($paypalStatus === 'COMPLETED' || $captureStatus === 'COMPLETED') {
+                $payment->update([
+                    'status' => 'succeeded',
+                    'metadata' => array_merge($payment->metadata ?? [], [
+                        'paypal_order_id' => $request->paypal_order_id,
+                        'paypal_capture_id' => $capture['id'] ?? null,
+                        'paypal_payer_id' => $paypalOrder['payer']['payer_id'] ?? null,
+                        'paypal_payer_email' => $paypalOrder['payer']['email_address'] ?? null,
+                        'paypal_capture_response' => $paypalOrder,
+                    ]),
+                ]);
+
+                DB::commit();
+
+                SellerNotificationService::notifyPaymentReceived($transaction->fresh());
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PayPal payment captured successfully',
+                    'data' => [
+                        'transaction' => $transaction->fresh(['sellLines.product', 'payments']),
+                    ],
+                ]);
+            }
+
+            $payment->update([
+                'status' => 'failed',
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'paypal_order_id' => $request->paypal_order_id,
+                    'paypal_capture_response' => $paypalOrder,
+                    'error' => 'PayPal payment was not completed.',
+                ]),
+            ]);
+
+            $transaction->update([
+                'status' => 'failed',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'PayPal payment was not completed.',
+                'data' => [
+                    'transaction' => $transaction->fresh(['payments']),
+                ],
+            ], 400);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('PayPal Capture Error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to capture PayPal payment',
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -860,5 +1022,22 @@ class OrderController extends Controller
         }
 
         return $prefix.$year.$month.str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    private function stripe(): StripeClient
+    {
+        if ($this->stripe instanceof StripeClient) {
+            return $this->stripe;
+        }
+
+        $secretKey = config('services.stripe.secret') ?? env('STRIPE_SECRET');
+
+        if (empty($secretKey)) {
+            throw new \RuntimeException('Stripe secret key is not configured. Please set STRIPE_SECRET in your .env file.');
+        }
+
+        $this->stripe = new StripeClient($secretKey);
+
+        return $this->stripe;
     }
 }

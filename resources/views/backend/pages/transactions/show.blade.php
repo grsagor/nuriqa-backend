@@ -1,3 +1,19 @@
+@php
+    $latestPayment = $transaction->payments->sortByDesc('id')->first();
+    $paymentProvider = match ($latestPayment?->payment_method) {
+        'stripe' => 'Stripe',
+        'paypal' => 'PayPal',
+        'bank' => 'Bank',
+        'cod' => 'Cash-on-Delivery',
+        default => $transaction->payment_method ? ucfirst($transaction->payment_method) : 'N/A',
+    };
+    $paymentReference = $latestPayment?->stripe_charge_id
+        ?? $latestPayment?->stripe_payment_intent_id
+        ?? data_get($latestPayment?->metadata, 'paypal_capture_id')
+        ?? data_get($latestPayment?->metadata, 'paypal_order_id')
+        ?? 'N/A';
+@endphp
+
 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
     <div class="modal-content">
         <div class="modal-header header-bg text-white">
@@ -24,8 +40,28 @@
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <strong>Payment Method:</strong>
+                    <strong>Checkout Method:</strong>
                     <p>{{ $transaction->payment_method ? ucfirst($transaction->payment_method) : 'N/A' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Payment Provider:</strong>
+                    <p>{{ $paymentProvider }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Payment Status:</strong>
+                    <p>
+                        @if($latestPayment)
+                            <span class="badge bg-{{ $latestPayment->status === 'succeeded' ? 'success' : ($latestPayment->status === 'failed' ? 'danger' : 'warning') }}">
+                                {{ ucfirst($latestPayment->status) }}
+                            </span>
+                        @else
+                            N/A
+                        @endif
+                    </p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Payment Reference:</strong>
+                    <p>{{ $paymentReference }}</p>
                 </div>
                 <div class="col-md-12 mb-3">
                     <strong>Billing Information:</strong>
@@ -34,6 +70,14 @@
                         {{ $transaction->billing_email }}<br>
                         {{ $transaction->billing_phone }}
                     </p>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <strong>Billing Address:</strong>
+                    <p>{{ $transaction->billing_address ?: 'N/A' }}</p>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <strong>Additional Info:</strong>
+                    <p>{{ $transaction->additional_info ?: 'N/A' }}</p>
                 </div>
                 <div class="col-md-12 mb-3">
                     <strong>Order Summary:</strong>
