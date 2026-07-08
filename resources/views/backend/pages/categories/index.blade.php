@@ -31,6 +31,7 @@
         <table id="datatable" class="data-table">
             <thead>
                 <tr>
+                    <th>Image</th>
                     <th>Category name</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -49,6 +50,12 @@ $(function () {
     initDataTable(
         '#datatable',
         [
+            {
+                data: 'image',
+                name: 'image',
+                orderable: false,
+                searchable: false
+            },
             { data: 'name', name: 'name' },
             {
                 data: 'action',

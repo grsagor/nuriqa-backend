@@ -20,8 +20,13 @@ class ImageService
         // Generate unique filename
         $filename = time().'_'.Str::random(10).'.'.$file->getClientOriginalExtension();
 
+        $uploadPath = public_path("uploads/{$directory}");
+        if (! is_dir($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+
         // Store file in public/uploads directory
-        $path = $file->move(public_path("uploads/{$directory}"), $filename);
+        $file->move($uploadPath, $filename);
 
         return "uploads/{$directory}/{$filename}";
     }
