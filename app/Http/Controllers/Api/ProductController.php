@@ -147,6 +147,26 @@ class ProductController extends Controller
             });
         }
 
+        if ($request->filled('page')) {
+            $perPage = (int) ($request->input('per_page') ?: $request->input('limit') ?: 20);
+            $perPage = min(max($perPage, 1), 100);
+
+            $paginator = $query->paginate($perPage);
+            $products = $paginator->getCollection();
+            $this->attachWishlistStatus($products);
+
+            return response()->json([
+                'success' => true,
+                'data' => $products->values(),
+                'pagination' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                ],
+            ]);
+        }
+
         if ($request->filled('limit')) {
             $query->limit($request->limit);
         }
@@ -155,9 +175,21 @@ class ProductController extends Controller
         }
 
         $products = $query->get();
+        $this->attachWishlistStatus($products);
 
-        // Check if user is authenticated and get their wishlist product IDs
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+        ]);
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Product>|\Illuminate\Database\Eloquent\Collection<int, Product>  $products
+     */
+    private function attachWishlistStatus($products): void
+    {
         $wishlistProductIds = [];
+
         try {
             $user = JWTAuth::parseToken()->authenticate();
             if ($user) {
@@ -169,15 +201,9 @@ class ProductController extends Controller
             // User not authenticated, wishlistProductIds remains empty
         }
 
-        // Add wishlist status to each product
         $products->each(function ($product) use ($wishlistProductIds) {
             $product->is_in_wishlist = in_array($product->id, $wishlistProductIds);
         });
-
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-        ]);
     }
 
     public function store(Request $request)
