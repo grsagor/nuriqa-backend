@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InvalidFirebaseIdTokenException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ForgotPasswordResetRequest;
 use App\Http\Requests\ForgotPasswordSendOtpRequest;
 use App\Http\Requests\ForgotPasswordVerifyOtpRequest;
+use App\Http\Requests\SocialLoginRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ImageService;
 use App\Services\OtpService;
+use App\Services\SocialAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -17,6 +20,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use RuntimeException;
 
 class AuthController extends Controller
 {
@@ -209,6 +213,53 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Login failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Login or register with a Firebase ID token (Google / Apple via Firebase Auth).
+     */
+    public function socialLogin(SocialLoginRequest $request, SocialAuthService $socialAuthService): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $result = $socialAuthService->authenticateWithIdToken((string) $request->validated('id_token'));
+            $user = $result['user'];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'image_url' => $user->image_url,
+                        'role' => $user->role ? $user->role->name : null,
+                        'role_id' => $user->role_id,
+                        'created_at' => $user->created_at->toISOString(),
+                    ],
+                    'token' => $result['token'],
+                    'expires_in' => $result['expires_in'],
+                    'token_type' => $result['token_type'],
+                ],
+            ]);
+        } catch (InvalidFirebaseIdTokenException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired Firebase ID token.',
+            ], 401);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Social login failed',
                 'error' => $e->getMessage(),
             ], 500);
         }

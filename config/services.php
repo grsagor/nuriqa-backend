@@ -62,4 +62,9 @@ return [
         'messaging_service_sid' => env('TWILIO_MESSAGING_SERVICE_SID'),
     ],
 
+    'firebase' => [
+        // Public project ID only — enough to verify Google/Apple ID tokens (no service account JSON).
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+    ],
+
 ];

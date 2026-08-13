@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/forgot-password/verify-otp', 'forgotPasswordVerifyOtp')->middleware('throttle:15,1')->name('api.v1.forgot-password.verify-otp');
         Route::post('/forgot-password/reset', 'forgotPasswordReset')->middleware('throttle:10,1')->name('api.v1.forgot-password.reset');
         Route::post('/login', 'login')->name('api.v1.login');
+        Route::post('/auth/social', 'socialLogin')->middleware('throttle:20,1')->name('api.v1.auth.social');
         Route::post('/logout', 'logout')->name('api.v1.logout')->middleware('auth:api');
         Route::get('/my-user-info', 'myUserInfo')->name('api.v1.my-user-info')->middleware('jwt.auth');
         Route::post('/my-notification-settings', 'updateNotificationSettings')->name('api.v1.my-notification-settings')->middleware('jwt.auth');
