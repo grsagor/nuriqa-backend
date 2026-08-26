@@ -389,7 +389,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $user,
+            'data' => $user->makePrivateAttributesVisible(),
         ]);
     }
 
@@ -471,7 +471,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Profile updated successfully',
-                'data' => $user->fresh(),
+                'data' => $user->fresh()->makePrivateAttributesVisible(),
             ]);
         } catch (\Exception $e) {
             return response()->json([

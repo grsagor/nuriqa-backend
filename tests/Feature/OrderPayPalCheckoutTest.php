@@ -10,6 +10,7 @@ use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\User;
+use App\Services\CheckoutShippingService;
 use App\Services\PayPalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery\MockInterface;
@@ -20,8 +21,27 @@ class OrderPayPalCheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function mockFlatShippingFee(float $fee = 15.0): void
+    {
+        $this->mock(CheckoutShippingService::class, function ($mock) use ($fee) {
+            $mock->shouldReceive('quote')->andReturn([
+                'total_fee' => $fee,
+                'quote' => ['currency' => 'GBP', 'total_fee' => $fee, 'seller_count' => 1, 'sellers' => []],
+            ]);
+            $mock->shouldReceive('shippingAddressFromCheckout')->andReturn([
+                'name' => 'Buyer Person',
+                'address_line_1' => '10 Test Street',
+                'city' => 'London',
+                'postcode' => 'E1 1AA',
+                'country' => 'GB',
+            ]);
+            $mock->shouldReceive('createShipmentsForTransaction')->andReturn([]);
+        });
+    }
+
     public function test_user_can_complete_paid_cart_checkout_with_paypal(): void
     {
+        $this->mockFlatShippingFee(15.0);
         $seller = User::factory()->create();
         $buyer = User::factory()->create();
         $product = $this->seedPaidProduct($seller);
@@ -44,6 +64,9 @@ class OrderPayPalCheckoutTest extends TestCase
                 'billing_email' => $buyer->email,
                 'billing_phone' => '07123456789',
                 'billing_address' => '10 Test Street, London, E1 1AA',
+                'shipping_address_line_1' => '10 Test Street',
+                'shipping_city' => 'London',
+                'shipping_postcode' => 'E1 1AA',
                 'payment_method' => 'paypal',
                 'agree_terms' => true,
                 'cart_items' => [
@@ -88,7 +111,8 @@ class OrderPayPalCheckoutTest extends TestCase
 
     public function test_sponsor_checkout_can_capture_paypal_payment(): void
     {
-        $seller = User::factory()->create();
+        $this->mockFlatShippingFee(15.0);
+        $seller = User::factory()->create(['postal_code' => 'SW1A 1AA']);
         $requester = User::factory()->create();
         $sponsor = User::factory()->create();
         $product = $this->seedPaidProduct($seller);
@@ -123,6 +147,9 @@ class OrderPayPalCheckoutTest extends TestCase
                 'billing_last_name' => 'Person',
                 'billing_email' => $sponsor->email,
                 'billing_phone' => '07111222333',
+                'shipping_address_line_1' => '11 Hope Road',
+                'shipping_city' => 'London',
+                'shipping_postcode' => 'E1 2AB',
                 'payment_method' => 'paypal',
                 'agree_terms' => true,
             ])

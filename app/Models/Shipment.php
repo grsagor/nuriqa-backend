@@ -9,10 +9,12 @@ class Shipment extends Model
 {
     protected $fillable = [
         'transaction_id',
+        'seller_id',
         'carrier',
         'tracking_number',
         'label_url',
         'status',
+        'shipping_fee',
         'address_to',
         'address_from',
         'weight_g',
@@ -25,12 +27,18 @@ class Shipment extends Model
             'address_to' => 'array',
             'address_from' => 'array',
             'dimensions_cm' => 'array',
+            'shipping_fee' => 'decimal:2',
         ];
     }
 
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
+    }
+
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'seller_id');
     }
 
     public function scopeByCarrier($query, string $carrier)

@@ -48,9 +48,27 @@ return [
     ],
 
     'evri' => [
-        'base_url' => env('EVRI_BASE_URL', 'https://api.evri.com'),
-        'client_id' => env('EVRI_CLIENT_ID'),
-        'client_secret' => env('EVRI_CLIENT_SECRET'),
+        // Hermes World / Evri Cloud (from integration email):
+        // Auth Token URL: https://oauth.prod.evricloud.co.uk
+        // API Base URL: https://api.hermesworld.co.uk
+        'auth_token_url' => env('EVRI_AUTH_TOKEN_URL'),
+        'base_url' => env('EVRI_BASE_URL', 'https://api.hermesworld.co.uk'),
+        // Required by oauth.prod.evricloud.co.uk (Auth0). Usually the API base URL.
+        'audience' => env('EVRI_AUDIENCE', env('EVRI_BASE_URL', 'https://api.hermesworld.co.uk')),
+        // Portal client number / Client ID (e.g. 10917).
+        'client_number' => env('EVRI_CLIENT_NUMBER', '10917'),
+        'client_name' => env('EVRI_CLIENT_NAME', 'Nuriqa'),
+        // Auth ID + Auth Secret from EVRi (used for Basic Auth on token request).
+        'auth_id' => env('EVRI_AUTH_ID'),
+        'auth_secret' => env('EVRI_AUTH_SECRET'),
+        // Optional OAuth body client_id/client_secret. Defaults to Auth ID/Secret.
+        'oauth_client_id' => env('EVRI_OAUTH_CLIENT_ID', env('EVRI_AUTH_ID')),
+        'oauth_client_secret' => env('EVRI_OAUTH_CLIENT_SECRET', env('EVRI_AUTH_SECRET')),
+        // Portal username/password (Nuriqa-sit / Nuriqa) — kept for reference / support.
+        'username' => env('EVRI_USERNAME'),
+        'password' => env('EVRI_PASSWORD'),
+        'api_key' => env('EVRI_API_KEY'),
+        'storage_disk' => env('EVRI_STORAGE_DISK', 'public'),
         's3_bucket' => env('EVRI_S3_BUCKET', 'nuriqa-labels'),
         'webhook_secret' => env('EVRI_WEBHOOK_SECRET'),
     ],

@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Size;
 use App\Models\User;
+use App\Services\CheckoutShippingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\TestCase;
@@ -18,6 +19,21 @@ class VoluntaryDonationCheckoutTest extends TestCase
     public function test_checkout_adds_voluntary_overpayment_to_donation_and_total(): void
     {
         \App\Models\PlatformSetting::query()->update(['fee_percentage' => 10]);
+
+        $this->mock(CheckoutShippingService::class, function ($mock) {
+            $mock->shouldReceive('quote')->andReturn([
+                'total_fee' => 15.0,
+                'quote' => ['currency' => 'GBP', 'total_fee' => 15.0, 'seller_count' => 1, 'sellers' => []],
+            ]);
+            $mock->shouldReceive('shippingAddressFromCheckout')->andReturn([
+                'name' => 'A B',
+                'address_line_1' => '1 Test St',
+                'city' => 'London',
+                'postcode' => 'E1 6AN',
+                'country' => 'GB',
+            ]);
+            $mock->shouldReceive('createShipmentsForTransaction')->andReturn([]);
+        });
 
         $seller = User::factory()->create();
         $buyer = User::factory()->create();
@@ -50,6 +66,9 @@ class VoluntaryDonationCheckoutTest extends TestCase
                 'billing_last_name' => 'B',
                 'billing_email' => 'a@a.com',
                 'billing_phone' => '1',
+                'shipping_address_line_1' => '1 Test Street',
+                'shipping_city' => 'London',
+                'shipping_postcode' => 'E1 6AN',
                 'payment_method' => 'cod',
                 'agree_terms' => true,
                 'cart_items' => [

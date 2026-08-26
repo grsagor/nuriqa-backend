@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Size;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\CheckoutShippingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\TestCase;
@@ -17,9 +18,51 @@ class PlatformFeeCheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function mockFlatShippingFee(float $fee = 15.0): void
+    {
+        $this->mock(CheckoutShippingService::class, function ($mock) use ($fee) {
+            $mock->shouldReceive('quote')->andReturn([
+                'total_fee' => $fee,
+                'quote' => [
+                    'currency' => 'GBP',
+                    'total_fee' => $fee,
+                    'seller_count' => 1,
+                    'sellers' => [],
+                ],
+            ]);
+            $mock->shouldReceive('shippingAddressFromCheckout')->andReturn([
+                'name' => 'A B',
+                'address_line_1' => '1 Test St',
+                'city' => 'London',
+                'postcode' => 'E1 6AN',
+                'country' => 'GB',
+            ]);
+            $mock->shouldReceive('createShipmentsForTransaction')->andReturn([]);
+        });
+    }
+
+    private function checkoutPayload(Cart $cart, int $quantity = 2): array
+    {
+        return [
+            'billing_first_name' => 'A',
+            'billing_last_name' => 'B',
+            'billing_email' => 'a@a.com',
+            'billing_phone' => '1',
+            'shipping_address_line_1' => '1 Test Street',
+            'shipping_city' => 'London',
+            'shipping_postcode' => 'E1 6AN',
+            'payment_method' => 'cod',
+            'agree_terms' => true,
+            'cart_items' => [
+                ['id' => $cart->id, 'quantity' => $quantity],
+            ],
+        ];
+    }
+
     public function test_checkout_applies_platform_fee_to_subtotal_and_total(): void
     {
         PlatformSetting::query()->update(['fee_percentage' => 10]);
+        $this->mockFlatShippingFee(15.0);
 
         $seller = User::factory()->create();
         $buyer = User::factory()->create();
@@ -48,17 +91,7 @@ class PlatformFeeCheckoutTest extends TestCase
         $token = JWTAuth::fromUser($buyer);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->postJson('/api/v1/orders/checkout', [
-                'billing_first_name' => 'A',
-                'billing_last_name' => 'B',
-                'billing_email' => 'a@a.com',
-                'billing_phone' => '1',
-                'payment_method' => 'cod',
-                'agree_terms' => true,
-                'cart_items' => [
-                    ['id' => $cart->id, 'quantity' => 2],
-                ],
-            ]);
+            ->postJson('/api/v1/orders/checkout', $this->checkoutPayload($cart, 2));
 
         $response->assertStatus(201);
         $transaction = Transaction::query()->first();
@@ -71,6 +104,7 @@ class PlatformFeeCheckoutTest extends TestCase
     public function test_checkout_applies_minimum_buyer_protection_for_free_items(): void
     {
         PlatformSetting::query()->update(['fee_percentage' => 10]);
+        $this->mockFlatShippingFee(15.0);
 
         $seller = User::factory()->create();
         $buyer = User::factory()->create();
@@ -99,17 +133,7 @@ class PlatformFeeCheckoutTest extends TestCase
         $token = JWTAuth::fromUser($buyer);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->postJson('/api/v1/orders/checkout', [
-                'billing_first_name' => 'A',
-                'billing_last_name' => 'B',
-                'billing_email' => 'a@a.com',
-                'billing_phone' => '1',
-                'payment_method' => 'cod',
-                'agree_terms' => true,
-                'cart_items' => [
-                    ['id' => $cart->id, 'quantity' => 3],
-                ],
-            ]);
+            ->postJson('/api/v1/orders/checkout', $this->checkoutPayload($cart, 3));
 
         $response->assertStatus(201);
         $transaction = Transaction::query()->first();
@@ -122,6 +146,7 @@ class PlatformFeeCheckoutTest extends TestCase
     public function test_checkout_buyer_protection_is_at_least_one_when_percentage_would_be_lower(): void
     {
         PlatformSetting::query()->update(['fee_percentage' => 10]);
+        $this->mockFlatShippingFee(15.0);
 
         $seller = User::factory()->create();
         $buyer = User::factory()->create();
@@ -150,17 +175,7 @@ class PlatformFeeCheckoutTest extends TestCase
         $token = JWTAuth::fromUser($buyer);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->postJson('/api/v1/orders/checkout', [
-                'billing_first_name' => 'A',
-                'billing_last_name' => 'B',
-                'billing_email' => 'a@a.com',
-                'billing_phone' => '1',
-                'payment_method' => 'cod',
-                'agree_terms' => true,
-                'cart_items' => [
-                    ['id' => $cart->id, 'quantity' => 1],
-                ],
-            ]);
+            ->postJson('/api/v1/orders/checkout', $this->checkoutPayload($cart, 1));
 
         $response->assertStatus(201);
         $transaction = Transaction::query()->first();

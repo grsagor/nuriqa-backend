@@ -94,12 +94,29 @@ class ProductPriceOfferTest extends TestCase
         ]);
 
         $buyerToken = JWTAuth::fromUser($buyer);
+        $this->mock(\App\Services\CheckoutShippingService::class, function ($mock) {
+            $mock->shouldReceive('quote')->andReturn([
+                'total_fee' => 15.0,
+                'quote' => ['currency' => 'GBP', 'total_fee' => 15.0, 'seller_count' => 1, 'sellers' => []],
+            ]);
+            $mock->shouldReceive('shippingAddressFromCheckout')->andReturn([
+                'name' => 'A B',
+                'address_line_1' => '1 Test St',
+                'city' => 'London',
+                'postcode' => 'E1 6AN',
+                'country' => 'GB',
+            ]);
+            $mock->shouldReceive('createShipmentsForTransaction')->andReturn([]);
+        });
         $this->withHeader('Authorization', 'Bearer '.$buyerToken)
             ->postJson('/api/v1/orders/checkout', [
                 'billing_first_name' => 'A',
                 'billing_last_name' => 'B',
                 'billing_email' => 'a@a.com',
                 'billing_phone' => '1',
+                'shipping_address_line_1' => '1 Test Street',
+                'shipping_city' => 'London',
+                'shipping_postcode' => 'E1 6AN',
                 'payment_method' => 'cod',
                 'agree_terms' => true,
                 'cart_items' => [

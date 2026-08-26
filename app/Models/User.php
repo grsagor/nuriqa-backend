@@ -44,6 +44,40 @@ class User extends Authenticatable implements JWTSubject
     protected $appends = ['image_url'];
 
     /**
+     * Columns safe to expose on public product/seller payloads.
+     *
+     * @var list<string>
+     */
+    public const PUBLIC_PROFILE_COLUMNS = [
+        'id',
+        'name',
+        'image',
+        'rating',
+        'reviews',
+        'signup_date',
+        'created_at',
+    ];
+
+    /**
+     * Private attributes that must never appear on accidental JSON serialization.
+     * Authenticated profile endpoints call makePrivateAttributesVisible().
+     *
+     * @var list<string>
+     */
+    public const PRIVATE_SERIALIZATION_ATTRIBUTES = [
+        'email',
+        'phone',
+        'address',
+        'apartment',
+        'city',
+        'postal_code',
+        'notification_settings',
+        'otp',
+        'otp_expires_at',
+        'firebase_uid',
+    ];
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
@@ -51,7 +85,25 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'email',
+        'phone',
+        'address',
+        'apartment',
+        'city',
+        'postal_code',
+        'notification_settings',
+        'otp',
+        'otp_expires_at',
+        'firebase_uid',
     ];
+
+    /**
+     * Reveal private profile fields for the authenticated owner only.
+     */
+    public function makePrivateAttributesVisible(): static
+    {
+        return $this->makeVisible(self::PRIVATE_SERIALIZATION_ATTRIBUTES);
+    }
 
     /**
      * Get the attributes that should be cast.

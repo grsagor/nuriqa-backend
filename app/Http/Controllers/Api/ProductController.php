@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductPriceOffer;
 use App\Models\Size;
+use App\Models\User;
 use App\Models\Wishlist;
 use App\Services\ImageService;
 use App\Services\ProductPriceOfferService;
@@ -416,7 +417,7 @@ class ProductController extends Controller
     public function show(string $id)
     {
         $product = Product::with([
-            'owner',
+            'owner:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
             'size',
             'category',
             'images',

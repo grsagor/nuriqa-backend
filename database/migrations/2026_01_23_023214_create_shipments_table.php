@@ -11,14 +11,16 @@ return new class extends Migration
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('transaction_id')->constrained('transactions')->cascadeOnDelete();
+            $table->foreignId('seller_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('carrier', 50)->default('evri');
-            $table->string('tracking_number');
-            $table->string('label_url')->nullable(); // S3 URL
-            $table->enum('status', ['created', 'in_transit', 'delivered', 'failed', 'cancelled'])->default('created');
-            $table->json('address_to')->nullable(); // Delivery address
-            $table->json('address_from')->nullable(); // Origin address
+            $table->string('tracking_number')->nullable();
+            $table->string('label_url')->nullable();
+            $table->string('status', 32)->default('pending');
+            $table->decimal('shipping_fee', 10, 2)->nullable();
+            $table->json('address_to')->nullable();
+            $table->json('address_from')->nullable();
             $table->integer('weight_g')->nullable();
-            $table->json('dimensions_cm')->nullable(); // {length, width, height}
+            $table->json('dimensions_cm')->nullable();
             $table->timestamps();
 
             $table->index(['carrier', 'tracking_number']);

@@ -143,8 +143,10 @@ Route::prefix('v1')->group(function () {
 
     // EVRi Admin Routes (protected)
     Route::middleware('jwt.auth')->group(function () {
+        Route::post('/evri/checkout-rates', [EVRiController::class, 'checkoutRates'])->name('api.v1.evri.checkout-rates');
         Route::post('/evri/transactions/{transaction}/create-label', [EVRiController::class, 'createLabel'])->name('api.v1.evri.create-label');
         Route::get('/evri/shipments/{shipment}/tracking', [EVRiController::class, 'getTrackingInfo'])->name('api.v1.evri.tracking');
+        Route::put('/evri/shipments/{shipment}', [EVRiController::class, 'updateShipment'])->name('api.v1.evri.update-shipment');
         Route::post('/evri/shipments/{shipment}/cancel', [EVRiController::class, 'cancelLabel'])->name('api.v1.evri.cancel');
         Route::post('/evri/tracking/update', [EVRiController::class, 'updateTracking'])->name('api.v1.evri.update-tracking');
 

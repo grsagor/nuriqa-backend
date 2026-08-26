@@ -3,23 +3,31 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CheckoutShippingRatesRequest;
+use App\Http\Requests\CreateEvriLabelRequest;
+use App\Http\Requests\EvriRatesRequest;
+use App\Http\Requests\UpdateEvriTrackingRequest;
+use App\Http\Requests\UpdateShipmentRequest;
+use App\Http\Requests\ValidateEvriAddressRequest;
+use App\Models\Cart;
 use App\Models\Shipment;
 use App\Models\Transaction;
+use App\Services\CheckoutShippingService;
 use App\Services\EVRiService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use Throwable;
 
 class EVRiController extends Controller
 {
-    protected EVRiService $evriService;
+    public function __construct(
+        protected EVRiService $evriService,
+        protected CheckoutShippingService $checkoutShippingService,
+    ) {}
 
-    public function __construct(EVRiService $evriService)
-    {
-        $this->evriService = $evriService;
-    }
-
-    public function authenticate()
+    public function authenticate(): JsonResponse
     {
         try {
             $authData = $this->evriService->authenticate();
@@ -28,52 +36,58 @@ class EVRiController extends Controller
                 'message' => 'EVRi authentication successful',
                 'expires_in' => $authData['expires_in'],
             ]);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function createLabel(Request $request, Transaction $transaction)
+    public function checkoutRates(CheckoutShippingRatesRequest $request): JsonResponse
     {
-        // TODO: Add admin role check when role system is implemented
-        // if (! $request->user() || ! $request->user()->hasRole('admin')) {
-        //     return response()->json(['message' => 'Unauthorized'], 403);
-        // }
+        $user = JWTAuth::parseToken()->authenticate();
 
-        $validator = Validator::make($request->all(), [
-            'address_to' => 'required|array',
-            'address_to.name' => 'required|string|max:100',
-            'address_to.address_line_1' => 'required|string|max:100',
-            'address_to.city' => 'required|string|max:50',
-            'address_to.postcode' => 'required|string|max:10',
-            'address_to.country' => 'nullable|string|size:2',
-            'address_to.phone' => 'nullable|string|max:20',
-            'address_to.email' => 'nullable|email|max:100',
-            'address_from' => 'required|array',
-            'address_from.name' => 'required|string|max:100',
-            'address_from.address_line_1' => 'required|string|max:100',
-            'address_from.city' => 'required|string|max:50',
-            'address_from.postcode' => 'required|string|max:10',
-            'address_from.country' => 'nullable|string|size:2',
-            'address_from.phone' => 'nullable|string|max:20',
-            'address_from.email' => 'nullable|email|max:100',
-            'package_details' => 'required|array',
-            'package_details.weight_g' => 'required|integer|min:1|max:30000',
-            'package_details.length_cm' => 'required|integer|min:1|max:100',
-            'package_details.width_cm' => 'required|integer|min:1|max:100',
-            'package_details.height_cm' => 'required|integer|min:1|max:100',
-        ]);
+        try {
+            $cartItems = Cart::query()
+                ->where('user_id', $user->id)
+                ->whereIn('id', $request->validated('cart_item_ids'))
+                ->with('product.owner')
+                ->get();
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            if ($cartItems->count() !== count($request->validated('cart_item_ids'))) {
+                return response()->json([
+                    'message' => 'Some cart items were not found or do not belong to you.',
+                ], 400);
+            }
+
+            $products = $cartItems->pluck('product')->filter();
+
+            if ($products->isEmpty()) {
+                return response()->json([
+                    'message' => 'No products found for shipping quote.',
+                ], 400);
+            }
+
+            $quote = $this->checkoutShippingService->quote(
+                $products,
+                $request->validated('shipping_postcode')
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $quote['quote'],
+            ]);
+        } catch (Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
 
+    public function createLabel(CreateEvriLabelRequest $request, Transaction $transaction): JsonResponse
+    {
         try {
             $result = $this->evriService->createLabel(
                 $transaction,
-                $request->address_to,
-                $request->address_from,
-                $request->package_details
+                $request->validated('address_to'),
+                $request->validated('address_from'),
+                $request->validated('package_details')
             );
 
             return response()->json([
@@ -82,71 +96,83 @@ class EVRiController extends Controller
                 'tracking_number' => $result['tracking_number'],
                 'label_url' => $result['label_url'],
             ], 201);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function getTrackingInfo(Shipment $shipment)
+    public function getTrackingInfo(Shipment $shipment): JsonResponse
     {
         try {
-            $trackingData = $this->evriService->getTrackingInfo($shipment->tracking_number);
+            $trackingData = $this->evriService->getTrackingInfo((string) $shipment->tracking_number);
 
             return response()->json([
-                'shipment' => $shipment,
+                'shipment' => $shipment->load('seller'),
                 'tracking_data' => $trackingData,
             ]);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function updateTracking(Request $request)
+    public function updateShipment(UpdateShipmentRequest $request, Shipment $shipment): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'tracking_number' => 'required|string',
-            'status' => 'required|string',
-            'timestamp' => 'required|date',
-            'location' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
+        $user = JWTAuth::parseToken()->authenticate();
+        $shipment->load('transaction.sellLines.product');
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        $isBuyer = (int) $shipment->transaction->user_id === (int) $user->id;
+        $isSeller = $shipment->seller_id
+            ? (int) $shipment->seller_id === (int) $user->id
+            : $shipment->transaction->sellLines->contains(
+                fn ($line) => (int) ($line->product->owner_id ?? 0) === (int) $user->id
+            );
+
+        if (! $isBuyer && ! $isSeller) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $shipment = Shipment::where('tracking_number', $request->tracking_number)->first();
+        $data = $request->validated();
+        unset($data['status']);
+
+        if ($data !== []) {
+            $shipment->fill($data);
+            $shipment->save();
+        }
+
+        if ($request->filled('status')) {
+            $this->evriService->updateShipmentStatus($shipment, [
+                'status' => $request->validated('status'),
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Shipment updated successfully',
+            'shipment' => $shipment->fresh(['seller', 'transaction']),
+        ]);
+    }
+
+    public function updateTracking(UpdateEvriTrackingRequest $request): JsonResponse
+    {
+        $shipment = Shipment::query()->where('tracking_number', $request->validated('tracking_number'))->first();
 
         if (! $shipment) {
             return response()->json(['message' => 'Shipment not found'], 404);
         }
 
         try {
-            $trackingData = [
-                'status' => $request->status,
-                'timestamp' => $request->timestamp,
-                'location' => $request->location,
-                'notes' => $request->notes,
-            ];
-
-            $this->evriService->updateShipmentStatus($shipment, $trackingData);
+            $this->evriService->updateShipmentStatus($shipment, $request->validated());
 
             return response()->json([
                 'message' => 'Tracking updated successfully',
                 'shipment' => $shipment->fresh(),
             ]);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function cancelLabel(Request $request, Shipment $shipment)
+    public function cancelLabel(Shipment $shipment): JsonResponse
     {
-        // TODO: Add admin role check when role system is implemented
-        // if (! $request->user() || ! $request->user()->hasRole('admin')) {
-        //     return response()->json(['message' => 'Unauthorized'], 403);
-        // }
-
         try {
             $success = $this->evriService->cancelLabel($shipment);
 
@@ -155,82 +181,58 @@ class EVRiController extends Controller
                     'message' => 'Label cancelled successfully',
                     'shipment' => $shipment->fresh(),
                 ]);
-            } else {
-                return response()->json(['message' => 'Failed to cancel label'], 500);
             }
-        } catch (\Exception $e) {
+
+            return response()->json(['message' => 'Failed to cancel label'], 500);
+        } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function validateAddress(Request $request)
+    public function validateAddress(ValidateEvriAddressRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100',
-            'address_line_1' => 'required|string|max:100',
-            'city' => 'required|string|max:50',
-            'postcode' => 'required|string|max:10',
-            'country' => 'nullable|string|size:2',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         try {
-            $result = $this->evriService->validateAddress($request->all());
+            $result = $this->evriService->validateAddress($request->validated());
 
             return response()->json([
                 'valid' => $result['valid'],
                 'suggestions' => $result['suggestions'] ?? [],
                 'formatted_address' => $result['formatted_address'] ?? null,
             ]);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function getRates(Request $request)
+    public function getRates(EvriRatesRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'from_postcode' => 'required|string|max:10',
-            'to_postcode' => 'required|string|max:10',
-            'weight_g' => 'required|integer|min:1|max:30000',
-            'length_cm' => 'required|integer|min:1|max:100',
-            'width_cm' => 'required|integer|min:1|max:100',
-            'height_cm' => 'required|integer|min:1|max:100',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         try {
-            $packageDetails = $request->only(['weight_g', 'length_cm', 'width_cm', 'height_cm']);
+            $packageDetails = $request->safe()->only(['weight_g', 'length_cm', 'width_cm', 'height_cm']);
             $rates = $this->evriService->getServiceRates(
                 $packageDetails,
-                $request->from_postcode,
-                $request->to_postcode
+                $request->validated('from_postcode'),
+                $request->validated('to_postcode')
             );
 
             return response()->json($rates);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+        } catch (Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
-    public function webhook(Request $request)
+    public function webhook(Request $request): JsonResponse
     {
-        // Verify webhook signature (implement based on EVRi's webhook security)
-        $signature = $request->header('X-EVRi-Signature');
+        $webhookSecret = (string) config('services.evri.webhook_secret');
+        $signature = (string) $request->header('X-EVRi-Signature', '');
         $payload = $request->getContent();
 
-        // In production, verify the signature here
-        // $this->verifyWebhookSignature($signature, $payload);
+        if ($webhookSecret !== '' && ! hash_equals(hash_hmac('sha256', $payload, $webhookSecret), $signature)) {
+            return response()->json(['message' => 'Invalid webhook signature'], 401);
+        }
 
         $data = $request->json()->all();
 
-        $shipment = Shipment::where('tracking_number', $data['tracking_number'])->first();
+        $shipment = Shipment::query()->where('tracking_number', $data['tracking_number'] ?? '')->first();
 
         if (! $shipment) {
             return response()->json(['message' => 'Shipment not found'], 404);
@@ -240,9 +242,9 @@ class EVRiController extends Controller
             $this->evriService->updateShipmentStatus($shipment, $data);
 
             return response()->json(['message' => 'Webhook processed successfully']);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             Log::error('EVRi webhook processing failed', [
-                'tracking_number' => $data['tracking_number'],
+                'tracking_number' => $data['tracking_number'] ?? null,
                 'error' => $e->getMessage(),
             ]);
 

@@ -5,18 +5,62 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\SponsorRequest;
+use App\Models\User;
 use App\Services\SellerNotificationService;
 use Illuminate\Http\Request;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class SponsorRequestController extends Controller
 {
+    /**
+     * Eager-load relations safe for unauthenticated sponsor listings.
+     *
+     * @return list<string>
+     */
+    private function publicRelations(): array
+    {
+        return [
+            'product.size',
+            'product.category',
+            'product.images',
+            'product.owner:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+            'user:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+        ];
+    }
+
+    /**
+     * Strip contact/shipping PII from public sponsor-request payloads.
+     *
+     * @return array<string, mixed>
+     */
+    private function toPublicSponsorRequest(SponsorRequest $sponsorRequest): array
+    {
+        $user = $sponsorRequest->relationLoaded('user') ? $sponsorRequest->user : null;
+        $product = $sponsorRequest->relationLoaded('product') ? $sponsorRequest->product : null;
+
+        return [
+            'id' => $sponsorRequest->id,
+            'product_id' => $sponsorRequest->product_id,
+            'request_reason' => $sponsorRequest->request_reason,
+            'status' => $sponsorRequest->status,
+            'created_at' => $sponsorRequest->created_at,
+            'updated_at' => $sponsorRequest->updated_at,
+            'product' => $product,
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'image' => $user->image,
+                'image_url' => $user->image_url,
+            ] : null,
+        ];
+    }
+
     public function index(Request $request)
     {
         // Get all pending sponsor requests (public)
         $status = $request->input('status', 'pending');
 
-        $query = SponsorRequest::with(['product.size', 'product.category', 'product.images', 'product.owner', 'user']);
+        $query = SponsorRequest::with($this->publicRelations());
 
         if ($status === 'pending') {
             $query->where('status', 'pending');
@@ -114,7 +158,7 @@ class SponsorRequestController extends Controller
             $query->limit($request->limit);
         }
 
-        $requests = $query->get();
+        $requests = $query->get()->map(fn (SponsorRequest $request) => $this->toPublicSponsorRequest($request));
 
         return response()->json([
             'success' => true,
@@ -130,7 +174,13 @@ class SponsorRequestController extends Controller
             ->whereHas('product', function ($q) use ($seller) {
                 $q->where('owner_id', $seller->id);
             })
-            ->with(['product.size', 'product.category', 'product.images', 'product.owner', 'user'])
+            ->with([
+                'product.size',
+                'product.category',
+                'product.images',
+                'product.owner:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+                'user:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+            ])
             ->latest();
 
         if ($request->filled('status')) {
@@ -150,7 +200,12 @@ class SponsorRequestController extends Controller
         $user = JWTAuth::parseToken()->authenticate();
 
         $requests = SponsorRequest::where('user_id', $user->id)
-            ->with(['product.size', 'product.category', 'product.images', 'product.owner'])
+            ->with([
+                'product.size',
+                'product.category',
+                'product.images',
+                'product.owner:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+            ])
             ->latest()
             ->get();
 
@@ -205,7 +260,12 @@ class SponsorRequestController extends Controller
             'status' => 'pending',
         ]);
 
-        $sponsorRequest->load(['product.size', 'product.category', 'product.images', 'product.owner']);
+        $sponsorRequest->load([
+            'product.size',
+            'product.category',
+            'product.images',
+            'product.owner:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+        ]);
 
         SellerNotificationService::notifySponsorRequestCreated($sponsorRequest);
 
@@ -221,7 +281,12 @@ class SponsorRequestController extends Controller
         $user = JWTAuth::parseToken()->authenticate();
 
         $sponsorRequest = SponsorRequest::where('user_id', $user->id)
-            ->with(['product.size', 'product.category', 'product.images', 'product.owner'])
+            ->with([
+                'product.size',
+                'product.category',
+                'product.images',
+                'product.owner:'.implode(',', User::PUBLIC_PROFILE_COLUMNS),
+            ])
             ->find($id);
 
         if (! $sponsorRequest) {
@@ -244,7 +309,7 @@ class SponsorRequestController extends Controller
     public function publicShow(string $id)
     {
         $sponsorRequest = SponsorRequest::where('status', 'pending')
-            ->with(['product.size', 'product.category', 'product.images', 'product.owner', 'user'])
+            ->with($this->publicRelations())
             ->find($id);
 
         if (! $sponsorRequest) {
@@ -256,7 +321,7 @@ class SponsorRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $sponsorRequest,
+            'data' => $this->toPublicSponsorRequest($sponsorRequest),
         ]);
     }
 }

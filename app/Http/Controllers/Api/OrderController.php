@@ -11,6 +11,7 @@ use App\Models\SponsorRequest;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\TransactionSellLine;
+use App\Services\CheckoutShippingService;
 use App\Services\PayPalService;
 use App\Services\PlatformFeeService;
 use App\Services\ProductPriceOfferService;
@@ -27,7 +28,10 @@ class OrderController extends Controller
 {
     private ?StripeClient $stripe = null;
 
-    public function __construct(private PayPalService $payPalService) {}
+    public function __construct(
+        private PayPalService $payPalService,
+        private CheckoutShippingService $checkoutShippingService,
+    ) {}
 
     /**
      * Create Stripe Payment Intent
@@ -91,7 +95,7 @@ class OrderController extends Controller
             // Get cart items that belong to the user
             $cartItems = Cart::where('user_id', $user->id)
                 ->whereIn('id', $requestedCartItemIds)
-                ->with('product')
+                ->with('product.owner')
                 ->get();
 
             // Validate that all requested cart items exist and belong to the user
@@ -136,9 +140,21 @@ class OrderController extends Controller
             $donationTotal = 0;
             $voluntaryDonationOrderTotal = 0;
             $tax = 0;
-            $deliveryFee = 15.00;
             $couponDiscount = 0;
 
+            try {
+                $shippingQuote = $this->checkoutShippingService->quote(
+                    $cartItems->pluck('product'),
+                    (string) $request->shipping_postcode
+                );
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            $deliveryFee = $shippingQuote['total_fee'];
             $payUnitByCartId = collect($request->cart_items)->keyBy('id')->map(function ($item) {
                 if (! is_array($item) || ! array_key_exists('pay_unit_price', $item) || $item['pay_unit_price'] === null || $item['pay_unit_price'] === '') {
                     return null;
@@ -330,14 +346,29 @@ class OrderController extends Controller
 
             DB::commit();
 
+            $shippingAddress = $this->checkoutShippingService->shippingAddressFromCheckout(
+                $request->validated(),
+                trim($request->billing_first_name.' '.$request->billing_last_name)
+            );
+
+            try {
+                $this->checkoutShippingService->createShipmentsForTransaction($transaction, $shippingAddress);
+            } catch (\Throwable $e) {
+                Log::error('Checkout EVRi shipment creation failed', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             SellerNotificationService::notifyOrderCreated($transaction);
 
-            $transaction->load(['sellLines.product', 'payments']);
+            $transaction->load(['sellLines.product', 'payments', 'shipments.seller']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction created successfully',
                 'data' => $transaction,
+                'shipping' => $shippingQuote['quote'],
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -363,6 +394,11 @@ class OrderController extends Controller
             'billing_email' => 'required|email|max:255',
             'billing_phone' => 'required|string|max:255',
             'billing_address' => 'nullable|string|max:2000',
+            'shipping_address_line_1' => 'nullable|string|max:255',
+            'shipping_address_line_2' => 'nullable|string|max:255',
+            'shipping_city' => 'nullable|string|max:255',
+            'shipping_postcode' => 'nullable|string|max:16',
+            'shipping_country' => 'nullable|string|size:2',
             'additional_info' => 'nullable|string|max:2000',
             'donate_anonymous' => 'nullable|boolean',
             'payment_method' => 'required|in:card,paypal,bank,cod',
@@ -376,7 +412,7 @@ class OrderController extends Controller
 
         try {
             // Get sponsor request
-            $sponsorRequest = SponsorRequest::with(['product', 'user'])
+            $sponsorRequest = SponsorRequest::with(['product.owner', 'user'])
                 ->where('status', 'pending')
                 ->findOrFail($request->sponsor_request_id);
 
@@ -397,6 +433,23 @@ class OrderController extends Controller
                 ], 400);
             }
 
+            $deliveryPostcode = (string) ($request->shipping_postcode ?: $sponsorRequest->postal_code);
+            if ($deliveryPostcode === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Delivery postcode is required to calculate shipping.',
+                ], 422);
+            }
+
+            try {
+                $shippingQuote = $this->checkoutShippingService->quote([$product], $deliveryPostcode);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             $productPrice = (float) ($product->price ?? 0);
             $sellerSubtotal = round($productPrice, 2);
             $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($sellerSubtotal, $product);
@@ -405,7 +458,7 @@ class OrderController extends Controller
             $platformFeeTotal = $linePlatformFee;
             $donationTotal = $lineDonation;
             $tax = 0;
-            $deliveryFee = 15.00;
+            $deliveryFee = $shippingQuote['total_fee'];
             $couponDiscount = 0;
             $total = $subtotal + $tax + $deliveryFee - $couponDiscount;
 
@@ -489,14 +542,35 @@ class OrderController extends Controller
 
             DB::commit();
 
+            $shippingAddress = [
+                'name' => trim((string) ($requester->name ?: ($request->billing_first_name.' '.$request->billing_last_name))),
+                'address_line_1' => (string) ($request->shipping_address_line_1 ?: $sponsorRequest->address ?: 'Address pending'),
+                'address_line_2' => $request->shipping_address_line_2 ?: $sponsorRequest->apartment,
+                'city' => (string) ($request->shipping_city ?: $sponsorRequest->city ?: 'Unknown'),
+                'postcode' => $deliveryPostcode,
+                'country' => (string) ($request->shipping_country ?: 'GB'),
+                'email' => (string) ($requester->email ?? $request->billing_email),
+                'phone' => (string) ($requester->phone ?? $request->billing_phone),
+            ];
+
+            try {
+                $this->checkoutShippingService->createShipmentsForTransaction($transaction, $shippingAddress);
+            } catch (\Throwable $e) {
+                Log::error('Sponsor checkout EVRi shipment creation failed', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             SellerNotificationService::notifyOrderCreated($transaction);
 
-            $transaction->load(['sellLines.product', 'sellLines.sponsorRequest', 'sellLines.requester', 'sellLines.sponsor', 'payments']);
+            $transaction->load(['sellLines.product', 'sellLines.sponsorRequest', 'sellLines.requester', 'sellLines.sponsor', 'payments', 'shipments.seller']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Sponsor transaction created successfully',
                 'data' => $transaction,
+                'shipping' => $shippingQuote['quote'],
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -848,6 +922,7 @@ class OrderController extends Controller
                 'sellLines.product.size',
                 'sellLines.product.images',
                 'payments',
+                'shipments.seller',
             ])
             ->latest()
             ->paginate($request->input('per_page', 15));
@@ -875,6 +950,7 @@ class OrderController extends Controller
             ->with([
                 'user',
                 'payments',
+                'shipments.seller',
                 'sellLines' => function ($q) use ($seller) {
                     $q->whereHas('product', function ($sub) use ($seller) {
                         $sub->where('owner_id', $seller->id);
@@ -907,7 +983,7 @@ class OrderController extends Controller
         $seller = JWTAuth::parseToken()->authenticate();
 
         $request->validate([
-            'status' => 'required|in:pending,completed,failed',
+            'status' => 'required|in:pending,processing,completed,failed,cancelled',
         ]);
 
         $transaction = Transaction::query()
@@ -937,7 +1013,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully',
-            'data' => $transaction->fresh(['user', 'payments', 'sellLines.product']),
+            'data' => $transaction->fresh(['user', 'payments', 'sellLines.product', 'shipments.seller']),
         ]);
     }
 
@@ -992,6 +1068,7 @@ class OrderController extends Controller
                 'sellLines.product.size',
                 'sellLines.product.images',
                 'payments',
+                'shipments.seller',
             ])
             ->firstOrFail();
 
