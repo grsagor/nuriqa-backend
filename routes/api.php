@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\CustomerDashboardController;
 use App\Http\Controllers\Api\EVRiController;
 use App\Http\Controllers\Api\JoinUsController;
 use App\Http\Controllers\Api\NewsletterController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductPriceOfferController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\PublicSellerController;
+use App\Http\Controllers\Api\SellerDashboardController;
 use App\Http\Controllers\Api\SellerNotificationController;
 use App\Http\Controllers\Api\SellerReportController;
 use App\Http\Controllers\Api\SponsorRequestController;
@@ -61,6 +63,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/products/details/{id}/reviews', [ProductReviewController::class, 'store'])->name('api.v1.products.reviews.store')->middleware('jwt.auth');
 
     Route::get('/seller/reviews', [ProductReviewController::class, 'sellerIndex'])->name('api.v1.seller.reviews.index')->middleware('jwt.auth');
+
+    Route::get('/customer/dashboard/stats', [CustomerDashboardController::class, 'stats'])
+        ->middleware('jwt.auth')
+        ->name('api.v1.customer.dashboard.stats');
+
+    Route::get('/seller/dashboard/stats', [SellerDashboardController::class, 'stats'])
+        ->middleware('jwt.auth')
+        ->name('api.v1.seller.dashboard.stats');
 
     Route::get('/sellers/{id}/profile', [PublicSellerController::class, 'show'])->name('api.v1.sellers.profile.show');
     Route::get('/sellers/{sellerId}/reviews', [ProductReviewController::class, 'publicSellerReviews'])->name('api.v1.sellers.reviews.index');
