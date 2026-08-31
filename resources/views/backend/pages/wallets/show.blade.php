@@ -42,9 +42,9 @@
                         <h5 class="mb-0">Wallet Balance</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>Available Balance:</strong> <span class="text-success fs-5">${{ number_format($wallet->available_balance, 2) }}</span></p>
-                        <p><strong>Pending Balance:</strong> <span class="text-warning fs-5">${{ number_format($wallet->pending_balance, 2) }}</span></p>
-                        <p><strong>Total Earnings:</strong> <span class="text-primary fs-5">${{ number_format($wallet->total_earnings, 2) }}</span></p>
+                        <p><strong>Available Balance:</strong> <span class="text-success fs-5">£{{ number_format($wallet->available_balance, 2) }}</span></p>
+                        <p><strong>Pending Balance:</strong> <span class="text-warning fs-5">£{{ number_format($wallet->pending_balance, 2) }}</span></p>
+                        <p><strong>Total Earnings:</strong> <span class="text-primary fs-5">£{{ number_format($wallet->total_earnings, 2) }}</span></p>
                     </div>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                             <tbody>
                                 @foreach($withdrawals as $withdrawal)
                                     <tr>
-                                        <td class="fw-bold">${{ number_format($withdrawal->amount, 2) }}</td>
+                                        <td class="fw-bold">£{{ number_format($withdrawal->amount, 2) }}</td>
                                         <td>
                                             <span class="badge bg-{{ $withdrawal->status === 'completed' ? 'success' : ($withdrawal->status === 'rejected' ? 'danger' : ($withdrawal->status === 'approved' ? 'info' : 'warning')) }}">
                                                 {{ ucfirst($withdrawal->status) }}

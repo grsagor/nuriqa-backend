@@ -129,7 +129,7 @@
                 <div id="hajraPaidPricingHolder">
                 @endif
                 <div class="mb-3">
-                    <label for="price" class="form-label fw-semibold">Price <span class="text-danger">*</span></label>
+                    <label for="price" class="form-label fw-semibold">Price (£) <span class="text-danger">*</span></label>
                     <input type="number" name="price" id="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
                 </div>
 

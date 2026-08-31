@@ -52,14 +52,14 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Current Available Balance</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="text" class="form-control" value="{{ number_format($wallet->available_balance, 2) }}" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Current Pending Balance</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="text" class="form-control" value="{{ number_format($wallet->pending_balance, 2) }}" readonly>
                                     </div>
                                 </div>
@@ -70,7 +70,7 @@
                                 <div class="col-md-6">
                                     <label for="available_balance" class="form-label">New Available Balance *</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="number" 
                                                id="available_balance" 
                                                name="available_balance" 
@@ -87,7 +87,7 @@
                                 <div class="col-md-6">
                                     <label for="pending_balance" class="form-label">New Pending Balance *</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="number" 
                                                id="pending_balance" 
                                                name="pending_balance" 
@@ -108,7 +108,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Available Balance Change</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="text" id="available_change" class="form-control" readonly>
                                         <span class="input-group-text" id="available_change_sign"></span>
                                     </div>
@@ -116,7 +116,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Pending Balance Change</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="text" id="pending_change" class="form-control" readonly>
                                         <span class="input-group-text" id="pending_change_sign"></span>
                                     </div>
@@ -180,7 +180,7 @@
                                 <div class="border-bottom pb-2 mb-2">
                                     <small class="text-muted">{{ $adjustment->created_at->format('M j, Y g:i A') }}</small><br>
                                     <strong>{{ $adjustment->description }}</strong><br>
-                                    <span class="badge bg-info">Amount: ${{ number_format($adjustment->amount, 2) }}</span>
+                                    <span class="badge bg-info">Amount: £{{ number_format($adjustment->amount, 2) }}</span>
                                 </div>
                             @endforeach
                         </div>

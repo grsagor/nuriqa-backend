@@ -134,7 +134,7 @@
                 <div id="hajraPaidPricingHolder">
                 @endif
                 <div class="mb-3">
-                    <label for="price" class="form-label fw-semibold">Price <span class="text-danger">*</span></label>
+                    <label for="price" class="form-label fw-semibold">Price (£) <span class="text-danger">*</span></label>
                     <input type="number" name="price" id="price" class="form-control" value="{{ $product->price ?? '' }}" placeholder="0.00" step="0.01" min="0" required>
                 </div>
 
@@ -224,6 +224,17 @@
                         </div>
                     </div>
                 </div>
+                @if(($product->type ?? '') === 'seller' || empty($product->type))
+                <div class="mb-3">
+                    <label for="approval_status" class="form-label fw-semibold">Approval Status</label>
+                    <select name="approval_status" id="approval_status" class="form-select">
+                        <option value="pending" {{ ($product->approval_status ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="approved" {{ ($product->approval_status ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
+                        <option value="rejected" {{ ($product->approval_status ?? '') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                    </select>
+                    <div class="form-text">You can change this anytime after approve or reject.</div>
+                </div>
+                @endif
             </div>
 
             <!-- Images -->

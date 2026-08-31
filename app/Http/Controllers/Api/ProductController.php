@@ -83,7 +83,7 @@ class ProductController extends Controller
             }
         }
 
-        // Filter by status (active / inactive)
+        // Filter by listing status (active / inactive)
         if ($request->filled('status')) {
             if ($request->status === 'active') {
                 $query->where('active_listing', 1);
@@ -92,6 +92,22 @@ class ProductController extends Controller
             if ($request->status === 'inactive') {
                 $query->where('active_listing', 0);
             }
+
+            if (in_array($request->status, [
+                Product::APPROVAL_PENDING,
+                Product::APPROVAL_APPROVED,
+                Product::APPROVAL_REJECTED,
+            ], true)) {
+                $query->where('approval_status', $request->status);
+            }
+        }
+
+        if ($request->filled('approval_status') && in_array($request->approval_status, [
+            Product::APPROVAL_PENDING,
+            Product::APPROVAL_APPROVED,
+            Product::APPROVAL_REJECTED,
+        ], true)) {
+            $query->where('approval_status', $request->approval_status);
         }
 
         if ($request->filled('search')) {
@@ -704,6 +720,37 @@ class ProductController extends Controller
                 ? 'Product updated and submitted for review.'
                 : 'Product updated successfully',
             'data' => $product->fresh(['size', 'category', 'images']),
+        ]);
+    }
+
+    public function updateListingStatus(Request $request, string $id)
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $product = Product::where('id', $id)->where('owner_id', $user->id)->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        $request->validate([
+            'active_listing' => 'required|boolean',
+        ]);
+
+        $product->update([
+            'active_listing' => filter_var($request->input('active_listing'), FILTER_VALIDATE_BOOLEAN),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Listing status updated successfully',
+            'data' => [
+                'id' => $product->id,
+                'active_listing' => (bool) $product->active_listing,
+                'approval_status' => $product->approval_status,
+            ],
         ]);
     }
 

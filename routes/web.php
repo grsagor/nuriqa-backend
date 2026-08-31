@@ -107,6 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::delete('/delete/{id}', 'delete')->name('delete');
         Route::post('/approve/{id}', 'approve')->name('approve');
         Route::post('/reject/{id}', 'reject')->name('reject');
+        Route::post('/approval-status/{id}', 'updateApprovalStatus')->name('approval-status');
     });
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('/', 'index')->name('index');

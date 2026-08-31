@@ -67,7 +67,7 @@ class WithdrawalController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('amount', function ($row) {
-                    return '<span class="fw-bold">$'.number_format($row->amount, 2).'</span>';
+                    return '<span class="fw-bold">£'.number_format($row->amount, 2).'</span>';
                 })
                 ->addColumn('status', function ($row) {
                     $badges = [

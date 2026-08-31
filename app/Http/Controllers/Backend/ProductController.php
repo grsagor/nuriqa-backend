@@ -215,7 +215,7 @@ class ProductController extends Controller
                         return '<span class="badge bg-success">Free</span>';
                     }
 
-                    return $row->price ? '$'.number_format($row->price, 2) : 'N/A';
+                    return $row->price ? '£'.number_format($row->price, 2) : 'N/A';
                 })
                 ->addColumn('location', function ($row) {
                     return $row->location ?: '<span class="text-muted">N/A</span>';
@@ -228,26 +228,27 @@ class ProductController extends Controller
                         return '<span class="text-muted">—</span>';
                     }
 
-                    $badgeClass = match ($row->approval_status) {
-                        Product::APPROVAL_PENDING => 'bg-warning',
-                        Product::APPROVAL_APPROVED => 'bg-success',
-                        Product::APPROVAL_REJECTED => 'bg-danger',
-                        default => 'bg-secondary',
-                    };
+                    $current = $row->approval_status ?? Product::APPROVAL_PENDING;
+                    $options = [
+                        Product::APPROVAL_PENDING => 'Pending',
+                        Product::APPROVAL_APPROVED => 'Approved',
+                        Product::APPROVAL_REJECTED => 'Rejected',
+                    ];
 
-                    return '<span class="badge '.$badgeClass.'">'.ucfirst($row->approval_status ?? Product::APPROVAL_PENDING).'</span>';
+                    $html = '<select class="form-select form-select-sm product-approval-status" data-url="'.route('admin.products.approval-status', $row->id).'" style="min-width: 110px;">';
+                    foreach ($options as $value => $label) {
+                        $selected = $current === $value ? ' selected' : '';
+                        $html .= '<option value="'.$value.'"'.$selected.'>'.$label.'</option>';
+                    }
+                    $html .= '</select>';
+
+                    return $html;
                 })
                 ->addColumn('action', function ($row) {
                     $edit = '<button data-url="'.route('admin.products.edit', $row->id).'" data-modal-parent="#crudModal" class="btn btn-sm btn-primary open_modal_btn"><i class="fas fa-edit"></i></button>';
                     $delete = '<button data-url="'.route('admin.products.delete', $row->id).'" class="btn btn-sm btn-danger crud_delete_btn"><i class="fas fa-trash"></i></button>';
-                    $approve = '<button data-url="'.route('admin.products.approve', $row->id).'" class="btn btn-sm btn-success crud_action_btn" data-action="approve"><i class="fas fa-check"></i></button>';
-                    $reject = '<button data-url="'.route('admin.products.reject', $row->id).'" class="btn btn-sm btn-warning crud_action_btn" data-action="reject"><i class="fas fa-times"></i></button>';
 
-                    $approvalActions = ($row->isSellerListing() && $row->approval_status === Product::APPROVAL_PENDING)
-                        ? ' '.$approve.' '.$reject
-                        : '';
-
-                    return $edit.' '.$delete.$approvalActions;
+                    return $edit.' '.$delete;
                 })
                 ->rawColumns(['thumbnail', 'title', 'type', 'price', 'location', 'approval_status', 'action'])
                 ->make(true);
@@ -300,6 +301,7 @@ class ProductController extends Controller
             'platform_donation' => 'nullable|boolean',
             'donation_percentage' => 'nullable|integer|min:0|max:100',
             'active_listing' => 'nullable|boolean',
+            'approval_status' => 'nullable|in:pending,approved,rejected',
             'stock' => 'nullable|integer|min:0',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'images' => 'nullable|array',
@@ -312,6 +314,12 @@ class ProductController extends Controller
 
         $product = Product::find($request->id);
         $data = $request->except(['images', 'thumbnail', 'remove_images', 'remove_thumbnail']);
+
+        if ($product && $product->isSellerListing() && $request->filled('approval_status')) {
+            $data['approval_status'] = $request->input('approval_status');
+        } else {
+            unset($data['approval_status']);
+        }
 
         $isHajraFree = ($request->input('type') === 'hajra') && $request->has('is_free');
 
@@ -429,24 +437,30 @@ class ProductController extends Controller
 
     public function approve(int $id)
     {
-        $product = Product::find($id);
-
-        if (! $product || ! $product->isSellerListing()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Seller product not found',
-            ], 404);
-        }
-
-        $product->update(['approval_status' => Product::APPROVAL_APPROVED]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Product approved successfully',
-        ]);
+        return $this->setApprovalStatus($id, Product::APPROVAL_APPROVED, 'Product approved successfully');
     }
 
     public function reject(int $id)
+    {
+        return $this->setApprovalStatus($id, Product::APPROVAL_REJECTED, 'Product rejected successfully');
+    }
+
+    public function updateApprovalStatus(Request $request, int $id)
+    {
+        $request->validate([
+            'approval_status' => 'required|in:pending,approved,rejected',
+        ]);
+
+        $message = match ($request->input('approval_status')) {
+            Product::APPROVAL_APPROVED => 'Product approved successfully',
+            Product::APPROVAL_REJECTED => 'Product rejected successfully',
+            default => 'Product set to pending review',
+        };
+
+        return $this->setApprovalStatus($id, $request->input('approval_status'), $message);
+    }
+
+    private function setApprovalStatus(int $id, string $status, string $message)
     {
         $product = Product::find($id);
 
@@ -457,11 +471,15 @@ class ProductController extends Controller
             ], 404);
         }
 
-        $product->update(['approval_status' => Product::APPROVAL_REJECTED]);
+        $product->update(['approval_status' => $status]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Product rejected successfully',
+            'message' => $message,
+            'data' => [
+                'id' => $product->id,
+                'approval_status' => $product->approval_status,
+            ],
         ]);
     }
 }

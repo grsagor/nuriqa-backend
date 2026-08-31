@@ -125,7 +125,7 @@
             <div class="col">
                 <div class="field">
                     <div class="field-label">💵 Amount:</div>
-                    <div class="field-value"><strong>${{ number_format($withdrawal->amount, 2) }}</strong></div>
+                    <div class="field-value"><strong>£{{ number_format($withdrawal->amount, 2) }}</strong></div>
                 </div>
 
                 <div class="field">

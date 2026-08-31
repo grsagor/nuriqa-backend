@@ -22,7 +22,7 @@
         <p>Your withdrawal request has been <strong>approved</strong>.</p>
         <div class="field">
             <div class="field-label">Amount:</div>
-            <div>${{ number_format($withdrawal->amount, 2) }}</div>
+            <div>£{{ number_format($withdrawal->amount, 2) }}</div>
         </div>
         <div class="field">
             <div class="field-label">Reference:</div>

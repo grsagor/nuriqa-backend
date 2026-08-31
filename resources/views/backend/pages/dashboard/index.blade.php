@@ -24,14 +24,14 @@
         <div class="col-12 col-sm-6 col-xl-4">
             <div class="stat-card stat-card--success">
                 <div class="stat-card__label">Total revenue</div>
-                <div class="stat-card__value">${{ number_format($stats['total_revenue'], 2) }}</div>
+                <div class="stat-card__value">£{{ number_format($stats['total_revenue'], 2) }}</div>
                 <div class="stat-card__hint">Completed transactions</div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl-4">
             <div class="stat-card stat-card--accent">
                 <div class="stat-card__label">Donation generated</div>
-                <div class="stat-card__value">${{ number_format($stats['total_donation'], 2) }}</div>
+                <div class="stat-card__value">£{{ number_format($stats['total_donation'], 2) }}</div>
                 <div class="stat-card__hint">From completed orders</div>
             </div>
         </div>
@@ -109,7 +109,7 @@
             labels: labels,
             datasets: [
                 {
-                    label: 'Revenue ($)',
+                    label: 'Revenue (£)',
                     data: revenue,
                     borderColor: 'rgba(89, 69, 69, 1)',
                     backgroundColor: 'rgba(89, 69, 69, 0.06)',
@@ -119,7 +119,7 @@
                     lineTension: 0.2
                 },
                 {
-                    label: 'Donation ($)',
+                    label: 'Donation (£)',
                     data: donations,
                     borderColor: 'rgba(180, 83, 9, 1)',
                     backgroundColor: 'rgba(180, 83, 9, 0.06)',
@@ -146,7 +146,7 @@
                         var ds = data.datasets[tooltipItem.datasetIndex] || {};
                         var label = ds.label || '';
                         var v = tooltipItem.yLabel;
-                        return label + ': $' + (typeof v === 'number' ? v.toFixed(2) : v);
+                        return label + ': £' + (typeof v === 'number' ? v.toFixed(2) : v);
                     }
                 }
             },
@@ -158,12 +158,12 @@
                             if (value >= 1000) {
                                 return (value / 1000).toFixed(1) + 'k';
                             }
-                            return '$' + value;
+                            return '£' + value;
                         }
                     },
                     scaleLabel: {
                         display: true,
-                        labelString: 'Amount ($)'
+                        labelString: 'Amount (£)'
                     },
                     gridLines: { color: 'rgba(0,0,0,0.06)' }
                 }],

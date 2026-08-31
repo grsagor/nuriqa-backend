@@ -53,7 +53,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <strong>Amount:</strong>
-                                <p class="fw-bold text-success fs-5">${{ number_format($withdrawal->amount, 2) }}</p>
+                                <p class="fw-bold text-success fs-5">£{{ number_format($withdrawal->amount, 2) }}</p>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <strong>Requested:</strong>
@@ -146,9 +146,9 @@
                     </div>
                     <div class="card-body">
                         @if($withdrawal->wallet)
-                            <p><strong>Available Balance:</strong> <span class="text-success">${{ number_format($withdrawal->wallet->available_balance, 2) }}</span></p>
-                            <p><strong>Pending Balance:</strong> <span class="text-warning">${{ number_format($withdrawal->wallet->pending_balance, 2) }}</span></p>
-                            <p><strong>Total Earnings:</strong> <span class="text-primary">${{ number_format($withdrawal->wallet->total_earnings, 2) }}</span></p>
+                            <p><strong>Available Balance:</strong> <span class="text-success">£{{ number_format($withdrawal->wallet->available_balance, 2) }}</span></p>
+                            <p><strong>Pending Balance:</strong> <span class="text-warning">£{{ number_format($withdrawal->wallet->pending_balance, 2) }}</span></p>
+                            <p><strong>Total Earnings:</strong> <span class="text-primary">£{{ number_format($withdrawal->wallet->total_earnings, 2) }}</span></p>
                             <a href="{{ route('admin.wallets.show', $withdrawal->wallet->id) }}" class="btn btn-sm btn-primary w-100 mt-3">
                                 <i class="fas fa-eye me-1"></i> View Wallet
                             </a>

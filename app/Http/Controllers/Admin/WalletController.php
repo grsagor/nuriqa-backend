@@ -32,13 +32,13 @@ class WalletController extends Controller
                     return $row->user ? $row->user->email : 'N/A';
                 })
                 ->addColumn('available_balance', function ($row) {
-                    return '<span class="text-success fw-bold">$'.number_format($row->available_balance, 2).'</span>';
+                    return '<span class="text-success fw-bold">£'.number_format($row->available_balance, 2).'</span>';
                 })
                 ->addColumn('pending_balance', function ($row) {
-                    return '<span class="text-warning fw-bold">$'.number_format($row->pending_balance, 2).'</span>';
+                    return '<span class="text-warning fw-bold">£'.number_format($row->pending_balance, 2).'</span>';
                 })
                 ->addColumn('total_balance', function ($row) {
-                    return '<span class="text-primary fw-bold">$'.number_format($row->total_balance, 2).'</span>';
+                    return '<span class="text-primary fw-bold">£'.number_format($row->total_balance, 2).'</span>';
                 })
                 ->addColumn('status', function ($row) {
                     if ($row->available_balance > 0) {

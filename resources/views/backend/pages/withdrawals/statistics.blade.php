@@ -26,7 +26,7 @@
             <div class="card bg-success text-white mb-4">
                 <div class="card-body">
                     Total Amount
-                    <div class="h3 mb-0">${{ number_format($stats['total_amount'], 2) }}</div>
+                    <div class="h3 mb-0">£{{ number_format($stats['total_amount'], 2) }}</div>
                     <small>All Time</small>
                 </div>
             </div>
@@ -35,7 +35,7 @@
             <div class="card bg-warning text-white mb-4">
                 <div class="card-body">
                     Pending Amount
-                    <div class="h3 mb-0">${{ number_format($stats['pending_amount'], 2) }}</div>
+                    <div class="h3 mb-0">£{{ number_format($stats['pending_amount'], 2) }}</div>
                     <small>{{ $stats['pending_count'] }} requests</small>
                 </div>
             </div>
@@ -44,7 +44,7 @@
             <div class="card bg-info text-white mb-4">
                 <div class="card-body">
                     Completed Amount
-                    <div class="h3 mb-0">${{ number_format($stats['completed_amount'], 2) }}</div>
+                    <div class="h3 mb-0">£{{ number_format($stats['completed_amount'], 2) }}</div>
                     <small>{{ $stats['completed_count'] }} requests</small>
                 </div>
             </div>
@@ -65,7 +65,7 @@
                             <div class="text-center">
                                 <div class="h4 text-warning">Pending</div>
                                 <div class="h2">{{ $stats['pending_count'] }}</div>
-                                <div class="h5">${{ number_format($stats['pending_amount'], 2) }}</div>
+                                <div class="h5">£{{ number_format($stats['pending_amount'], 2) }}</div>
                                 <div class="progress mt-2">
                                     <div class="progress-bar bg-warning" style="width: {{ $stats['total_amount'] > 0 ? ($stats['pending_amount'] / $stats['total_amount']) * 100 : 0 }}%"></div>
                                 </div>
@@ -75,7 +75,7 @@
                             <div class="text-center">
                                 <div class="h4 text-info">Approved</div>
                                 <div class="h2">{{ $stats['completed_count'] }}</div>
-                                <div class="h5">${{ number_format($stats['completed_amount'], 2) }}</div>
+                                <div class="h5">£{{ number_format($stats['completed_amount'], 2) }}</div>
                                 <div class="progress mt-2">
                                     <div class="progress-bar bg-info" style="width: {{ $stats['total_amount'] > 0 ? ($stats['completed_amount'] / $stats['total_amount']) * 100 : 0 }}%"></div>
                                 </div>
@@ -85,7 +85,7 @@
                             <div class="text-center">
                                 <div class="h4 text-danger">Rejected</div>
                                 <div class="h2">{{ $stats['rejected_count'] }}</div>
-                                <div class="h5">${{ number_format($stats['rejected_amount'], 2) }}</div>
+                                <div class="h5">£{{ number_format($stats['rejected_amount'], 2) }}</div>
                                 <div class="progress mt-2">
                                     <div class="progress-bar bg-danger" style="width: {{ $stats['total_amount'] > 0 ? ($stats['rejected_amount'] / $stats['total_amount']) * 100 : 0 }}%"></div>
                                 </div>
@@ -145,8 +145,8 @@
                             <tr>
                                 <td>{{ \Carbon\Carbon::createFromFormat('Y-m', $stat->month)->format('F Y') }}</td>
                                 <td>{{ $stat->count }}</td>
-                                <td class="fw-bold">${{ number_format($stat->total, 2) }}</td>
-                                <td>${{ number_format($stat->total / $stat->count, 2) }}</td>
+                                <td class="fw-bold">£{{ number_format($stat->total, 2) }}</td>
+                                <td>£{{ number_format($stat->total / $stat->count, 2) }}</td>
                                 <td>
                                     @php
                                         $prevStat = $monthlyStats->where('month', \Carbon\Carbon::createFromFormat('Y-m', $stat->month)->subMonth()->format('Y-m'))->first();
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     order: 2
                 },
                 {
-                    label: 'Total Amount ($)',
+                    label: 'Total Amount (£)',
                     data: amounts.reverse(),
                     backgroundColor: 'rgba(75, 192, 192, 0.8)',
                     borderColor: 'rgba(75, 192, 192, 1)',
@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     position: 'right',
                     title: {
                         display: true,
-                        text: 'Total Amount ($)'
+                        text: 'Total Amount (£)'
                     },
                     grid: {
                         drawOnChartArea: false

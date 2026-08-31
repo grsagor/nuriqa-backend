@@ -23,7 +23,7 @@
         <p>Your withdrawal request has <strong>not been approved</strong>. The amount has been returned to your available balance.</p>
         <div class="field">
             <div class="field-label">Amount:</div>
-            <div>${{ number_format($withdrawal->amount, 2) }}</div>
+            <div>£{{ number_format($withdrawal->amount, 2) }}</div>
         </div>
         <div class="field">
             <div class="field-label">Reference:</div>

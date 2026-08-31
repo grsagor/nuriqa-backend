@@ -150,4 +150,34 @@ class ProductApprovalTest extends TestCase
         $this->assertStringContainsString((string) $product->id, $payload);
         $this->assertStringContainsString('seller', $payload);
     }
+
+    public function test_admin_can_change_approval_status_after_approve_or_reject(): void
+    {
+        $seller = User::factory()->create();
+        $admin = User::factory()->create(['role_id' => 1]);
+        $product = $this->createSellerProduct($seller, Product::APPROVAL_APPROVED);
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.approval-status', $product->id), [
+                'approval_status' => Product::APPROVAL_REJECTED,
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'approval_status' => Product::APPROVAL_REJECTED,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.approval-status', $product->id), [
+                'approval_status' => Product::APPROVAL_PENDING,
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'approval_status' => Product::APPROVAL_PENDING,
+        ]);
+    }
 }

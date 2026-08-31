@@ -35,25 +35,25 @@
                     <div class="col-md-3">
                         <div class="text-center">
                             <h6 class="text-success">Available Balance</h6>
-                            <h4>${{ number_format($wallet->available_balance, 2) }}</h4>
+                            <h4>£{{ number_format($wallet->available_balance, 2) }}</h4>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
                             <h6 class="text-warning">Pending Balance</h6>
-                            <h4>${{ number_format($wallet->pending_balance, 2) }}</h4>
+                            <h4>£{{ number_format($wallet->pending_balance, 2) }}</h4>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
                             <h6 class="text-primary">Total Earnings</h6>
-                            <h4>${{ number_format($wallet->total_earnings, 2) }}</h4>
+                            <h4>£{{ number_format($wallet->total_earnings, 2) }}</h4>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
                             <h6 class="text-info">Total Withdrawals</h6>
-                            <h4>${{ number_format($wallet->withdrawals()->where('status', 'completed')->sum('amount'), 2) }}</h4>
+                            <h4>£{{ number_format($wallet->withdrawals()->where('status', 'completed')->sum('amount'), 2) }}</h4>
                         </div>
                     </div>
                 </div>
@@ -141,7 +141,7 @@
                                     <td>
                                         <span class="badge bg-warning">Withdrawal</span>
                                     </td>
-                                    <td class="fw-bold text-danger">-${{ number_format($withdrawal->amount, 2) }}</td>
+                                    <td class="fw-bold text-danger">-£{{ number_format($withdrawal->amount, 2) }}</td>
                                     <td>
                                         @if($withdrawal->paymentMethod)
                                             <div>

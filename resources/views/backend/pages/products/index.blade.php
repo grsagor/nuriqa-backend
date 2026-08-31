@@ -91,11 +91,58 @@
 
             // Handle current images removal
             $(document).on("click", ".remove-current-image", function() {
-                alert("hello")
                 var imageId = $(this).data('image-id');
                 var input = $('.remove-image-input[data-image-id="' + imageId + '"]');
                 input.val(imageId);
                 $(this).closest('.position-relative').hide();
+            });
+
+            $(document).on('change', '.product-approval-status', function () {
+                const $select = $(this);
+                const url = $select.data('url');
+                const previous = $select.data('previous') || $select.find('option').filter(function () {
+                    return this.defaultSelected;
+                }).val();
+                const approvalStatus = $select.val();
+
+                $select.prop('disabled', true);
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        approval_status: approvalStatus,
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Toast.fire({
+                                icon: 'success',
+                                title: res.message || 'Approval status updated',
+                            });
+                            $select.data('previous', approvalStatus);
+                            if (typeof window.LaravelDataTables !== 'undefined' && $('#datatable').length) {
+                                $('#datatable').DataTable().ajax.reload(null, false);
+                            }
+                        } else {
+                            $select.val(previous);
+                            Toast.fire({
+                                icon: 'error',
+                                title: res.message || 'Failed to update status',
+                            });
+                        }
+                    },
+                    error: function (err) {
+                        $select.val(previous);
+                        Toast.fire({
+                            icon: 'error',
+                            title: err?.responseJSON?.message || 'Failed to update status',
+                        });
+                    },
+                    complete: function () {
+                        $select.prop('disabled', false);
+                    },
+                });
             });
         })
     </script>

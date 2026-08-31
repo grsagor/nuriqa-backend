@@ -54,6 +54,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/store', 'store')->name('api.v1.products.store')->middleware('jwt.auth');
         Route::put('/{id}', 'update')->name('api.v1.products.update')->middleware('jwt.auth');
         Route::post('/{id}', 'update')->name('api.v1.products.update.post')->middleware('jwt.auth'); // POST for FormData (PHP doesn't parse PUT body)
+        Route::patch('/{id}/listing-status', 'updateListingStatus')->name('api.v1.products.listing-status')->middleware('jwt.auth');
         Route::delete('/{id}', 'destroy')->name('api.v1.products.destroy')->middleware('jwt.auth');
     });
 
