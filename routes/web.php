@@ -96,9 +96,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
     Route::prefix('products')->name('products.')->controller(ProductController::class)->group(function () {
-        Route::get('/', function () {
-            return redirect()->route('admin.products.merchandise.index');
-        })->name('index');
+        Route::get('/', 'allIndex')->name('index');
         Route::get('/merchandise', 'merchandiseIndex')->name('merchandise.index');
         Route::get('/hajra', 'hajraIndex')->name('hajra.index');
         Route::get('/list', 'list')->name('list');
@@ -107,6 +105,8 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::put('/update/{id}', 'update')->name('update');
         Route::delete('/delete/{id}', 'delete')->name('delete');
+        Route::post('/approve/{id}', 'approve')->name('approve');
+        Route::post('/reject/{id}', 'reject')->name('reject');
     });
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('/', 'index')->name('index');

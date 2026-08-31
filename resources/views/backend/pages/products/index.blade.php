@@ -17,11 +17,13 @@
                 <p class="page-subtitle">{{ $pageSubtitle ?? 'Create and manage product listings' }}</p>
             </div>
 
-            <button type="button" class="btn btn-create open_modal_btn"
-                data-url="{{ route('admin.products.create', ['catalogType' => $catalogType ?? 'merchandise']) }}"
-                data-modal-parent="#crudModal">
-                + Add {{ ($catalogType ?? '') === 'hajra' ? 'Hajra' : 'Merchandise' }}
-            </button>
+            @if(!empty($catalogType))
+                <button type="button" class="btn btn-create open_modal_btn"
+                    data-url="{{ route('admin.products.create', ['catalogType' => $catalogType]) }}"
+                    data-modal-parent="#crudModal">
+                    + Add {{ $catalogType === 'hajra' ? 'Hajra' : 'Merchandise' }}
+                </button>
+            @endif
         </div>
 
         <!-- Table surface -->
@@ -36,6 +38,9 @@
                         @endif
                         <th>Owner</th>
                         <th>Price</th>
+                        @if($showApprovalColumn ?? empty($catalogType))
+                            <th>Approval</th>
+                        @endif
                         <th>Location</th>
                         <th>Upload Date</th>
                         <th class="text-end">Actions</th>
@@ -59,9 +64,12 @@
                 if (empty($catalogType)) {
                     $listColumns[] = ['data' => 'type', 'name' => 'type', 'orderable' => false];
                 }
+                $listColumns[] = ['data' => 'owner', 'name' => 'owner'];
+                $listColumns[] = ['data' => 'price', 'name' => 'price'];
+                if ($showApprovalColumn ?? empty($catalogType)) {
+                    $listColumns[] = ['data' => 'approval_status', 'name' => 'approval_status', 'orderable' => false];
+                }
                 $listColumns = array_merge($listColumns, [
-                    ['data' => 'owner', 'name' => 'owner'],
-                    ['data' => 'price', 'name' => 'price'],
                     ['data' => 'location', 'name' => 'location'],
                     ['data' => 'upload_date', 'name' => 'upload_date'],
                     ['data' => 'action', 'name' => 'action', 'orderable' => false, 'searchable' => false, 'className' => 'text-end'],

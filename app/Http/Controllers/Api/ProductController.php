@@ -22,9 +22,9 @@ class ProductController extends Controller
     {
         $query = Product::with(['size', 'category']);
 
-        // Hide out-of-stock products from public listing (sellers still see their own)
         if (! $request->filled('myproduct')) {
             $query->where('stock', '>', 0);
+            $query->publiclyVisible();
         }
 
         if ($request->filled('myproduct')) {
@@ -43,6 +43,7 @@ class ProductController extends Controller
         if ($request->filled('owner_id') && ! $request->filled('myproduct')) {
             $query->where('owner_id', (int) $request->owner_id);
             $query->where('active_listing', 1);
+            $query->where('approval_status', Product::APPROVAL_APPROVED);
         }
 
         if ($request->filled('condition')) {
@@ -316,6 +317,7 @@ class ProductController extends Controller
         $data['upload_date'] = now()->toDateString();
         // Marketplace listings from the API are always seller-owned
         $data['type'] = 'seller';
+        $data['approval_status'] = Product::APPROVAL_PENDING;
         // Seller products: one listing = one item, stock always 1
         $data['stock'] = 1;
 
@@ -351,7 +353,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product created successfully',
+            'message' => 'Product submitted for review. It will appear in the marketplace once approved.',
             'product_id' => $product->id,
         ]);
     }
@@ -447,6 +449,13 @@ class ProductController extends Controller
             ], 404);
         }
 
+        if (! $viewerIsOwner && $product->isSellerListing() && $product->approval_status !== Product::APPROVAL_APPROVED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
         $product->is_in_wishlist = false;
         if ($authUser) {
             $product->is_in_wishlist = Wishlist::where('user_id', $authUser->id)
@@ -518,6 +527,7 @@ class ProductController extends Controller
 
         $runQuery = function (bool $withMaterial, bool $withCondition, int $take) use ($excludeId, $categoryId, $material, $condition, &$collectedIds) {
             $q = Product::query()
+                ->publiclyVisible()
                 ->where('id', '!=', $excludeId)
                 ->where('stock', '>', 0)
                 ->where('category_id', $categoryId)
@@ -648,6 +658,10 @@ class ProductController extends Controller
             $data['discount_type'] = null;
         }
 
+        if ($product->isSellerListing()) {
+            $data['approval_status'] = Product::APPROVAL_PENDING;
+        }
+
         $product->update($data);
 
         $removedIds = $request->input('removed_image_ids', []);
@@ -686,7 +700,9 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product updated successfully',
+            'message' => $product->isSellerListing()
+                ? 'Product updated and submitted for review.'
+                : 'Product updated successfully',
             'data' => $product->fresh(['size', 'category', 'images']),
         ]);
     }

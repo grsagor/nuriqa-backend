@@ -22,6 +22,7 @@ class ProductController extends Controller
             'pageTitle' => 'Merchandise products',
             'pageSubtitle' => 'Create and manage merchandise catalog listings',
             'breadcrumbLabel' => 'Merchandise products',
+            'showApprovalColumn' => false,
         ]);
     }
 
@@ -32,6 +33,18 @@ class ProductController extends Controller
             'pageTitle' => 'Hajra products',
             'pageSubtitle' => 'Create and manage Hajra catalog listings',
             'breadcrumbLabel' => 'Hajra products',
+            'showApprovalColumn' => false,
+        ]);
+    }
+
+    public function allIndex()
+    {
+        return view('backend.pages.products.index', [
+            'catalogType' => null,
+            'pageTitle' => 'All products',
+            'pageSubtitle' => 'View and manage every product across seller, merchandise, and Hajra listings',
+            'breadcrumbLabel' => 'All products',
+            'showApprovalColumn' => true,
         ]);
     }
 
@@ -145,6 +158,8 @@ class ProductController extends Controller
             $data['upload_date'] = now()->toDateString();
         }
 
+        $data['approval_status'] = Product::APPROVAL_APPROVED;
+
         $product = Product::create($data);
 
         // Handle multiple images
@@ -168,10 +183,10 @@ class ProductController extends Controller
     {
         if (request()->ajax()) {
             $query = Product::with(['owner', 'size', 'category'])
-                ->select('id', 'owner_id', 'title', 'type', 'price', 'thumbnail', 'location', 'is_featured', 'upload_date', 'created_at', 'is_free')
+                ->select('id', 'owner_id', 'title', 'type', 'price', 'thumbnail', 'location', 'is_featured', 'upload_date', 'created_at', 'is_free', 'active_listing', 'approval_status')
                 ->latest();
 
-            if ($request->filled('type') && in_array($request->query('type'), ['merchandise', 'hajra'], true)) {
+            if ($request->filled('type') && in_array($request->query('type'), ['merchandise', 'hajra', 'seller'], true)) {
                 $query->where('type', $request->query('type'));
             }
 
@@ -208,13 +223,33 @@ class ProductController extends Controller
                 ->addColumn('upload_date', function ($row) {
                     return $row->upload_date ? Carbon::parse($row->upload_date)->format('d M Y') : 'N/A';
                 })
+                ->addColumn('approval_status', function ($row) {
+                    if (! $row->isSellerListing()) {
+                        return '<span class="text-muted">—</span>';
+                    }
+
+                    $badgeClass = match ($row->approval_status) {
+                        Product::APPROVAL_PENDING => 'bg-warning',
+                        Product::APPROVAL_APPROVED => 'bg-success',
+                        Product::APPROVAL_REJECTED => 'bg-danger',
+                        default => 'bg-secondary',
+                    };
+
+                    return '<span class="badge '.$badgeClass.'">'.ucfirst($row->approval_status ?? Product::APPROVAL_PENDING).'</span>';
+                })
                 ->addColumn('action', function ($row) {
                     $edit = '<button data-url="'.route('admin.products.edit', $row->id).'" data-modal-parent="#crudModal" class="btn btn-sm btn-primary open_modal_btn"><i class="fas fa-edit"></i></button>';
                     $delete = '<button data-url="'.route('admin.products.delete', $row->id).'" class="btn btn-sm btn-danger crud_delete_btn"><i class="fas fa-trash"></i></button>';
+                    $approve = '<button data-url="'.route('admin.products.approve', $row->id).'" class="btn btn-sm btn-success crud_action_btn" data-action="approve"><i class="fas fa-check"></i></button>';
+                    $reject = '<button data-url="'.route('admin.products.reject', $row->id).'" class="btn btn-sm btn-warning crud_action_btn" data-action="reject"><i class="fas fa-times"></i></button>';
 
-                    return $edit.' '.$delete;
+                    $approvalActions = ($row->isSellerListing() && $row->approval_status === Product::APPROVAL_PENDING)
+                        ? ' '.$approve.' '.$reject
+                        : '';
+
+                    return $edit.' '.$delete.$approvalActions;
                 })
-                ->rawColumns(['thumbnail', 'title', 'type', 'price', 'location', 'action'])
+                ->rawColumns(['thumbnail', 'title', 'type', 'price', 'location', 'approval_status', 'action'])
                 ->make(true);
         }
 
@@ -389,6 +424,44 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product deleted successfully',
+        ]);
+    }
+
+    public function approve(int $id)
+    {
+        $product = Product::find($id);
+
+        if (! $product || ! $product->isSellerListing()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Seller product not found',
+            ], 404);
+        }
+
+        $product->update(['approval_status' => Product::APPROVAL_APPROVED]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product approved successfully',
+        ]);
+    }
+
+    public function reject(int $id)
+    {
+        $product = Product::find($id);
+
+        if (! $product || ! $product->isSellerListing()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Seller product not found',
+            ], 404);
+        }
+
+        $product->update(['approval_status' => Product::APPROVAL_REJECTED]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product rejected successfully',
         ]);
     }
 }

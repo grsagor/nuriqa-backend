@@ -59,6 +59,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-ruler"></i></div>
                     Sizes
                 </a>
+                <a class="nav-link {{ request()->routeIs('admin.products.index') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-boxes"></i></div>
+                    All products
+                </a>
                 <a class="nav-link {{ request()->routeIs('admin.products.merchandise.index') ? 'active' : '' }}" href="{{ route('admin.products.merchandise.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-shopping-bag"></i></div>
                     Merchandise products

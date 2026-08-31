@@ -3,12 +3,19 @@
 namespace App\Models;
 
 use App\Services\PlatformFeeService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    public const APPROVAL_PENDING = 'pending';
+
+    public const APPROVAL_APPROVED = 'approved';
+
+    public const APPROVAL_REJECTED = 'rejected';
+
     protected $fillable = [
         'owner_id',
         'title',
@@ -33,6 +40,7 @@ class Product extends Model
         'platform_donation',
         'donation_percentage',
         'active_listing',
+        'approval_status',
         'stock',
     ];
 
@@ -83,6 +91,25 @@ class Product extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function isSellerListing(): bool
+    {
+        return $this->type === 'seller' || $this->type === null || $this->type === '';
+    }
+
+    public function scopePubliclyVisible(Builder $query): void
+    {
+        $query->where(function (Builder $q) {
+            $q->whereIn('type', ['merchandise', 'hajra'])
+                ->orWhere(function (Builder $sub) {
+                    $sub->where(function (Builder $typeQ) {
+                        $typeQ->where('type', 'seller')
+                            ->orWhereNull('type')
+                            ->orWhere('type', '');
+                    })->where('approval_status', self::APPROVAL_APPROVED);
+                });
+        });
     }
 
     public static $materials = [
