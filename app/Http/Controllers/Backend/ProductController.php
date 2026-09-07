@@ -8,8 +8,10 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Size;
 use App\Services\ImageService;
+use App\Services\ProductModerationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
 
@@ -437,31 +439,81 @@ class ProductController extends Controller
 
     public function approve(int $id)
     {
-        return $this->setApprovalStatus($id, Product::APPROVAL_APPROVED, 'Product approved successfully');
+        return $this->setApprovalStatus($id, Product::APPROVAL_APPROVED, 'approve', 'Product approved successfully');
     }
 
-    public function reject(int $id)
+    public function reject(Request $request, int $id)
     {
-        return $this->setApprovalStatus($id, Product::APPROVAL_REJECTED, 'Product rejected successfully');
+        $request->validate([
+            'message' => 'nullable|string|max:2000',
+            'rejection_reason' => 'nullable|string|max:255',
+        ]);
+
+        return $this->setApprovalStatus(
+            $id,
+            Product::APPROVAL_REJECTED,
+            'reject',
+            'Product rejected successfully',
+            $request->input('message'),
+            $request->input('rejection_reason'),
+        );
+    }
+
+    public function returnForCorrection(Request $request, int $id)
+    {
+        $request->validate([
+            'message' => 'required|string|max:2000',
+        ]);
+
+        return $this->setApprovalStatus(
+            $id,
+            Product::APPROVAL_RETURNED,
+            'return_for_correction',
+            'Product returned for correction',
+            $request->input('message'),
+        );
     }
 
     public function updateApprovalStatus(Request $request, int $id)
     {
         $request->validate([
-            'approval_status' => 'required|in:pending,approved,rejected',
+            'approval_status' => 'required|in:pending,approved,rejected,returned',
+            'message' => 'nullable|string|max:2000',
+            'rejection_reason' => 'nullable|string|max:255',
         ]);
 
-        $message = match ($request->input('approval_status')) {
+        $status = $request->input('approval_status');
+        $action = match ($status) {
+            Product::APPROVAL_APPROVED => 'approve',
+            Product::APPROVAL_REJECTED => 'reject',
+            Product::APPROVAL_RETURNED => 'return_for_correction',
+            default => 'set_pending',
+        };
+        $message = match ($status) {
             Product::APPROVAL_APPROVED => 'Product approved successfully',
             Product::APPROVAL_REJECTED => 'Product rejected successfully',
+            Product::APPROVAL_RETURNED => 'Product returned for correction',
             default => 'Product set to pending review',
         };
 
-        return $this->setApprovalStatus($id, $request->input('approval_status'), $message);
+        return $this->setApprovalStatus(
+            $id,
+            $status,
+            $action,
+            $message,
+            $request->input('message'),
+            $request->input('rejection_reason'),
+        );
     }
 
-    private function setApprovalStatus(int $id, string $status, string $message)
-    {
+    private function setApprovalStatus(
+        int $id,
+        string $status,
+        string $action,
+        string $flashMessage,
+        ?string $moderationMessage = null,
+        ?string $rejectionReason = null,
+    ) {
         $product = Product::find($id);
 
         if (! $product || ! $product->isSellerListing()) {
@@ -471,14 +523,21 @@ class ProductController extends Controller
             ], 404);
         }
 
-        $product->update(['approval_status' => $status]);
+        app(ProductModerationService::class)->transition(
+            $product,
+            $status,
+            $action,
+            Auth::user(),
+            $moderationMessage,
+            $rejectionReason,
+        );
 
         return response()->json([
             'success' => true,
-            'message' => $message,
+            'message' => $flashMessage,
             'data' => [
                 'id' => $product->id,
-                'approval_status' => $product->approval_status,
+                'approval_status' => $product->fresh()->approval_status,
             ],
         ]);
     }

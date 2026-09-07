@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Size;
 use App\Models\User;
 use App\Services\CheckoutShippingService;
+use App\Services\PlatformFeeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\TestCase;
@@ -18,7 +19,8 @@ class VoluntaryDonationCheckoutTest extends TestCase
 
     public function test_checkout_adds_voluntary_overpayment_to_donation_and_total(): void
     {
-        \App\Models\PlatformSetting::query()->update(['fee_percentage' => 10]);
+        \App\Models\PlatformSetting::query()->update(['admin_fee_amount' => 0.75]);
+        PlatformFeeService::clearCache();
 
         $this->mock(CheckoutShippingService::class, function ($mock) {
             $mock->shouldReceive('quote')->andReturn([
@@ -57,7 +59,6 @@ class VoluntaryDonationCheckoutTest extends TestCase
         ]);
 
         $cart = Cart::query()->create(['user_id' => $buyer->id, 'product_id' => $product->id, 'quantity' => 2]);
-
         $token = JWTAuth::fromUser($buyer);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
@@ -80,7 +81,8 @@ class VoluntaryDonationCheckoutTest extends TestCase
         $tx = \App\Models\Transaction::query()->first();
         $this->assertNotNull($tx);
         $this->assertEquals(20.0, (float) $tx->donation_total);
-        $this->assertEquals(255.0, (float) $tx->total);
+        // 200 seller + 0.75 admin fee + 15 delivery + 20 voluntary
+        $this->assertEquals(235.75, (float) $tx->total);
 
         $line = \App\Models\TransactionSellLine::query()->first();
         $this->assertEquals(20.0, (float) $line->voluntary_donation_amount);

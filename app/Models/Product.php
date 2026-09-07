@@ -16,6 +16,16 @@ class Product extends Model
 
     public const APPROVAL_REJECTED = 'rejected';
 
+    public const APPROVAL_RETURNED = 'returned';
+
+    public const CONTRIBUTION_FIXED = 'fixed';
+
+    public const CONTRIBUTION_FLEXIBLE = 'flexible';
+
+    public const DELIVERY_PAYER_BUYER = 'buyer';
+
+    public const DELIVERY_PAYER_DONOR = 'donor';
+
     protected $fillable = [
         'owner_id',
         'title',
@@ -31,16 +41,24 @@ class Product extends Model
         'material',
         'color',
         'price',
+        'guide_value',
         'thumbnail',
         'is_featured',
         'is_free',
+        'contribution_mode',
+        'delivery_payer',
         'discount_enabled',
         'discount_type',
         'discount',
         'platform_donation',
         'donation_percentage',
+        'cause_allocation_type',
+        'cause_allocation_value',
+        'cause_id',
         'active_listing',
         'approval_status',
+        'rejection_reason',
+        'moderation_message',
         'stock',
     ];
 
@@ -62,6 +80,8 @@ class Product extends Model
             'active_listing' => 'boolean',
             'upload_date' => 'date',
             'price' => 'decimal:2',
+            'guide_value' => 'decimal:2',
+            'cause_allocation_value' => 'decimal:2',
             'discount' => 'decimal:2',
             'donation_percentage' => 'integer',
             'stock' => 'integer',
@@ -71,6 +91,23 @@ class Product extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function cause(): BelongsTo
+    {
+        return $this->belongsTo(Cause::class);
+    }
+
+    public function approvalHistories(): HasMany
+    {
+        return $this->hasMany(ProductApprovalHistory::class)->latest();
+    }
+
+    public function allowsFlexibleContribution(): bool
+    {
+        return ($this->contribution_mode ?? self::CONTRIBUTION_FIXED) === self::CONTRIBUTION_FLEXIBLE
+            || $this->is_free
+            || (float) ($this->price ?? 0) <= 0;
     }
 
     public function size(): BelongsTo

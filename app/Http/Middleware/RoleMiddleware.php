@@ -52,7 +52,7 @@ class RoleMiddleware
         if (! $hasAccess) {
             $rolesList = implode(', ', $roles);
 
-            return redirect()->route('dashboard')->with('error', "You do not have the required privileges. Required roles: {$rolesList}");
+            return redirect()->route('auth.login')->with('error', "You do not have the required privileges. Required roles: {$rolesList}");
         }
 
         return $next($request);

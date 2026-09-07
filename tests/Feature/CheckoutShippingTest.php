@@ -95,7 +95,8 @@ class CheckoutShippingTest extends TestCase
         $transaction = Transaction::query()->first();
         $this->assertNotNull($transaction);
         $this->assertEquals(3.99, (float) $transaction->delivery_fee);
-        $this->assertEquals(104.99, (float) $transaction->total);
+        // 100 seller + 0.75 admin fee + 3.99 delivery
+        $this->assertEquals(104.74, (float) $transaction->total);
 
         $shipment = Shipment::query()->where('transaction_id', $transaction->id)->first();
         $this->assertNotNull($shipment);

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CauseController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\CustomerDashboardController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Api\SellerDashboardController;
 use App\Http\Controllers\Api\SellerNotificationController;
 use App\Http\Controllers\Api\SellerReportController;
 use App\Http\Controllers\Api\SponsorRequestController;
+use App\Http\Controllers\Api\SupportCaseController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\WithdrawalController;
@@ -123,6 +125,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/seller', 'sellerIndex')->name('api.v1.orders.seller-index');
         Route::put('/seller/{id}/status', 'sellerUpdateStatus')->name('api.v1.orders.seller-update-status');
         Route::get('/sponsored', 'sponsoredIndex')->name('api.v1.orders.sponsored-index');
+        Route::post('/{id}/cancel', 'cancel')->name('api.v1.orders.cancel');
+        Route::post('/{id}/refund', 'refund')->name('api.v1.orders.refund');
         Route::get('/', 'index')->name('api.v1.orders.index');
         Route::get('/{id}', 'show')->name('api.v1.orders.show');
     });
@@ -138,6 +142,15 @@ Route::prefix('v1')->group(function () {
 
     // Join Us Applications (no auth required)
     Route::post('/join-us', [JoinUsController::class, 'store'])->name('api.v1.join-us.store');
+
+    Route::get('/causes', [CauseController::class, 'index'])->name('api.v1.causes.index');
+
+    Route::prefix('support-cases')->controller(SupportCaseController::class)->middleware('jwt.auth')->group(function () {
+        Route::get('/', 'index')->name('api.v1.support-cases.index');
+        Route::post('/', 'store')->name('api.v1.support-cases.store');
+        Route::get('/{id}', 'show')->name('api.v1.support-cases.show');
+        Route::post('/{id}/messages', 'addMessage')->name('api.v1.support-cases.messages');
+    });
 
     // Contact Form (no auth required)
     Route::post('/contact', [ContactController::class, 'store'])->name('api.v1.contact.store');

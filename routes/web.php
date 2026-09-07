@@ -18,6 +18,7 @@ use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\SellerReportController;
 use App\Http\Controllers\Backend\SizeController;
 use App\Http\Controllers\Backend\SponsorRequestController;
+use App\Http\Controllers\Backend\SupportCaseController;
 use App\Http\Controllers\Backend\TransactionController;
 use App\Http\Controllers\Backend\UserController;
 use Illuminate\Support\Facades\Route;
@@ -107,6 +108,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::delete('/delete/{id}', 'delete')->name('delete');
         Route::post('/approve/{id}', 'approve')->name('approve');
         Route::post('/reject/{id}', 'reject')->name('reject');
+        Route::post('/return/{id}', 'returnForCorrection')->name('return');
         Route::post('/approval-status/{id}', 'updateApprovalStatus')->name('approval-status');
     });
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
@@ -175,6 +177,15 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::post('/{id}/status', 'updateStatus')->name('update-status');
+    });
+    Route::prefix('support-cases')->name('support-cases.')->controller(SupportCaseController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/list', 'list')->name('list');
+        Route::get('/{id}', 'show')->name('show');
+        Route::post('/{id}/acknowledge', 'acknowledge')->name('acknowledge');
+        Route::post('/{id}/assign', 'assign')->name('assign');
+        Route::post('/{id}/messages', 'addMessage')->name('messages');
+        Route::post('/{id}/decide', 'decide')->name('decide');
     });
     Route::prefix('newsletter-subscribers')->name('newsletter-subscribers.')->controller(NewsletterSubscriberController::class)->group(function () {
         Route::get('/', 'index')->name('index');

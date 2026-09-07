@@ -13,6 +13,7 @@ class SellerRegistrationApprovalTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        // Root redirects to the admin dashboard (same behaviour as ExampleTest).
+        $response->assertRedirect(route('admin.dashboard.index'));
     }
 }

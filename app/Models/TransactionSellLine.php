@@ -19,6 +19,10 @@ class TransactionSellLine extends Model
         'platform_fee_amount',
         'donation_amount',
         'voluntary_donation_amount',
+        'cause_id',
+        'cause_allocation_amount',
+        'contribution_amount',
+        'delivery_payer',
     ];
 
     protected function casts(): array
@@ -30,6 +34,8 @@ class TransactionSellLine extends Model
             'platform_fee_amount' => 'decimal:2',
             'donation_amount' => 'decimal:2',
             'voluntary_donation_amount' => 'decimal:2',
+            'cause_allocation_amount' => 'decimal:2',
+            'contribution_amount' => 'decimal:2',
         ];
     }
 

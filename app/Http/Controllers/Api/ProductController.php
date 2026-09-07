@@ -243,8 +243,13 @@ class ProductController extends Controller
             'condition' => 'required|in:new,used',
 
             'price' => 'nullable|numeric|min:0',
-
+            'guide_value' => 'nullable|numeric|min:0',
             'is_free' => 'nullable|boolean',
+            'contribution_mode' => 'nullable|in:fixed,flexible',
+            'delivery_payer' => 'nullable|in:buyer,donor',
+            'cause_id' => 'nullable|exists:causes,id',
+            'cause_allocation_type' => 'nullable|in:none,fixed,percentage,origin_profit',
+            'cause_allocation_value' => 'nullable|numeric|min:0',
 
             'discount_enabled' => 'nullable|boolean',
             'discount_type' => 'nullable|in:percentage,flat|required_if:discount_enabled,1',
@@ -313,7 +318,7 @@ class ProductController extends Controller
         $data['platform_donation'] = filter_var($request->input('platform_donation'), FILTER_VALIDATE_BOOLEAN);
         $data['active_listing'] = filter_var($request->input('active_listing', true), FILTER_VALIDATE_BOOLEAN);
 
-        // Enforce FREE product rules
+        // Enforce FREE / flexible contribution rules
         if ($data['is_free']) {
             $data['price'] = 0;
             $data['discount'] = 0;
@@ -321,6 +326,22 @@ class ProductController extends Controller
             $data['discount_type'] = null;
             $data['platform_donation'] = false;
             $data['donation_percentage'] = 0;
+            $data['contribution_mode'] = Product::CONTRIBUTION_FLEXIBLE;
+        } else {
+            $data['contribution_mode'] = $request->input('contribution_mode', Product::CONTRIBUTION_FIXED);
+        }
+
+        if (($data['contribution_mode'] ?? '') === Product::CONTRIBUTION_FLEXIBLE) {
+            $data['is_free'] = true;
+            $data['price'] = 0;
+        }
+
+        $data['delivery_payer'] = $request->input('delivery_payer', Product::DELIVERY_PAYER_BUYER);
+        $data['cause_allocation_type'] = $request->input('cause_allocation_type', $data['platform_donation'] ? 'percentage' : 'none');
+        if ($request->filled('cause_allocation_value')) {
+            $data['cause_allocation_value'] = $request->input('cause_allocation_value');
+        } elseif (($data['cause_allocation_type'] ?? '') === 'percentage') {
+            $data['cause_allocation_value'] = $request->input('donation_percentage');
         }
 
         // Enforce discount rules
@@ -338,6 +359,14 @@ class ProductController extends Controller
         $data['stock'] = 1;
 
         $product = Product::create($data);
+
+        app(\App\Services\ProductModerationService::class)->record(
+            $product,
+            Product::APPROVAL_PENDING,
+            'submit',
+            $user,
+            'Listing submitted for review',
+        );
 
         // Handle images + auto thumbnail
         if ($request->hasFile('images')) {
@@ -678,7 +707,18 @@ class ProductController extends Controller
             $data['approval_status'] = Product::APPROVAL_PENDING;
         }
 
+        $previousStatus = $product->approval_status;
         $product->update($data);
+
+        if ($product->isSellerListing() && $previousStatus !== Product::APPROVAL_PENDING) {
+            app(\App\Services\ProductModerationService::class)->record(
+                $product->fresh(),
+                Product::APPROVAL_PENDING,
+                'resubmit',
+                $user,
+                'Listing resubmitted for review',
+            );
+        }
 
         $removedIds = $request->input('removed_image_ids', []);
         if (is_array($removedIds) && count($removedIds) > 0) {

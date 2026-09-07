@@ -18,8 +18,16 @@ class Transaction extends Model
         'donation_total',
         'tax',
         'delivery_fee',
+        'delivery_payer',
         'coupon_discount',
         'total',
+        'admin_fee_total',
+        'processor_fee_total',
+        'cause_allocation_total',
+        'refund_status',
+        'refunded_amount',
+        'cancelled_at',
+        'completed_at',
         'billing_first_name',
         'billing_last_name',
         'billing_email',
@@ -41,14 +49,25 @@ class Transaction extends Model
             'delivery_fee' => 'decimal:2',
             'coupon_discount' => 'decimal:2',
             'total' => 'decimal:2',
+            'admin_fee_total' => 'decimal:2',
+            'processor_fee_total' => 'decimal:2',
+            'cause_allocation_total' => 'decimal:2',
+            'refunded_amount' => 'decimal:2',
             'donate_anonymous' => 'boolean',
             'keep_updated' => 'boolean',
+            'cancelled_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(LedgerEntry::class);
     }
 
     public function sellLines(): HasMany

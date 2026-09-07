@@ -111,6 +111,10 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-flag"></i></div>
                     Seller reports
                 </a>
+                <a class="nav-link {{ Request::segment(2) == 'support-cases' ? 'active' : '' }}" href="{{ route('admin.support-cases.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-life-ring"></i></div>
+                    Support cases
+                </a>
                 <a class="nav-link {{ Request::segment(2) == 'newsletter-subscribers' ? 'active' : '' }}" href="{{ route('admin.newsletter-subscribers.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-paper-plane"></i></div>
                     Newsletter subscribers

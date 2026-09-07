@@ -248,9 +248,12 @@ class OrderController extends Controller
                 'status' => 'pending',
                 'subtotal' => $subtotal,
                 'platform_fee_total' => $platformFeeTotal,
+                'admin_fee_total' => $platformFeeTotal,
                 'donation_total' => $donationTotal,
+                'cause_allocation_total' => $donationTotal,
                 'tax' => $tax,
                 'delivery_fee' => $deliveryFee,
+                'delivery_payer' => 'buyer',
                 'coupon_discount' => $couponDiscount,
                 'total' => $total,
                 'billing_first_name' => $request->billing_first_name,
@@ -281,6 +284,10 @@ class OrderController extends Controller
                     'platform_fee_amount' => $row['linePlatformFee'],
                     'donation_amount' => $row['lineDonation'],
                     'voluntary_donation_amount' => $row['voluntaryLine'],
+                    'cause_id' => $product->cause_id,
+                    'cause_allocation_amount' => $row['lineDonation'],
+                    'contribution_amount' => $lineSubtotal,
+                    'delivery_payer' => $product->delivery_payer ?? 'buyer',
                 ]);
 
                 Product::where('id', $product->id)->decrement('stock', $quantity);
@@ -361,6 +368,15 @@ class OrderController extends Controller
             }
 
             SellerNotificationService::notifyOrderCreated($transaction);
+
+            try {
+                app(\App\Services\LedgerService::class)->recordCheckout($transaction->fresh(['sellLines.product']));
+            } catch (\Throwable $e) {
+                Log::warning('Ledger recording failed after checkout', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             $transaction->load(['sellLines.product', 'payments', 'shipments.seller']);
 
@@ -1116,5 +1132,67 @@ class OrderController extends Controller
         $this->stripe = new StripeClient($secretKey);
 
         return $this->stripe;
+    }
+
+    public function cancel(Request $request, string $id): JsonResponse
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $transaction = Transaction::query()->where('id', $id)->where('user_id', $user->id)->firstOrFail();
+
+        if (in_array($transaction->status, ['completed', 'cancelled', 'failed'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order cannot be cancelled in its current status.',
+            ], 422);
+        }
+
+        $transaction->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order cancelled.',
+            'data' => $transaction->fresh(['sellLines.product', 'payments', 'shipments']),
+        ]);
+    }
+
+    public function refund(Request $request, string $id): JsonResponse
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $request->validate([
+            'amount' => 'nullable|numeric|min:0.01',
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $isAdmin = optional($user->role)->name === 'admin';
+        $transaction = Transaction::query()
+            ->when(! $isAdmin, fn ($q) => $q->where('user_id', $user->id))
+            ->findOrFail($id);
+
+        $amount = round((float) ($request->input('amount') ?? $transaction->total), 2);
+        if ($amount > (float) $transaction->total) {
+            return response()->json(['success' => false, 'message' => 'Refund exceeds order total.'], 422);
+        }
+
+        $transaction->update([
+            'refund_status' => 'refunded',
+            'refunded_amount' => $amount,
+            'status' => $transaction->status === 'cancelled' ? 'cancelled' : $transaction->status,
+        ]);
+
+        $payment = $transaction->payments()->latest()->first();
+        if ($payment) {
+            $payment->update(['status' => 'refunded']);
+        }
+
+        app(\App\Services\LedgerService::class)->recordRefund($transaction, $amount, $user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Refund recorded.',
+            'data' => $transaction->fresh(['payments', 'ledgerEntries']),
+        ]);
     }
 }
