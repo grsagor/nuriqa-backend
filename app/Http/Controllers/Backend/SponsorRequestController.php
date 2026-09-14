@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\SponsorRequest;
+use App\Services\SponsorRequestModerationService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
 class SponsorRequestController extends Controller
 {
+    public function __construct(protected SponsorRequestModerationService $moderationService) {}
+
     public function index()
     {
         return view('backend.pages.sponsor-requests.index');
@@ -36,6 +40,7 @@ class SponsorRequestController extends Controller
                         'pending' => 'bg-warning',
                         'approved' => 'bg-success',
                         'rejected' => 'bg-danger',
+                        'returned' => 'bg-info',
                         default => 'bg-secondary'
                     };
 
@@ -46,10 +51,8 @@ class SponsorRequestController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $view = '<button data-url="'.route('admin.sponsor-requests.show', $row->id).'" data-modal-parent="#crudModal" class="btn btn-sm btn-info open_modal_btn"><i class="fas fa-eye"></i></button>';
-                    $approve = '<button data-url="'.route('admin.sponsor-requests.approve', $row->id).'" class="btn btn-sm btn-success crud_action_btn" data-action="approve"><i class="fas fa-check"></i></button>';
-                    $reject = '<button data-url="'.route('admin.sponsor-requests.reject', $row->id).'" class="btn btn-sm btn-danger crud_action_btn" data-action="reject"><i class="fas fa-times"></i></button>';
 
-                    return $view.' '.($row->status === 'pending' ? $approve.' '.$reject : '');
+                    return $view;
                 })
                 ->rawColumns(['status', 'action'])
                 ->make(true);
@@ -73,7 +76,7 @@ class SponsorRequestController extends Controller
         ]);
     }
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $sponsorRequest = SponsorRequest::find($id);
         if (! $sponsorRequest) {
@@ -83,7 +86,11 @@ class SponsorRequestController extends Controller
             ], 404);
         }
 
-        $sponsorRequest->update(['status' => 'approved']);
+        $data = $request->validate([
+            'message' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $this->moderationService->approve($sponsorRequest, $request->user(), $data['message'] ?? null);
 
         return response()->json([
             'success' => true,
@@ -91,7 +98,7 @@ class SponsorRequestController extends Controller
         ]);
     }
 
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
         $sponsorRequest = SponsorRequest::find($id);
         if (! $sponsorRequest) {
@@ -101,11 +108,37 @@ class SponsorRequestController extends Controller
             ], 404);
         }
 
-        $sponsorRequest->update(['status' => 'rejected']);
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $this->moderationService->reject($sponsorRequest, $request->user(), $data['message'], $data['message']);
 
         return response()->json([
             'success' => true,
             'message' => 'Sponsor request rejected successfully',
+        ]);
+    }
+
+    public function returnForCorrection(Request $request, $id)
+    {
+        $sponsorRequest = SponsorRequest::find($id);
+        if (! $sponsorRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sponsor request not found',
+            ], 404);
+        }
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $this->moderationService->returnForCorrection($sponsorRequest, $request->user(), $data['message']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sponsor request returned for correction',
         ]);
     }
 

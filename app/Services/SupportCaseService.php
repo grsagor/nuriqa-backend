@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class SupportCaseService
 {
+    public function __construct(protected AuditLogService $auditLogService) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -38,22 +40,40 @@ class SupportCaseService
 
     public function acknowledge(SupportCase $case, ?User $owner = null): SupportCase
     {
+        $from = $case->status;
         $case->update([
             'status' => SupportCase::STATUS_ACKNOWLEDGED,
             'acknowledged_at' => now(),
             'owner_id' => $owner?->id ?? $case->owner_id,
         ]);
 
+        $this->auditLogService->record(
+            'support_case.acknowledge',
+            $case,
+            $owner,
+            $from,
+            SupportCase::STATUS_ACKNOWLEDGED,
+        );
+
         return $case->fresh();
     }
 
     public function assign(SupportCase $case, User $owner): SupportCase
     {
+        $from = $case->status;
         $case->update([
             'owner_id' => $owner->id,
             'status' => SupportCase::STATUS_ASSIGNED,
             'acknowledged_at' => $case->acknowledged_at ?? now(),
         ]);
+
+        $this->auditLogService->record(
+            'support_case.assign',
+            $case,
+            $owner,
+            $from,
+            SupportCase::STATUS_ASSIGNED,
+        );
 
         return $case->fresh();
     }
@@ -81,13 +101,16 @@ class SupportCaseService
      */
     public function decide(SupportCase $case, array $data, User $actor): SupportCase
     {
+        $from = $case->status;
+        $to = $data['status'] ?? SupportCase::STATUS_RESOLVED;
+
         $case->update([
             'decision' => $data['decision'] ?? $case->decision,
             'financial_outcome' => $data['financial_outcome'] ?? $case->financial_outcome,
             'admin_notes' => $data['admin_notes'] ?? $case->admin_notes,
-            'status' => $data['status'] ?? SupportCase::STATUS_RESOLVED,
+            'status' => $to,
             'owner_id' => $case->owner_id ?? $actor->id,
-            'closed_at' => in_array($data['status'] ?? SupportCase::STATUS_RESOLVED, [SupportCase::STATUS_RESOLVED, SupportCase::STATUS_CLOSED], true)
+            'closed_at' => in_array($to, [SupportCase::STATUS_RESOLVED, SupportCase::STATUS_CLOSED], true)
                 ? now()
                 : $case->closed_at,
         ]);
@@ -95,6 +118,18 @@ class SupportCaseService
         if (! empty($data['message'])) {
             $this->addMessage($case, $actor, (string) $data['message'], false);
         }
+
+        $this->auditLogService->record(
+            'support_case.decide',
+            $case,
+            $actor,
+            $from,
+            $to,
+            $data['decision'] ?? null,
+            [
+                'financial_outcome' => $data['financial_outcome'] ?? null,
+            ],
+        );
 
         return $case->fresh(['messages', 'owner']);
     }

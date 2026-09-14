@@ -56,5 +56,10 @@ class ProductModerationHistoryTest extends TestCase
         $this->assertSame(Product::APPROVAL_RETURNED, $product->fresh()->approval_status);
         $this->assertSame('Please add clearer photos.', $product->fresh()->moderation_message);
         $this->assertSame(1, ProductApprovalHistory::query()->count());
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'product.return_for_correction',
+            'auditable_id' => $product->id,
+            'to_status' => Product::APPROVAL_RETURNED,
+        ]);
     }
 }

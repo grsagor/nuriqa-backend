@@ -8,6 +8,8 @@ use App\Models\User;
 
 class ProductModerationService
 {
+    public function __construct(protected AuditLogService $auditLogService) {}
+
     public function record(
         Product $product,
         string $toStatus,
@@ -35,6 +37,7 @@ class ProductModerationService
         ?string $message = null,
         ?string $rejectionReason = null,
     ): Product {
+        $from = $product->approval_status;
         $this->record($product, $toStatus, $action, $actor, $message);
 
         $product->update([
@@ -43,6 +46,16 @@ class ProductModerationService
             'moderation_message' => $message,
             'active_listing' => $toStatus === Product::APPROVAL_APPROVED ? $product->active_listing : false,
         ]);
+
+        $this->auditLogService->record(
+            'product.'.$action,
+            $product,
+            $actor,
+            $from,
+            $toStatus,
+            $message,
+            $rejectionReason ? ['rejection_reason' => $rejectionReason] : [],
+        );
 
         return $product->fresh();
     }

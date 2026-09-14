@@ -135,6 +135,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/show/{id}', 'show')->name('show');
         Route::post('/approve/{id}', 'approve')->name('approve');
         Route::post('/reject/{id}', 'reject')->name('reject');
+        Route::post('/return/{id}', 'returnForCorrection')->name('return');
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
     Route::prefix('transactions')->name('transactions.')->controller(TransactionController::class)->group(function () {
@@ -142,6 +143,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::get('/complete/{id}', 'complete')->name('complete');
+        Route::post('/refund/{id}', 'refund')->name('refund');
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
     Route::prefix('merchandise-transactions')->name('merchandise-transactions.')->controller(TransactionController::class)->group(function () {

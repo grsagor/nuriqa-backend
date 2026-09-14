@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use App\Models\Wallet;
+use App\Services\AuditLogService;
+use App\Services\LedgerService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
@@ -222,6 +225,7 @@ class TransactionController extends Controller
 
         DB::beginTransaction();
         try {
+            $fromStatus = $transaction->status;
             $transaction->update(['status' => 'completed']);
 
             $sellerEarnings = [];
@@ -255,6 +259,14 @@ class TransactionController extends Controller
 
             DB::commit();
 
+            app(AuditLogService::class)->record(
+                'transaction.complete',
+                $transaction,
+                auth()->user(),
+                $fromStatus,
+                'completed',
+            );
+
             return redirect()->back()
                 ->with('success', 'Order marked as completed and seller wallets credited.');
         } catch (\Exception $e) {
@@ -263,6 +275,60 @@ class TransactionController extends Controller
             return redirect()->back()
                 ->with('error', 'Failed to complete order: '.$e->getMessage());
         }
+    }
+
+    public function refund(Request $request, $id)
+    {
+        $transaction = Transaction::query()->findOrFail($id);
+
+        if (($transaction->refund_status ?? null) === 'refunded') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order is already refunded.',
+            ], 422);
+        }
+
+        $data = $request->validate([
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $amount = round((float) ($data['amount'] ?? $transaction->total), 2);
+        if ($amount > (float) $transaction->total) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Refund exceeds order total.',
+            ], 422);
+        }
+
+        $from = $transaction->status;
+        $actor = $request->user();
+
+        $transaction->update([
+            'refund_status' => 'refunded',
+            'refunded_amount' => $amount,
+        ]);
+
+        $payment = $transaction->payments()->latest()->first();
+        if ($payment) {
+            $payment->update(['status' => 'refunded']);
+        }
+
+        app(LedgerService::class)->recordRefund($transaction, $amount, $actor);
+        app(AuditLogService::class)->record(
+            'order.refund',
+            $transaction,
+            $actor,
+            $from,
+            $transaction->fresh()->status,
+            $data['reason'] ?? null,
+            ['amount' => $amount],
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Refund recorded.',
+        ]);
     }
 
     public function delete($id)

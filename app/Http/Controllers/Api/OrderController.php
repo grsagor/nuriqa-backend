@@ -1146,10 +1146,19 @@ class OrderController extends Controller
             ], 422);
         }
 
+        $from = $transaction->status;
         $transaction->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
         ]);
+
+        app(\App\Services\AuditLogService::class)->record(
+            'order.cancel',
+            $transaction,
+            $user,
+            $from,
+            'cancelled',
+        );
 
         return response()->json([
             'success' => true,
@@ -1166,7 +1175,7 @@ class OrderController extends Controller
             'reason' => 'nullable|string|max:1000',
         ]);
 
-        $isAdmin = optional($user->role)->name === 'admin';
+        $isAdmin = optional($user->role)->name === 'admin' || (int) $user->role_id === 1;
         $transaction = Transaction::query()
             ->when(! $isAdmin, fn ($q) => $q->where('user_id', $user->id))
             ->findOrFail($id);
@@ -1176,6 +1185,7 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Refund exceeds order total.'], 422);
         }
 
+        $from = $transaction->status;
         $transaction->update([
             'refund_status' => 'refunded',
             'refunded_amount' => $amount,
@@ -1188,6 +1198,15 @@ class OrderController extends Controller
         }
 
         app(\App\Services\LedgerService::class)->recordRefund($transaction, $amount, $user);
+        app(\App\Services\AuditLogService::class)->record(
+            'order.refund',
+            $transaction,
+            $user,
+            $from,
+            $transaction->fresh()->status,
+            $request->input('reason'),
+            ['amount' => $amount],
+        );
 
         return response()->json([
             'success' => true,

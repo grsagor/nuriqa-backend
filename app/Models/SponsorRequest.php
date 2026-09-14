@@ -22,11 +22,19 @@ class SponsorRequest extends Model
         'additional_info',
         'keep_updated',
         'status',
+        'moderation_message',
+        'rejection_reason',
+        'moderated_at',
+        'moderated_by',
     ];
 
-    protected $casts = [
-        'keep_updated' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'keep_updated' => 'boolean',
+            'moderated_at' => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo
     {

@@ -65,7 +65,7 @@
                 </a>
                 <a class="nav-link {{ request()->routeIs('admin.products.merchandise.index') ? 'active' : '' }}" href="{{ route('admin.products.merchandise.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-shopping-bag"></i></div>
-                    Merchandise products
+                    Origin products
                 </a>
                 <a class="nav-link {{ request()->routeIs('admin.products.hajra.index') ? 'active' : '' }}" href="{{ route('admin.products.hajra.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-store"></i></div>
@@ -83,7 +83,7 @@
                 </a>
                 <a class="nav-link {{ Request::segment(2) == 'merchandise-transactions' ? 'active' : '' }}" href="{{ route('admin.merchandise-transactions.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-shopping-bag"></i></div>
-                    Merchandise Transactions
+                    Origin Transactions
                 </a>
                 <a class="nav-link {{ Request::segment(2) == 'hajra-transactions' ? 'active' : '' }}" href="{{ route('admin.hajra-transactions.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-store"></i></div>

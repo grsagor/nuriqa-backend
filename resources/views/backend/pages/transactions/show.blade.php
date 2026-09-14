@@ -88,8 +88,8 @@
                                 <th>Quantity</th>
                                 <th>Seller unit</th>
                                 <th>Line (seller)</th>
-                                <th>Buyer protection fee</th>
-                                <th>Donation (listing %)</th>
+								<th>Nuriqa administration fee</th>
+                                <th>Cause allocation</th>
                                 <th>Extra donation (buyer)</th>
                             </tr>
                         </thead>
@@ -109,15 +109,15 @@
                     </table>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <strong>Subtotal (items incl. buyer protection fee):</strong>
+					<strong>Subtotal (items incl. Nuriqa administration fee):</strong>
                     <p>£{{ number_format($transaction->subtotal, 2) }}</p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <strong>Buyer protection fee (total):</strong>
+                    <strong>Nuriqa administration fee (total):</strong>
                     <p>£{{ number_format($transaction->platform_fee_total ?? 0, 2) }}</p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <strong>Donation from seller listings (total):</strong>
+                    <strong>Cause allocation (total):</strong>
                     <p>£{{ number_format($transaction->donation_total ?? 0, 2) }}</p>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -136,6 +136,49 @@
                     <strong>Total:</strong>
                     <p class="fw-bold">£{{ number_format($transaction->total, 2) }}</p>
                 </div>
+                @if(($transaction->refund_status ?? null) !== 'refunded' && !in_array($transaction->status, ['failed'], true))
+                    <div class="col-md-12 mb-3">
+                        <hr>
+                        <form method="POST" action="{{ route('admin.transactions.refund', $transaction->id) }}" class="admin-refund-form">
+                            @csrf
+                            <label class="form-label" for="refund_reason">Record refund</label>
+                            <textarea name="reason" id="refund_reason" class="form-control mb-2" rows="2" placeholder="Reason (optional)"></textarea>
+                            <input type="number" step="0.01" min="0.01" name="amount" class="form-control mb-2" placeholder="Amount (blank = full total)" value="">
+                            <button type="submit" class="btn btn-warning">Record refund</button>
+                        </form>
+                        <script>
+                            (function () {
+                                var form = document.querySelector('.admin-refund-form');
+                                if (!form) return;
+                                form.addEventListener('submit', function (e) {
+                                    e.preventDefault();
+                                    fetch(form.action, {
+                                        method: 'POST',
+                                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                                        body: new FormData(form)
+                                    }).then(function (r) { return r.json(); }).then(function (data) {
+                                        if (data.success) {
+                                            if (typeof toastr !== 'undefined') toastr.success(data.message);
+                                            else alert(data.message);
+                                            if (typeof $('#datatable').DataTable === 'function') {
+                                                $('#datatable').DataTable().ajax.reload(null, false);
+                                            }
+                                            var modal = bootstrap.Modal.getInstance(document.querySelector('#crudModal'));
+                                            if (modal) modal.hide();
+                                        } else {
+                                            alert(data.message || 'Refund failed');
+                                        }
+                                    }).catch(function () { alert('Refund failed'); });
+                                });
+                            })();
+                        </script>
+                    </div>
+                @elseif(($transaction->refund_status ?? null) === 'refunded')
+                    <div class="col-md-12 mb-3">
+                        <strong>Refund:</strong>
+                        <p>£{{ number_format($transaction->refunded_amount ?? 0, 2) }} recorded</p>
+                    </div>
+                @endif
                 <div class="col-md-12 mb-3">
                     <strong>Created At:</strong>
                     <p>{{ $transaction->created_at->format('d M Y H:i') }}</p>
