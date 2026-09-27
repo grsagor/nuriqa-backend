@@ -1,0 +1,11 @@
+{
+    "name": "Gazian",
+    "alias": "gazian",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Gazian\\Providers\\GazianServiceProvider"
+    ],
+    "files": []
+}
