@@ -243,11 +243,16 @@ return [
     | Here you can define which commands will be visible and used in your
     | application. You can add your own commands to merge section.
     |
+    | Guarded with class_exists so `composer install` can boot Laravel
+    | before the package is fully available (prePackageUninstall scripts).
+    |
     */
-    'commands' => ConsoleServiceProvider::defaultCommands()
-        ->merge([
-            // New commands go here
-        ])->toArray(),
+    'commands' => class_exists(ConsoleServiceProvider::class)
+        ? ConsoleServiceProvider::defaultCommands()
+            ->merge([
+                // New commands go here
+            ])->toArray()
+        : [],
 
     /*
     |--------------------------------------------------------------------------
