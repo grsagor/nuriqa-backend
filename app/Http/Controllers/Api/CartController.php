@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\PlatformFeeService;
 use App\Services\ProductPriceOfferService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class CartController extends Controller
@@ -23,10 +24,14 @@ class CartController extends Controller
         }
 
         $sellerUnit = ProductPriceOfferService::resolvedSellerUnitPrice($p, $user);
+        if ($cart->contribution_amount !== null && $p->acceptsBuyerChosenPrice()) {
+            $sellerUnit = round((float) $cart->contribution_amount, 2);
+        }
         $quantity = max(1, (int) $cart->quantity);
         $sellerLineSubtotal = round($sellerUnit * $quantity, 2);
         $linePlatformFee = PlatformFeeService::platformFeeAmountForSellerSubtotal($sellerLineSubtotal, $p);
         $platformFeePerUnit = round($linePlatformFee / $quantity, 2);
+        $p->setAttribute('checkout_contribution_amount', $cart->contribution_amount !== null ? (float) $cart->contribution_amount : null);
         $p->setAttribute('checkout_seller_unit_price', $sellerUnit);
         $p->setAttribute('checkout_platform_fee_per_unit', $platformFeePerUnit);
         $p->setAttribute('checkout_buyer_unit_price', round($sellerUnit + $platformFeePerUnit, 2));
@@ -54,6 +59,26 @@ class CartController extends Controller
         ]);
     }
 
+    /**
+     * Validated per-unit contribution chosen by the buyer, or null when none was sent.
+     *
+     * @throws ValidationException when the product has a fixed price
+     */
+    private function buyerContribution(Request $request, Product $product): ?float
+    {
+        if (! $request->filled('contribution_amount')) {
+            return null;
+        }
+
+        if (! $product->acceptsBuyerChosenPrice()) {
+            throw ValidationException::withMessages([
+                'contribution_amount' => 'This item has a fixed price, so a custom contribution cannot be set.',
+            ]);
+        }
+
+        return round((float) $request->input('contribution_amount'), 2);
+    }
+
     public function index(Request $request)
     {
         $user = JWTAuth::parseToken()->authenticate();
@@ -78,6 +103,7 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'nullable|integer|min:1',
+            'contribution_amount' => 'nullable|numeric|min:'.Product::MIN_BUYER_CONTRIBUTION.'|max:1000000',
         ]);
 
         $user = JWTAuth::parseToken()->authenticate();
@@ -90,6 +116,7 @@ class CartController extends Controller
                 'message' => 'Product not found',
             ], 404);
         }
+        $contribution = $this->buyerContribution($request, $product);
         $quantity = $request->input('quantity', 1);
         if ($product->stock < $quantity) {
             return response()->json([
@@ -102,6 +129,21 @@ class CartController extends Controller
         $existingCart = Cart::where('user_id', $user->id)
             ->where('product_id', $request->product_id)
             ->first();
+
+        if ($existingCart && $contribution !== null) {
+            // Re-submitting with a chosen amount only changes the amount, not how many are in the cart.
+            $existingCart->contribution_amount = $contribution;
+            $existingCart->save();
+
+            $existingCart->load(['product.size', 'product.category', 'product.images', 'product.owner']);
+            $this->attachCheckoutPricing($existingCart, $user);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart updated',
+                'data' => $existingCart,
+            ]);
+        }
 
         if ($existingCart) {
             // Update quantity (ensure we don't exceed stock)
@@ -129,6 +171,7 @@ class CartController extends Controller
             'user_id' => $user->id,
             'product_id' => $request->product_id,
             'quantity' => $quantity,
+            'contribution_amount' => $contribution,
         ]);
 
         $cart->load(['product.size', 'product.category', 'product.images', 'product.owner']);

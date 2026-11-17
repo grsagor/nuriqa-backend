@@ -8,6 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('gazian_trade_enquiries');
+        Schema::dropIfExists('gazian_newsletter_subscribers');
+    }
+
+    public function down(): void
+    {
+        Schema::create('gazian_newsletter_subscribers', function (Blueprint $table) {
+            $table->id();
+            $table->string('email')->unique();
+            $table->timestamps();
+        });
+
         Schema::create('gazian_trade_enquiries', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -20,10 +32,5 @@ return new class extends Migration
             $table->boolean('is_read')->default(false);
             $table->timestamps();
         });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('gazian_trade_enquiries');
     }
 };

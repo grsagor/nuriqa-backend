@@ -188,6 +188,12 @@ class OrderController extends Controller
                 $listUnit = ProductPriceOfferService::listSellerUnitPrice($product);
                 $resolvedUnit = $offer ? round((float) $offer->offered_unit_price, 2) : $listUnit;
 
+                // Buyer-chosen price on a flexible product replaces the listing price (and any price offer).
+                if ($cartItem->contribution_amount !== null && $product->acceptsBuyerChosenPrice()) {
+                    $resolvedUnit = round((float) $cartItem->contribution_amount, 2);
+                    $offer = null;
+                }
+
                 if (! $product->is_free && $resolvedUnit <= 0) {
                     return response()->json([
                         'success' => false,

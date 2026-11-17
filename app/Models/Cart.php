@@ -11,10 +11,12 @@ class Cart extends Model
         'user_id',
         'product_id',
         'quantity',
+        'contribution_amount',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
+        'contribution_amount' => 'decimal:2',
     ];
 
     public function user(): BelongsTo

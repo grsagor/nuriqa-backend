@@ -22,6 +22,9 @@ class Product extends Model
 
     public const CONTRIBUTION_FLEXIBLE = 'flexible';
 
+    /** Lowest per-unit amount a buyer can choose on a flexible (charity-style) product. */
+    public const MIN_BUYER_CONTRIBUTION = 1.00;
+
     public const DELIVERY_PAYER_BUYER = 'buyer';
 
     public const DELIVERY_PAYER_DONOR = 'donor';
@@ -108,6 +111,15 @@ class Product extends Model
         return ($this->contribution_mode ?? self::CONTRIBUTION_FIXED) === self::CONTRIBUTION_FLEXIBLE
             || $this->is_free
             || (float) ($this->price ?? 0) <= 0;
+    }
+
+    /**
+     * Whether the buyer may choose their own per-unit price (listing price then acts as a guide).
+     * Hajra's Choice garments always work this way.
+     */
+    public function acceptsBuyerChosenPrice(): bool
+    {
+        return $this->allowsFlexibleContribution() || $this->type === 'hajra';
     }
 
     public function size(): BelongsTo
