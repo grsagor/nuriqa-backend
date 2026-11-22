@@ -1,0 +1,44 @@
+name: Deploy to production
+
+# Pushing to the `production` branch deploys the Laravel API (admin.nuriqa.com) to the Nuriqa server.
+# The server-side script is /usr/local/sbin/nuriqa-deploy; the SSH key below can run that script and nothing else.
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DEPLOY_HOST: 46.62.196.84
+      # Public host key of the server, so the connection cannot be silently redirected.
+      DEPLOY_HOST_KEY: "46.62.196.84 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFTVdZ68qOGwsnXqj4a3XmoTApbPUsbsS/XeXlCabgAN"
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::The DEPLOY_SSH_KEY secret is not set for this repository."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_HOST_KEY" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=30 \
+            root@"$DEPLOY_HOST" backend
