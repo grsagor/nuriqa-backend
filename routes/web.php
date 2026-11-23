@@ -15,6 +15,7 @@ use App\Http\Controllers\Backend\NewsletterSubscriberController;
 use App\Http\Controllers\Backend\PlatformSettingController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\RoleController;
+use App\Http\Controllers\Backend\TraderVerificationController;
 use App\Http\Controllers\Backend\SellerReportController;
 use App\Http\Controllers\Backend\SizeController;
 use App\Http\Controllers\Backend\SponsorRequestController;
@@ -173,6 +174,14 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
         Route::get('/list', 'list')->name('list');
         Route::get('/show/{id}', 'show')->name('show');
         Route::delete('/delete/{id}', 'delete')->name('delete');
+    });
+    Route::prefix('trader-verifications')->name('trader-verifications.')->controller(TraderVerificationController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/list', 'list')->name('list');
+        Route::get('/show/{id}', 'show')->name('show');
+        Route::post('/{id}/approve', 'approve')->name('approve');
+        Route::post('/{id}/reject', 'reject')->name('reject');
+        Route::get('/documents/{id}', 'document')->name('document');
     });
     Route::prefix('seller-reports')->name('seller-reports.')->controller(SellerReportController::class)->group(function () {
         Route::get('/', 'index')->name('index');

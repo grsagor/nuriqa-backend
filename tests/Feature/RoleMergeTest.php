@@ -5,12 +5,18 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RoleMergeTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // These tests build their own legacy roles; drop the Trader role that migrations create.
+        Role::query()->delete();
+    }
 
     private function runMergeMigration(): void
     {

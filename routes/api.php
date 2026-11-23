@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\SellerNotificationController;
 use App\Http\Controllers\Api\SellerReportController;
 use App\Http\Controllers\Api\SponsorRequestController;
 use App\Http\Controllers\Api\SupportCaseController;
+use App\Http\Controllers\Api\TraderVerificationController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\WithdrawalController;
@@ -53,11 +54,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/sizes', 'sizes')->name('api.v1.products.sizes');
         Route::get('/my-most-wishlisted', 'myMostWishlisted')->name('api.v1.products.my-most-wishlisted')->middleware('jwt.auth');
         Route::get('/details/{id}', 'show')->name('api.v1.products.show');
-        Route::post('/store', 'store')->name('api.v1.products.store')->middleware('jwt.auth');
-        Route::put('/{id}', 'update')->name('api.v1.products.update')->middleware('jwt.auth');
-        Route::post('/{id}', 'update')->name('api.v1.products.update.post')->middleware('jwt.auth'); // POST for FormData (PHP doesn't parse PUT body)
-        Route::patch('/{id}/listing-status', 'updateListingStatus')->name('api.v1.products.listing-status')->middleware('jwt.auth');
-        Route::delete('/{id}', 'destroy')->name('api.v1.products.destroy')->middleware('jwt.auth');
+        Route::post('/store', 'store')->name('api.v1.products.store')->middleware(['jwt.auth', 'can.trade']);
+        Route::put('/{id}', 'update')->name('api.v1.products.update')->middleware(['jwt.auth', 'can.trade']);
+        Route::post('/{id}', 'update')->name('api.v1.products.update.post')->middleware(['jwt.auth', 'can.trade']); // POST for FormData (PHP doesn't parse PUT body)
+        Route::patch('/{id}/listing-status', 'updateListingStatus')->name('api.v1.products.listing-status')->middleware(['jwt.auth', 'can.trade']);
+        Route::delete('/{id}', 'destroy')->name('api.v1.products.destroy')->middleware(['jwt.auth', 'can.trade']);
     });
 
     Route::get('/products/details/{id}/reviews', [ProductReviewController::class, 'index'])->name('api.v1.products.reviews.index');
@@ -92,18 +93,18 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('cart')->controller(CartController::class)->middleware('jwt.auth')->group(function () {
         Route::get('/', 'index')->name('api.v1.cart.index');
-        Route::post('/', 'store')->name('api.v1.cart.store');
+        Route::post('/', 'store')->name('api.v1.cart.store')->middleware('can.trade');
         Route::delete('/', 'clear')->name('api.v1.cart.clear');
-        Route::put('/{id}', 'update')->name('api.v1.cart.update');
+        Route::put('/{id}', 'update')->name('api.v1.cart.update')->middleware('can.trade');
         Route::delete('/{id}', 'destroy')->name('api.v1.cart.destroy');
     });
 
     Route::prefix('product-price-offers')->controller(ProductPriceOfferController::class)->middleware('jwt.auth')->group(function () {
-        Route::post('/', 'store')->name('api.v1.product-price-offers.store');
+        Route::post('/', 'store')->name('api.v1.product-price-offers.store')->middleware('can.trade');
         Route::get('/mine', 'myOffers')->name('api.v1.product-price-offers.mine');
         Route::get('/seller', 'sellerIndex')->name('api.v1.product-price-offers.seller-index');
-        Route::post('/{id}/approve', 'approve')->name('api.v1.product-price-offers.approve');
-        Route::post('/{id}/decline', 'decline')->name('api.v1.product-price-offers.decline');
+        Route::post('/{id}/approve', 'approve')->name('api.v1.product-price-offers.approve')->middleware('can.trade');
+        Route::post('/{id}/decline', 'decline')->name('api.v1.product-price-offers.decline')->middleware('can.trade');
     });
 
     Route::prefix('sponsor-requests')->controller(SponsorRequestController::class)->group(function () {
@@ -116,19 +117,28 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('orders')->controller(OrderController::class)->middleware('jwt.auth')->group(function () {
-        Route::post('/create-payment-intent', 'createPaymentIntent')->name('api.v1.orders.create-payment-intent');
-        Route::post('/checkout', 'checkout')->name('api.v1.orders.checkout');
-        Route::post('/sponsor-checkout', 'sponsorCheckout')->name('api.v1.orders.sponsor-checkout');
-        Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment');
-        Route::post('/paypal/create-order', 'createPayPalOrder')->name('api.v1.orders.paypal.create-order');
-        Route::post('/paypal/capture-order', 'capturePayPalOrder')->name('api.v1.orders.paypal.capture-order');
+        Route::post('/create-payment-intent', 'createPaymentIntent')->name('api.v1.orders.create-payment-intent')->middleware('can.trade');
+        Route::post('/checkout', 'checkout')->name('api.v1.orders.checkout')->middleware('can.trade');
+        Route::post('/sponsor-checkout', 'sponsorCheckout')->name('api.v1.orders.sponsor-checkout')->middleware('can.trade');
+        Route::post('/confirm-payment', 'confirmPayment')->name('api.v1.orders.confirm-payment')->middleware('can.trade');
+        Route::post('/paypal/create-order', 'createPayPalOrder')->name('api.v1.orders.paypal.create-order')->middleware('can.trade');
+        Route::post('/paypal/capture-order', 'capturePayPalOrder')->name('api.v1.orders.paypal.capture-order')->middleware('can.trade');
         Route::get('/seller', 'sellerIndex')->name('api.v1.orders.seller-index');
-        Route::put('/seller/{id}/status', 'sellerUpdateStatus')->name('api.v1.orders.seller-update-status');
+        Route::put('/seller/{id}/status', 'sellerUpdateStatus')->name('api.v1.orders.seller-update-status')->middleware('can.trade');
         Route::get('/sponsored', 'sponsoredIndex')->name('api.v1.orders.sponsored-index');
         Route::post('/{id}/cancel', 'cancel')->name('api.v1.orders.cancel');
         Route::post('/{id}/refund', 'refund')->name('api.v1.orders.refund');
         Route::get('/', 'index')->name('api.v1.orders.index');
         Route::get('/{id}', 'show')->name('api.v1.orders.show');
+    });
+
+    // Trader accounts fill in their verification here; buying and selling stays blocked until it is approved.
+    Route::prefix('trader/verification')->controller(TraderVerificationController::class)->middleware(['jwt.auth', 'trader'])->group(function () {
+        Route::get('/', 'show');
+        Route::put('/', 'update');
+        Route::post('/submit', 'submit')->middleware('throttle:10,1');
+        Route::post('/documents', 'uploadDocument')->middleware('throttle:30,1');
+        Route::delete('/documents/{id}', 'deleteDocument')->whereNumber('id');
     });
 
     Route::prefix('seller/notifications')->controller(SellerNotificationController::class)->middleware('jwt.auth')->group(function () {
@@ -189,7 +199,7 @@ Route::prefix('v1')->group(function () {
         // Withdrawal Routes
         Route::prefix('withdrawals')->controller(WithdrawalController::class)->group(function () {
             Route::get('/', 'index')->name('api.v1.withdrawals.index');
-            Route::post('/', 'store')->name('api.v1.withdrawals.store');
+            Route::post('/', 'store')->name('api.v1.withdrawals.store')->middleware('can.trade');
             Route::get('/limits', 'withdrawalLimits')->name('api.v1.withdrawals.limits');
             Route::get('/{id}', 'show')->name('api.v1.withdrawals.show');
             Route::put('/{id}/cancel', 'cancel')->name('api.v1.withdrawals.cancel');

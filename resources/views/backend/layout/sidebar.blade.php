@@ -107,6 +107,12 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-envelope"></i></div>
                     Contact Messages
                 </a>
+                @php($pendingTraders = \App\Models\TraderVerification::where('status', 'pending')->count())
+                <a class="nav-link {{ Request::segment(2) == 'trader-verifications' ? 'active' : '' }}" href="{{ route('admin.trader-verifications.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-user-check"></i></div>
+                    Trader verifications
+                    @if($pendingTraders > 0)<span class="badge bg-warning text-dark ms-2">{{ $pendingTraders }}</span>@endif
+                </a>
                 <a class="nav-link {{ Request::segment(2) == 'seller-reports' ? 'active' : '' }}" href="{{ route('admin.seller-reports.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-flag"></i></div>
                     Seller reports

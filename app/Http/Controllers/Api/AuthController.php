@@ -35,7 +35,8 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
             'phone_country_code' => 'required|string|regex:/^\+[1-9]\d{0,3}$/',
             'phone_number' => 'required|string|regex:/^\d{5,20}$/',
-            'role_id' => 'nullable|exists:roles,id',
+            // The client only says what kind of account it wants; it can never choose a role id (that would allow admin signups).
+            'account_type' => 'nullable|in:individual,trader',
         ]);
 
         if ($validator->fails()) {
@@ -47,7 +48,7 @@ class AuthController extends Controller
         }
 
         try {
-            $data = $request->all();
+            $data = $request->only(['name', 'email', 'phone_country_code', 'phone_number']);
             $data['password'] = Hash::make($request->password);
             $data['phone'] = $this->formatPhoneNumber(
                 (string) $request->input('phone_country_code'),
@@ -64,11 +65,15 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            // Set default role if not provided (single account type: full marketplace access)
-            if (! isset($data['role_id']) || empty($data['role_id'])) {
-                $defaultRole = Role::defaultForNewAccounts();
-                $data['role_id'] = $defaultRole ? $defaultRole->id : null;
+            $accountType = (string) $request->input('account_type', 'individual');
+            $role = Role::forAccountType($accountType);
+            if (! $role && $accountType === 'trader') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Trader accounts are not available right now.',
+                ], 422);
             }
+            $data['role_id'] = $role?->id;
 
             $user = User::create($data);
 
@@ -87,6 +92,7 @@ class AuthController extends Controller
                         'phone' => $user->phone,
                         'role' => $user->role ? $user->role->name : null,
                         'role_id' => $user->role_id,
+                        'trader_verification_status' => $user->traderVerificationStatus(),
                         'created_at' => $user->created_at->toISOString(),
                     ],
                     ...$debugOtpData,
@@ -200,6 +206,7 @@ class AuthController extends Controller
                         'image_url' => $user->image_url,
                         'role' => $user->role ? $user->role->name : null,
                         'role_id' => $user->role_id,
+                        'trader_verification_status' => $user->traderVerificationStatus(),
                         'created_at' => $user->created_at->toISOString(),
                     ],
                     'token' => $token,
@@ -237,6 +244,7 @@ class AuthController extends Controller
                         'image_url' => $user->image_url,
                         'role' => $user->role ? $user->role->name : null,
                         'role_id' => $user->role_id,
+                        'trader_verification_status' => $user->traderVerificationStatus(),
                         'created_at' => $user->created_at->toISOString(),
                     ],
                     'token' => $result['token'],
@@ -333,6 +341,7 @@ class AuthController extends Controller
                             'phone' => $user->phone,
                             'role' => $user->role ? $user->role->name : null,
                             'role_id' => $user->role_id,
+                            'trader_verification_status' => $user->traderVerificationStatus(),
                             'email_verified_at' => $user->email_verified_at ? $user->email_verified_at->toISOString() : null,
                             'created_at' => $user->created_at->toISOString(),
                         ],
@@ -364,6 +373,7 @@ class AuthController extends Controller
                         'phone' => $user->phone,
                         'role' => $user->role ? $user->role->name : null,
                         'role_id' => $user->role_id,
+                        'trader_verification_status' => $user->traderVerificationStatus(),
                         'email_verified_at' => $user->email_verified_at ? $user->email_verified_at->toISOString() : null,
                         'created_at' => $user->created_at->toISOString(),
                     ],
@@ -385,9 +395,11 @@ class AuthController extends Controller
     {
         $user = JWTAuth::parseToken()->authenticate();
 
+        $user->loadMissing('role');
+
         return response()->json([
             'success' => true,
-            'data' => $user->makePrivateAttributesVisible(),
+            'data' => $user->makePrivateAttributesVisible()->setAttribute('trader_verification_status', $user->traderVerificationStatus()),
         ]);
     }
 

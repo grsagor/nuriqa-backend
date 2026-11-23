@@ -128,6 +128,32 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Role::class);
     }
 
+    public function traderVerification(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TraderVerification::class);
+    }
+
+    public function isTrader(): bool
+    {
+        return strtolower((string) $this->role?->name) === 'trader';
+    }
+
+    /** draft | pending | approved | rejected for traders; null for everyone else. */
+    public function traderVerificationStatus(): ?string
+    {
+        if (! $this->isTrader()) {
+            return null;
+        }
+
+        return $this->traderVerification?->status ?? TraderVerification::DRAFT;
+    }
+
+    /** Traders must be approved before they can buy or sell; everyone else is unrestricted. */
+    public function canTrade(): bool
+    {
+        return ! $this->isTrader() || $this->traderVerificationStatus() === TraderVerification::APPROVED;
+    }
+
     /**
      * Get the language associated with the user.
      */
