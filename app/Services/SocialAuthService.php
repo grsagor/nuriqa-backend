@@ -103,9 +103,7 @@ class SocialAuthService
      */
     private function createUser(array $claims): User
     {
-        $defaultRole = Role::where('name', 'user')->first()
-            ?? Role::where('name', 'customer')->first()
-            ?? Role::where('name', 'seller')->first();
+        $defaultRole = Role::defaultForNewAccounts();
 
         return User::query()->create([
             'name' => $claims['name'] ?? Str::before($claims['email'], '@'),

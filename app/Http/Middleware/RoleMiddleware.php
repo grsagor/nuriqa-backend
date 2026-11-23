@@ -26,8 +26,7 @@ class RoleMiddleware
         // Create role mapping for easier checking
         $roleMapping = [
             'admin' => 1,
-            'seller' => 2,
-            'customer' => 3,
+            'individual' => 3,
         ];
 
         // Check if user has any of the required roles
