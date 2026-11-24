@@ -75,16 +75,21 @@ class UserController extends Controller
                 ->addColumn('image', function ($row) {
                     $imagePath = ImageService::getUrl($row->image, asset('assets/img/utils/no-image.png'));
                     if ($row->image) {
-                        return '<img src="'.$imagePath.'" alt="'.$row->name.'" class="user-avatar">';
+                        return '<img src="'.e($imagePath).'" alt="'.e($row->name).'" class="user-avatar">';
                     }
 
                     return '<div class="user-avatar d-flex align-items-center justify-content-center bg-light"><i class="fas fa-user text-muted"></i></div>';
                 })
                 ->addColumn('name', function ($row) {
-                    return '<div class="d-flex align-items-center">'.$row->name.'</div>';
+                    // Names are typed in at signup and this column is rendered as HTML, so it must be escaped.
+                    return '<div class="d-flex align-items-center">'.e($row->name).'</div>';
+                })
+                // email and phone are hidden on the User model (privacy), so serialising the row drops them: add them explicitly.
+                ->addColumn('email', function ($row) {
+                    return e($row->email);
                 })
                 ->addColumn('phone', function ($row) {
-                    return $row->phone ?: '<span class="text-muted">N/A</span>';
+                    return $row->phone ? e($row->phone) : '<span class="text-muted">N/A</span>';
                 })
                 ->addColumn('role', function ($row) {
                     $roleName = $row->role ? $row->role->name : 'N/A';
